@@ -37,7 +37,6 @@ Sub main
 		// 检测hwnd是否失效
 		Call hwndCheck(hwnd)
 		
-		
 		// 检测是否需要选地图
 		Call needPrepare
 		Call needChoseMap
@@ -314,42 +313,6 @@ Function roleInArea(x1, y1, x2, y2)
 	roleInArea = dm.findColor (x1, y1, x2, y2, "00CCFF-101010", 1.0, 0, intX, intY)
 End Function
 
-Sub 打手穿甲攻击(spaceDelay)
-	If Form1.CheckBox2.Value = 1 Then 
-		Call 打手攻击(spaceDelay)
-	Else 
-		dm.keyPress 50
-		For 10
-			dm.keyPress 51	
-		Next
-		For 10
-			dm.keyPress 56
-		Next
-		For 10
-			dm.keyPress 53
-		Next
-		For 10
-			dm.keypress 52
-		Next
-		
-		dm.keyDown 32
-		Delay spaceDelay
-		dm.keyUp 32
-	End If
-End Sub
-
-Sub 打手攻击(spaceDelay)
-	Dim str
-	str = LCase(LTrim(Form1.InputBox2.Text + ""))
-	While len(str) > 0
-		dm.keyPressChar Left(str, 1)
-		str = Right(str, Len(str) - 1)
-	Wend
-	dm.keyDown 32
-	Delay spaceDelay
-	dm.keyUp 32
-End Sub
-
 Sub attack(strength)
 	Dim str
 	str = LCase(LTrim(Form1.InputBox2.Text + ""))
@@ -368,7 +331,6 @@ Sub attack(strength)
 	dm.keyUp 32
 	
 End Sub
-
 
 Sub needChoseMap
 	// 先点击，然后再检测
@@ -498,7 +460,6 @@ Sub hwndCheck(hwnd)
 		ExitScript
 	End If
 End Sub
-
 
 // 保存所有打手的句柄，在运行挂机脚本时排除这些句柄
 Sub saveMaster(hwnd)
