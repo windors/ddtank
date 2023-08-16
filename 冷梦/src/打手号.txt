@@ -37,6 +37,8 @@ Sub main
 		// 检测hwnd是否失效
 		Call hwndCheck(hwnd)
 		
+		Call needCreateRoom
+		
 		// 检测是否需要选地图
 		Call needPrepare
 		Call needChoseMap
@@ -50,6 +52,21 @@ Sub main
 		End If
 		Delay 700 * (1 - (Form1.Slider1.Value / 1000))
 	Wend
+End Sub
+
+
+Sub needCreateRoom
+	dm.FindPic 670, 470, 735, 530, "C:\tmp\大厅标识.bmp", 101010, 0.8, 0, intX, intY
+	If intX > 0 And intY > 0 Then 
+	 	TracePrint "检测到在大厅内"
+		dm.moveTo intX + 10, intY + 10
+		dm.leftClick 
+		
+		Delay 500
+		dm.moveTo 411, 442
+		dm.leftClick 
+		Delay 1000
+	End If
 End Sub
 
 Sub 要打的副本
@@ -141,8 +158,6 @@ Sub 要打的副本
 	dm.leftClick 
 	Delay 300
 End Sub
-
-
 
 Sub 打副本策略
 	round = round + 1
@@ -312,6 +327,19 @@ End Function
 Function roleInArea(x1, y1, x2, y2)
 	roleInArea = dm.findColor (x1, y1, x2, y2, "00CCFF-101010", 1.0, 0, intX, intY)
 End Function
+
+
+Sub 打手攻击(spaceDelay)
+    Dim str
+    str = LCase(LTrim(Form1.InputBox2.Text + ""))
+    While len(str) > 0
+        dm.keyPressChar Left(str, 1)
+        str = Right(str, Len(str) - 1)
+    Wend
+    dm.keyDown 32
+    Delay spaceDelay
+    dm.keyUp 32
+End Sub
 
 Sub attack(strength)
 	Dim str
@@ -547,7 +575,7 @@ End Sub
 
 Sub bund(hwnd)
 	Set dm = createobject("dm.dmsoft")
-	dm_ret = dm.BindWindowEx(hwnd, "dx2", "dx2", "dx", "dx.public.active.message", Form1.InputBox3.Text + 0)
+	dm_ret = dm.BindWindowEx(hwnd, "dx2", "dx2", "dx", "dx.public.active.message", 4)
 	if dm_ret = 0 then
    	last_error = dm.GetLastError()
 	// 如果是WIN7 VISTA WIN2008系统,检测当前系统是否有开启UAC
