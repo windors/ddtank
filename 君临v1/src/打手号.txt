@@ -74,6 +74,8 @@ Sub 打副本策略
 	Select Case (Form1.ComboBox1.ListIndex * 4 + Form1.ComboBox2.ListIndex)
 		Case 0
 			Call attackWithAngle(20, 50, 1)
+		Case 1
+			Call attackWithAngle(20, 45, 1)
 	End Select
 End Sub
 
@@ -191,7 +193,8 @@ Function getAngle()
 End Function
 
 Sub attack(strength)
-	Dim str
+	Dim str, tried
+	tried = 0
 	str = LCase(LTrim(Form1.InputBox2.Text + ""))
 	While len(str) > 0
 		dm.keyPressChar Left(str, 1)
@@ -201,12 +204,19 @@ Sub attack(strength)
 	If strength > 95 Then 
 		strength = 95
 	End If
-	dm.keyDown 32
-	While dm.getColor(159 + 4.97 * strength, 596) <> "6d2802"
-		Delay 1
-	Wend
-	dm.keyUp 32
-	
+	// 出手前检测是否能够出手，防止卡死
+	If isMyRound() Then 
+		dm.keyDown 32
+		While dm.getColor(159 + 4.97 * strength, 596) <> "6d2802"
+			tried = tried + 1
+			Delay 1
+			If tried > 20000 Then 
+				dm.keyUp 32
+				exit Sub
+			End If
+		Wend
+		dm.keyUp 32
+	End If
 End Sub
 
 Sub needChoseMap
@@ -272,12 +282,18 @@ Sub needPrepare
 End Sub
 
 Sub needAttack
-	dm.FindPic 123, 114, 198, 135, "C:\tmp\该出手了.bmp", 101010, 0.8, 0, intX, intY
-	If intX > 0 And intY > 0 Then 
+	If isMyRound() Then 
 		Call 打副本策略
 	End If
 End Sub
 
+Function isMyRound()
+	isMyRound = False
+	dm.FindPic 123, 114, 198, 135, "C:\tmp\该出手了.bmp", 101010, 0.8, 0, intX, intY
+	If intX > 0 And intY > 0 Then 
+		isMyRound = True
+	End If
+End Function
 
 Sub needDraw
 	dm.FindPic 88, 59, 904, 571, "C:\tmp\翻牌卡.bmp", 101010, 0.8, 0, px, py
