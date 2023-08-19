@@ -69,6 +69,16 @@ Sub needCreateRoom
 	End If
 End Sub
 
+Sub 打副本策略
+	round = round + 1
+	Form1.Label4.Caption = "第" & (n + 1) & "次副本，第" & round & "回合"
+	Select Case (Form1.ComboBox1.ListIndex * 4 + Form1.ComboBox2.ListIndex)
+		Case 0
+			Call attackWithAngle(20, 50, 1)
+	End Select
+End Sub
+
+// ok
 Sub 要打的副本
 	Dim x, y
 	// x, y 待选择副本的位置
@@ -118,141 +128,6 @@ Sub 要打的副本
 	Delay 300
 End Sub
 
-Sub 打副本策略
-	round = round + 1
-	Form1.Label4.Caption = "第" & (n + 1) & "次副本，第" & round & "回合"
-	Select Case Form1.ComboBox1.ListIndex
-		Case 0
-			If round = 1 Then 
-				dm.keyDownChar "d"
-				Delay 800
-				dm.keyUpChar "d"
-			End If
-			Call 打手攻击(1500)
-		Case 1
-			If round = 1 Then 
-				For 7
-					dm.keyPressChar "w"
-				Next
-			End If
-			Call 打手攻击(2000)
-		Case 2
-			If round = 1 Then 
-				dm.keyDownChar "d"
-				Delay 2000
-				dm.keyUpChar "d"
-			Else 
-				dm.keyDownChar "d"
-				Delay 100
-				dm.keyUpChar "d"
-			End If
-			Call attack(60)
-		Case 3
-			If round = 1 Then 
-				dm.keyDownChar "d"
-				Delay 800
-				dm.keyUpChar "d"
-				For 8
-					dm.keyPressChar "w"
-				Next
-			End If
-			Call 打手攻击(1500)
-		Case 4
-			// 强化本
-			If round = 1 Then 
-				position = getPlace(820, 89, 850, 89, 954, 89, 982, 89)
-				While position < 1
-					position = getPlace(820, 89, 850, 89, 954, 89, 982, 89)
-				Wend
-				If position = 1 Then 
-					For 7
-						dm.keyPress 87
-					Next	
-				ElseIf position = 2 Or position = 3 Then 
-					For 10
-						dm.keyPress 87
-					Next
-				End If
-			End If
-			Call 打手攻击(1700)
-		Case 5
-			If round = 1 Then 
-				position = getPlace(873, 96, 891, 96, 905, 96, 923, 96)
-				While position < 0
-					position = getPlace(873, 96, 891, 96, 905, 96, 923, 96)
-				Wend
-				If position = 1 Or position = 2 Then 
-					// 40 55
-					// 40 50
-					For 15
-						dm.keyPressChar "w"
-					Next
-				ElseIf position = 3 Then
-					// 50, 45~50
-					For 23
-						dm.keyPressChar "w"
-					Next
-				ElseIf position = 4 Then 
-					// 55, 43
-					For 26
-						dm.keyPressChar "w"
-					Next
-				End If
-			End If
-			If position = 1 Then 
-				Call attack(55)
-			ElseIf position = 2 Then
-				Call attack(50)
-			ElseIf position = 3 Then
-				Call attack(45)
-			ElseIf position = 4 Then
-				Call attack(43)
-			End If
-		Case 6
-			// 走左最左面，然后50力度即可
-			If round = 1 Then 
-				dm.keyDownChar "a"
-				Delay 9000
-				dm.keyUpChar "a"
-				dm.keyPressChar "p"
-				dm.keyPressChar "d"
-			Else 
-				Call attack(50)
-			End If
-		Case 7
-			// 走到最右面，65 56; 20 54
-			If round = 1 Then 
-				dm.keyDownChar "d"
-				Delay 9000
-				dm.keyUpChar "d"
-				dm.keyPressChar "p"
-				dm.keyPressChar "a"
-				For 3
-					dm.keyPressChar "w"
-				Next
-			Else 
-				Call attack(54)
-			End If
-		Case 8
-			If dm.getColor(984, 90) = "ff0000" Then 
-				// 右面的没有打死
-				If toward = 0 Or toward = 1 Then 
-					dm.keyPressChar "d"
-					toward = 2
-				End If
-				Call attack(70)
-			ElseIf dm.getColor(878, 90) = "ff0000" Then
-				// 左面的没有被打死
-				If toward = 0 Or toward = 2 Then 
-					dm.keyPressChar "a"
-					toward = 1
-				End If
-				Call attack(70)
-			End If
-			// 再检测左面的有没有打死
-	End Select
-End Sub
-
 // 获取角色位置，由于三角出现在角色上方3个像素~5个像素的位置，传进来小地图角色位置最上方中间像素（3个中的中间）
 Function getPlace(x1, y1, x2, y2, x3, y3, x4, y4)
 	getPlace = -1
@@ -287,18 +162,34 @@ Function roleInArea(x1, y1, x2, y2)
 	roleInArea = dm.findColor (x1, y1, x2, y2, "00CCFF-101010", 1.0, 0, intX, intY)
 End Function
 
-
-Sub 打手攻击(spaceDelay)
-    Dim str
-    str = LCase(LTrim(Form1.InputBox2.Text + ""))
-    While len(str) > 0
-        dm.keyPressChar Left(str, 1)
-        str = Right(str, Len(str) - 1)
-    Wend
-    dm.keyDown 32
-    Delay spaceDelay
-    dm.keyUp 32
+/**
+ * 带角度的攻击
+ * angle: 角度
+ * strength: 力度
+ * mis: 误差
+ **/
+Sub attackWithAngle(angle, strength, mis)
+	nowAngle = getAngle()
+	While nowAngle < angle - mis Or nowAngle > angle + mis
+		While getAngle() < (angle + mis)
+			dm.keyPressChar "w"
+			Delay 88
+		Wend
+		While getAngle() > (angle - mis)
+			dm.keyPressChar "s"
+			Delay 88
+		Wend
+		nowAngle = getAngle()
+	Wend
+	// 力度无误
+	Call attack(strength)
 End Sub
+
+Function getAngle()
+	// BGR：1a1a1a 0d261a 241710 16201a 2b2228 0d0d26 201d1c 321d17 1d1d21 030d1c
+	getAngle = dm.Ocr(40, 550, 85, 590, "1a1a1a-000000|1a260d-000000|101724-000000|1a2016-000000|28222b-000000|260d0d-000000|1c1d20-000000|211d1d-000000|171d32-000000|1c0d03-000000", 1) + 0
+	TracePrint getAngle
+End Function
 
 Sub attack(strength)
 	Dim str
@@ -536,26 +427,30 @@ Sub bund(hwnd)
 	Set dm = createobject("dm.dmsoft")
 	dm_ret = dm.BindWindowEx(hwnd, "dx2", "dx2", "dx", "dx.public.active.message", 4)
 	if dm_ret = 0 then
-   	last_error = dm.GetLastError()
-	// 如果是WIN7 VISTA WIN2008系统,检测当前系统是否有开启UAC
-   	if dm.GetOsType() = 3 then
-    	// 有开启UAC的话，尝试关闭
-			if dm.CheckUAC() = 1 then
-     			if dm.SetUAC(0) = 1 then
-          			// 关闭UAC之后，必须重启系统才可以生效
-          			messagebox "已经关闭系统UAC设置，必须重启系统才可以生效。点击确定重启系统"
-         			// dm.ExitOs 2
-                	Delay 2000
-         			endscript
-     			end if
-			end if
-   	end if
-   	// 具体错误码的含义，可以参考函数GetLastError的说明.
-   	MessageBox "绑定失败，错误码是:" & last_error
-   	EndScript
-	Else 
-   	TracePrint "绑定成功"
-	end if
+   		last_error = dm.GetLastError()
+		// 如果是WIN7 VISTA WIN2008系统,检测当前系统是否有开启UAC
+   		if dm.GetOsType() = 3 then
+    		// 有开启UAC的话，尝试关闭
+				if dm.CheckUAC() = 1 then
+     				if dm.SetUAC(0) = 1 then
+          				// 关闭UAC之后，必须重启系统才可以生效
+          				messagebox "已经关闭系统UAC设置，必须重启系统才可以生效。点击确定重启系统"
+         				// dm.ExitOs 2
+                		Delay 2000
+         				endscript
+     				end if
+				end if
+   		end if
+   		// 具体错误码的含义，可以参考函数GetLastError的说明.
+   		MessageBox "绑定失败，错误码是:" & last_error
+   		EndScript
+		Else 
+   		TracePrint "绑定成功"
+	End If
+	// 选择字库文件
+	dm_ret = dm.SetDict(0, "C:/tmp/ddtankLibrary.txt")
+	// 使用字库文件的编号
+	dm_ret = dm.UseDict(0)
 End Sub
 
 Sub OnScriptExit()
