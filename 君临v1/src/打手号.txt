@@ -37,8 +37,6 @@ Sub main
 		// 检测hwnd是否失效
 		Call hwndCheck(hwnd)
 		
-		Call needCreateRoom
-		
 		// 检测是否需要选地图
 		Call needPrepare
 		Call needChoseMap
@@ -48,7 +46,8 @@ Sub main
 		Call needAttack
 		// 检测是否需要将奖励放进背包
 		If checkTimes Mod 5 = 0 Then 
-			Call needPutInBag
+			Call needCreateRoom
+			Call needDraw
 		End If
 		Delay 700 * (1 - (Form1.Slider1.Value / 1000))
 	Wend
@@ -279,15 +278,11 @@ Sub needAttack
 	End If
 End Sub
 
-// 蛋2独有的副本结束后需要将物品放入背包 ok
-Sub needPutInBag
-	Dim isEnd
-	isEnd = False
+
+Sub needDraw
 	dm.FindPic 88, 59, 904, 571, "C:\tmp\翻牌卡.bmp", 101010, 0.8, 0, px, py
 	While px > 0 and py > 0
-		TracePrint "检测到翻牌页面"
-		isEnd = True
-		
+		Form1.Label4.Caption = "第" & n & "次抽卡，祝好运 0v0~"
 		For 3
 			While px > 0 and py > 0
 				dm.moveTo px, py
@@ -295,11 +290,28 @@ Sub needPutInBag
 				dm.FindPic 88, 59, 904, 571, "C:\tmp\翻牌卡.bmp", 101010, 0.8, 0, px, py
 				dm.moveTo 438, 342
 				dm.leftClick 
-				Delay 300
+				Delay 1000 * Rnd()
 			Wend
 			Delay 1000
 		Next
 		dm.FindPic 88, 59, 904, 571, "C:\tmp\翻牌卡.bmp", 101010, 0.8, 0, px, py
+	Wend
+	Call needPutInBag
+End Sub
+
+// 蛋2独有的副本结束后需要将物品放入背包 ok
+Sub needPutInBag
+	Dim isEnd
+	isEnd = False
+	dm.FindPic 385, 218, 407, 246, "C:\tmp\全选进背包.bmp", 101010, 0.8, 0, px, py
+	While px > 0 and py > 0
+		TracePrint "检测到结束窗口"
+		isEnd = True
+		// 普通模式
+		dm.moveTo px, py
+		dm.leftClick 
+		Delay 5000
+		dm.FindPic 385, 218, 407, 246, "C:\tmp\全选进背包.bmp", 101010, 0.8, 0, px, py
 	Wend
 	If isEnd Then 
 		n = n + 1

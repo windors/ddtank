@@ -60,7 +60,7 @@ Sub main
 		// 检测是否需要按p	
 		Call needPressPass
 		// 检测是否需要将奖励放进背包
-		Call needPutInBag
+		Call needDraw
 		Delay 1000 * (1 - (Form1.Slider1.Value / 1000))
 	Wend
 End Sub
@@ -81,7 +81,7 @@ End Sub
 
 // 检测是否需要准备
 Sub needPrepare
-	dm.FindPic 886, 430, 970, 548, "C:\tmp\需要准备.bmp", 101010, 0.6, 0, intX, intY
+	dm.FindPic 900, 440, 970, 520, "C:\tmp\准备.bmp", 101010, 0.8, 0, intX, intY
 	If intX > 0 And intY > 0 Then 
 		// 购买怒气
 		dm.moveTo 954, 339
@@ -94,52 +94,44 @@ Sub needPrepare
 	End If
 End Sub
 
+Sub needDraw
+	dm.FindPic 88, 59, 904, 571, "C:\tmp\翻牌卡.bmp", 101010, 0.8, 0, px, py
+	While px > 0 and py > 0
+		Form1.Label4.Caption = "第" & n & "次抽卡，祝好运 0v0~"
+		For 3
+			While px > 0 and py > 0
+				dm.moveTo px, py
+				dm.leftClick 
+				dm.FindPic 88, 59, 904, 571, "C:\tmp\翻牌卡.bmp", 101010, 0.8, 0, px, py
+				dm.moveTo 438, 342
+				dm.leftClick 
+				Delay 1000 * Rnd()
+			Wend
+			Delay 1000
+		Next
+		dm.FindPic 88, 59, 904, 571, "C:\tmp\翻牌卡.bmp", 101010, 0.8, 0, px, py
+	Wend
+	Call needPutInBag
+End Sub
+
 // 蛋2独有的副本结束后需要将物品放入背包 ok
 Sub needPutInBag
+	Dim isEnd
+	isEnd = False
 	dm.FindPic 385, 218, 407, 246, "C:\tmp\全选进背包.bmp", 101010, 0.8, 0, px, py
 	While px > 0 and py > 0
+		TracePrint "检测到结束窗口"
 		isEnd = True
-		If Form1.CheckBox1.Value = 1 Then 
-			// 刷资源模式
-			For 10
-				For 100
-					// 到了结算页面
-					dm.FindPic 129, 173, 349, 349, "C:\tmp\时装-久伴.bmp|C:\tmp\时装-偏执.bmp|C:\tmp\时装-七荒.bmp|C:\tmp\时装-小帅.bmp", 000000, 0.7, 0, x, y
-					If x > 0 and y > 0 Then 
-						dm.moveTo x + 10, y + 5
-						dm.leftClick 
-						dm.moveTo 0, 0
-						TracePrint "找到了一个"
-						Delay 1000
-					End If
-					Delay 1
-				Next
-				If x < 0 and y < 0 Then 
-					TracePrint "已找到全部资源，退出循环"
-					Exit For
-				End If
-			Next
-			// 点一下确定按钮
-			If Form1.CheckBox2.Value Then 
-				Delay 1000
-			End If
-			
-			dm.MoveTo 696, 542
-			dm.leftClick 
-			Delay 2000
-			// 等待结束
-		Else
-			// 普通模式
-			If Form1.CheckBox2.Value Then 
-				Delay 2000
-			End If
-			
-			dm.moveTo px, py
-			dm.leftClick 
-			Delay 1000
-		End If
+		// 普通模式
+		dm.moveTo px, py
+		dm.leftClick 
+		Delay 5000
 		dm.FindPic 385, 218, 407, 246, "C:\tmp\全选进背包.bmp", 101010, 0.8, 0, px, py
 	Wend
+	If isEnd Then 
+		n = n + 1
+		Form1.Label4.Caption = "第" & n & "次副本，结束！"
+	End If
 End Sub
 
 Sub hwndCheck(hwnd)
