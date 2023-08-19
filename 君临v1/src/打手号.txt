@@ -70,91 +70,50 @@ Sub needCreateRoom
 End Sub
 
 Sub 要打的副本
+	Dim x, y
+	// x, y 待选择副本的位置
 	round = 0
 	position = 0
 	toward = 0
 	Form1.Label4.Caption = "第" & (n + 1) & "次副本，开始！"
-	If Form1.ComboBox1.ListIndex > 11 Then 
-		// 后面的本要先点击这个
-		dm.moveTo 806, 390
-		dm.leftClick 
-	End If
-	Select Case Form1.ComboBox1.ListIndex
+	
+	Select Case Form1.ComboBox1.ListIndex Mod 3
+		// 选择行
 		Case 0
-			// 新手本
-			dm.moveTo 319, 321
+			y = 324
 		Case 1
-			// 蚂蚁本
-			dm.moveTo 460, 322
+			y = 375
 		Case 2
-			// 小鸡本
-			dm.moveTo 580, 319
-		Case 3
-			// 波谷本
-			dm.moveTo 721,320 
-		Case 4
-			// 邪神
-			dm.moveTo 318, 374
-		Case 5
-			// 堡垒
-			dm.moveTo 458,376
-		Case 6
-			// 龙巢
-			dm.moveTo 592, 377
-		Case 7
-			// 运动会
-			dm.moveTo 724, 373
-		Case 8
-			// 时空
-			dm.moveTo 325, 432
-		Case 9
-			// 勇士竞技场
-			dm.moveTo 459, 425
-		Case 10
-			// 世界杯
-			dm.moveTo 587, 426
-		Case 11
-			// 魔法堡垒
-			dm.moveTo 720, 425
-		Case 12
-			// 冰雪之城
-			dm.moveTo 323, 325
-		Case 13
-			// 魔法森林
-			dm.moveTo 459, 325
-		Case 14
-			// 沙丘幻境
-			dm.moveTo 589, 329
-		Case 15
-			// 血色
-			dm.moveTo 728, 334
-		Case 16
-			// 冰雪城堡
-			dm.moveTo 322, 380
-		Case 17
-			// 四大神兽
-			dm.moveTo 455, 384
-		Case 18
-			// 天空之城
-			dm.moveTo 590, 379
-		Case 19
-			// 大闹天宫
-			dm.moveTo 726, 379
-		Case 20
-			// 龙舟
-			dm.moveTo 327, 435
-		Case 21
-			// 人鱼
-			dm.moveTo 453, 431
+			y = 428
 	End Select
+	If Form1.ComboBox1.ListIndex > 3 Then 
+		For Fix(Form1.ComboBox1.ListIndex / 3)
+			dm.moveTo 805, 430
+			dm.leftClick 
+			dm.moveTo 805, 431
+			dm.leftClick 
+			dm.leftClick
+		Next
+	End If
+	
+	Select Case Form1.ComboBox2.ListIndex Mod 4
+		Case 0
+			x = 329
+		Case 1
+			x = 461
+		Case 2
+			x = 604
+		Case 3
+			x = 738
+	End Select
+	
+	
+	dm.moveTo x, y
 	dm.leftClick 
-	// 难度
-	dm.moveTo 366, 504
+	// 难度，全简单
+	dm.moveTo 370,501
 	dm.leftClick
 	dm.moveTo 735, 568
-	If Form1.CheckBox3.Value Then 
-		Delay 2000
-	End If
 	dm.leftClick 
 	Delay 300
 End Sub
@@ -378,13 +337,13 @@ Sub needChoseMap
 			TracePrint "第" & (n + 1) & "次" & "副本，开始"
 			Call 要打的副本
 		End If
-	dm.FindPic 891, 454, 981, 495, "C:\tmp\房主开始.bmp", 101010, 0.6, 0, intX, intY
+	dm.FindPic 910, 450, 970, 500, "C:\tmp\开始1.bmp", 101010, 0.6, 0, intX, intY
 	If intX > 0 And intY > 0 Then 
 		dm.moveTo intX + 10, intY + 10
 		dm.leftClick 
 	End If
 
-	dm.FindPic 893, 454, 980, 508, "C:\tmp\房主开始2.bmp", 101010, 0.6, 0, intX, intY
+	dm.FindPic 910, 450, 970, 510, "C:\tmp\开始2.bmp", 101010, 0.6, 0, intX, intY
 	If intX > 0 And intY > 0 Then 
 		dm.moveTo intX, intY
 		dm.leftClick 
