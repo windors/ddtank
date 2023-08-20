@@ -170,16 +170,34 @@ End Function
  * mis: 误差
  **/
 Sub attackWithAngle(angle, strength, mis)
+	Dim failCount, lastAngle
+	failCount = 0
+	lastAngle = -2100000000
 	nowAngle = getAngle()
 	While nowAngle < angle - mis Or nowAngle > angle + mis
-		While getAngle() < (angle + mis)
+		If nowAngle = lastAngle Then 
+			failCount = failCount + 1
+		Else 
+			failCount = 0
+		End If
+		If failCount > 3 Then 
+			// 超过3次尝试变更角度不动，说明需要移动
+			If dm.findColor(55, 500, 100, 590, "0000E1-000010", 1.0, 0, intX, intY) Then 
+				// 朝向右
+				// TODO 复杂情况（走到了边缘后走不动）的处理
+				dm.keyPressChar "d"
+			Else 
+				dm.keyPressChar "a"
+			End If
+		End If
+		If getAngle() < (angle + mis)
 			dm.keyPressChar "w"
 			Delay 88
-		Wend
-		While getAngle() > (angle - mis)
+		End If
+		If getAngle() > (angle - mis)
 			dm.keyPressChar "s"
 			Delay 88
-		Wend
+		End If
 		nowAngle = getAngle()
 	Wend
 	// 力度无误
