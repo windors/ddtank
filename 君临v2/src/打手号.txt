@@ -1,14 +1,16 @@
 Dim hwnd
 Dim round
-Dim position
 Dim toward
 Dim n
 Dim checkTimes
-Dim antFirst
-Call init
+Dim strengthTable30
+Dim roleColor
+
 Sub init
-	checkTimes = 0
-	n = 0
+	strengthTable30 = array(14, 20, 24, 28, 32, 35, 38, 41, 44, 47, 50, 52, 55, 57, 60, 62, 65, 67, 69, 72)
+	// 角色小地图颜色
+	roleColor = "00ccff"
+	
 	If (Form1.InputBox1.Text + 0) <> - 1  Then 
 		MessageBox "选择了手动指定句柄"
 		hwnd = Form1.InputBox1.Text
@@ -17,7 +19,7 @@ Sub init
 	End If
 	If (Plugin.Window.GetClass(hwnd) <> "MacromediaFlashPlayerActiveX") Then 
 		MessageBox "未检测到窗口，请重新运行脚本，启动时鼠标需要放在游戏内！"
-	Else 
+	Else
 		Call main
 	End If
 End Sub
@@ -27,8 +29,13 @@ Sub main
 	Call bund(hwnd)
 	// 将主句柄保存
 	Call saveMaster(hwnd)
+	// 激活窗口
 	dm.moveTo 0, 0
 	dm.leftClick 
+	// 计数器初始化
+	checkTimes = 0
+	// 初始化已打副本次数
+	n = 0
 	While True
 		checkTimes = checkTimes + 1
 		If checkTimes > 100 Then 
@@ -74,83 +81,6 @@ Sub 打副本策略
 	While isMyRound()
 		Call attackAuto
 	Wend
-	
-	/*
-	Select Case (Form1.ComboBox1.ListIndex * 4 + Form1.ComboBox2.ListIndex)
-		Case 0
-			Call attackWithAngle(20, 50, 1)
-		Case 1
-			Call attackWithAngle(20, 45, 1)
-		Case 2
-			Call attackWithAngle(25, 40, 1)
-		Case 3
-			Call attackWithAngle(20, 45, 1)
-		Case 4
-			Call attackWithAngle(20, 45, 1)
-		Case 5
-			Call attackWithAngle(20, 45, 1)
-		Case 6
-			Call attackWithAngle(20, 45, 1)
-		Case 7
-			Call attackWithAngle(20, 45, 1)
-		Case 8
-			Call attackWithAngle(30, 38, 1)	
-		Case 9
-			Call attackWithAngle(20, 46, 1)
-		Case 10
-			Call attackWithAngle(30, 38, 1)	
-		Case 11
-			Call attackWithAngle(20, 45, 1)
-		Case 12
-			Call attackWithAngle(20, 45, 1)
-		Case 13
-			// 斜坡未验证
-			Call attackWithAngle(20, 45, 1)
-		Case 14
-			Call attackWithAngle(20, 45, 1)
-		Case 15
-			Call attackWithAngle(20, 45, 1)
-		Case 16
-			Call attackWithAngle(20, 45, 1)
-		Case 17
-			Call attackWithAngle(20, 45, 1)
-		Case 18
-			Call attackWithAngle(20, 45, 1)
-		Case 19
-			Call attackWithAngle(20, 45, 1)
-		Case 20
-			Call attackWithAngle(20, 45, 1)
-		Case 21
-			Call attackWithAngle(20, 45, 1)
-		Case 22
-			Call attackWithAngle(20, 45, 1)
-		Case 23
-			Call attackWithAngle(30, 38, 1)
-		Case 24
-			Call attackWithAngle(30, 38, 1)
-		Case 25
-			Call attackWithAngle(20, 45, 1)
-		Case 26
-			Call attackWithAngle(20, 45, 1)
-		Case 27
-			alert ("懒得写这个本")
-		Case 28
-			Call attackWithAngle(20, 45, 1)
-		Case 29
-			Call attackWithAngle(20, 45, 1)
-		Case 30
-			Call attackWithAngle(20, 45, 1)
-		Case 31
-			Call attackWithAngle(20, 45, 1)
-		Case 32
-			Call attackWithAngle(20, 45, 1)
-		Case 33
-			Call attackWithAngle(20, 45, 1)
-		Case 34
-			Call attackWithAngle(20, 45, 1)
-		Case 35
-	End Select
-	*/
 End Sub
 
 // ok
@@ -158,7 +88,6 @@ Sub 要打的副本
 	Dim x, y
 	// x, y 待选择副本的位置
 	round = 0
-	position = 0
 	toward = 0
 	Form1.Label4.Caption = "第" & (n + 1) & "次副本，开始！"
 	
@@ -234,7 +163,7 @@ Function getPlace(x1, y1, x2, y2, x3, y3, x4, y4)
 End Function
 
 Function roleInArea(x1, y1, x2, y2)
-	roleInArea = dm.findColor (x1, y1, x2, y2, "00CCFF-101010", 1.0, 0, intX, intY)
+	roleInArea = dm.findColor (x1, y1, x2, y2, roleColor + "-101010", 1.0, 0, intX, intY)
 End Function
 
 /**
@@ -256,25 +185,21 @@ Sub attackWithAngle(angle, strength, mis)
 		End If
 		If failCount > 3 Then 
 			// 超过3次尝试变更角度不动，说明需要移动
-			If dm.findColor(59, 497, 108, 590, "FF0000-200000", 1.0, 0, intX, intY) Then 
-				// 朝向右
-				// TODO 复杂情况（走到了边缘后走不动）的处理
-				dm.keyPressChar "d"
-				dm.keyPressChar "d"
-				dm.keyPressChar "d"
-				dm.keyPressChar "d"
-				dm.keyPressChar "d"
-				TracePrint "需要按d"
-			ElseIf dm.findColor(20, 500, 55, 590, "FF0000-200000", 1.0, 0, intX, intY) Then 
-				dm.keyPressChar "a"
-				dm.keyPressChar "a"
-				dm.keyPressChar "a"
-				dm.keyPressChar "a"
-				dm.keyPressChar "a"
-				TracePrint "需要按a"
-			Else 
-				
-			End If
+			// TODO 复杂情况（走到了边缘后走不动）的处理
+			Select Case getToward()
+				Case 0
+					dm.keyPressChar "d"
+					dm.keyPressChar "d"
+					dm.keyPressChar "d"
+					dm.keyPressChar "d"
+					dm.keyPressChar "d"
+				Case 1
+					dm.keyPressChar "a"
+					dm.keyPressChar "a"
+					dm.keyPressChar "a"
+					dm.keyPressChar "a"
+					dm.keyPressChar "a"
+			End Select
 		End If
 		If getAngle() < (angle + mis)
 			dm.keyPressChar "w"
@@ -291,117 +216,52 @@ Sub attackWithAngle(angle, strength, mis)
 	Call attack(strength)
 End Sub
 
+Function getToward
+	If dm.findColor(59, 497, 108, 590, "FF0000-200000", 1.0, 0, intX, intY) Then 
+			// 右
+			getToward = 1
+		ElseIf dm.findColor(20, 500, 55, 590, "FF0000-200000", 1.0, 0, intX, intY) Then 
+			// 左
+			getToward = 0
+		Else 
+			getToward = -1
+		End If
+End Function
+
 /**
  * 自动寻找屏距，兵计算攻击
  **/
 Sub attackAuto
-	// 寻找符合颜色要求的，第一行连续超过n个，第二行少于n但大于0的图像位置，并且下方1-5个px的周围包含超过连续10个符合要求像素个数的位置
-	If dm.findStr(843, 20, 999, 114, "我", "00ccff-a01030", 0.8, x1, y1) = 0 Then 
-		// 找敌人坐标
-		If dm.findColor(843, 20, 999, 114, "ff0000-000000", 1, 0, x2, y2) Then 
-			Dim strength
-			TracePrint Fix((x2 - x1)/(Form1.InputBox3.Text) + 0.0001) + 1
-			Select Case Fix((x2 - x1)/(Form1.InputBox3.Text) + 0.0001) + 1
-				Case 1
-					strength = 14
-				Case 2
-					strength = 20
-				Case 3
-					strength = 24
-				Case 4
-					strength = 28
-				Case 5
-					strength = 32
-				Case 6
-					strength = 35
-				Case 7
-					strength = 38
-				Case 8
-					strength = 41
-				Case 9
-					strength = 44
-				Case 10
-					strength = 47
-				Case 11
-					strength = 50
-				Case 12
-					strength = 52
-				Case 13
-					strength = 55
-				Case 14
-					strength = 57
-				Case 15
-					strength = 60
-				Case 16
-					strength = 62
-				Case 17
-					strength = 65
-				Case 18
-					strength = 67
-				Case 19
-					strength = 69
-				Case 20
-					strength = 72
-			End Select
-			strength = strength + 3
-			Call attackWithAngle(30, strength, 1)
-		End If
+	If Form1.CheckBox1.Value Then 
+		Call attackWithAngle(Form1.InputBox4.Text, Form1.InputBox5.Text, Form1.InputBox7.Text)
 	Else 
-		Delay 1
-	End If
-End Sub
-
-/**
- * 在某个像素点周围寻找颜色相似的像素个数
- **/
-Function countContinuousColor(x1, y1, c)
-	Dim x, y, flag, nextX, nextY, alreadyX, alreadyY
-	x = x1
-	y = y1
-	flag = false
-	countContinuousColor = 0
-	// Step1：找到最左面（优先级高）、最上面的点
-	While flag = false
-		While dm.CmpColor(x - 1, y, c)
-			x = x - 1
-			flag = true
-		Wend
-		While dm.CmpColor(x, y - 1, c)
-			y = y - 1
-			flag = false
-		Wend
-	Wend
-	// Step2：统计每一列，同时当右面的像素符合要求时，向上爬取，直到最顶层
-	While dm.CmpColor(x, y, c)
-		countContinuousColor = countContinuousColor + 1
-		If dm.CpmColor(x + 1, y) Then 
-			nextX = x + 1
-			nextY = y
-			// 右面的点可行，寻找右面列符合要求的最上面的一个点
-			While dm.CmpColor(nextX, nextY - 1, c)
-				nextY = nextY - 1
-			Wend
-			alreadyX = nextX
-			alreadyY = nextY
-			If nextX <> alreadyX And nextY <> alreadyY Then 
-				// 说明找到了下一个列（防止出现统计类似“K”字型时仅统计上半部分的情况
-				While dm.CmpColor(alreadyX, alreadyY)
-					countContinuousColor = countContinuousColor + 1
-					alreadyY = alreadyY + 1
-				Wend
+		// 寻找符合颜色要求的，第一行连续超过n个，第二行少于n但大于0的图像位置，并且下方1-5个px的周围包含超过连续10个符合要求像素个数的位置
+		If dm.findStr(843, 20, 999, 114, "我", roleColor + "-a01030", 0.8, x1, y1) = 0 Then 
+			// 找敌人坐标
+			If dm.findColor(843, 20, 999, 114, "ff0000-000000", 1, 0, x2, y2) Then 
+				Dim strength, angle
+				angle = 30
+				strength = strengthTable30(Fix((x2 - x1) / Form1.InputBox3.Text))
+				// 计算垂直偏差
+				vertical = (y1 - y2) / Form1.InputBox3.Text
+				If vertical > 0 Then 
+					// 角色比目标高，力度需要减少 （参数*距离）2
+					strength = strength - (vertical * Form1.InputBox9.Text) * (vertical * Form1.InputBox9.Text)
+				Else 
+					// 角色比目标低，角度需要调高 （参数*距离）2
+					angle = angle + (vertical * Form1.InputBox8.Text) * (vertical * Form1.InputBox8.Text)
+				End If
+				strength = strength + Form1.InputBox6.Text
+				Call attackWithAngle(angle, strength, Form1.InputBox7.Text)
 			End If
+		Else 
+			// 自动为
+			Delay 1
 		End If
-		// 当前向下爬取
-		y = y + 1
-	Wend
-	// 全部统计完毕后若alreadyX, alreadyY 都大于0，说明最后一个列未处理
-	If alreadyX > 0 And alreadyY > 0 Then 
-		While dm.CmpColor(alreadyX, alreadyY)
-			countContinuousColor = countContinuousColor + 1
-			alreadyY = alreadyY + 1
-		Wend
 	End If
-End Function
+
+	
+End Sub
 
 Function getAngle()
 	// BGR：1a1a1a 0d261a 241710 16201a 2b2228 0d0d26 201d1c 321d17 1d1d21 030d1c
@@ -677,3 +537,9 @@ End Sub
 Sub OnScriptExit()
    dm.UnBindWindow
 End Sub
+Event Form1.Button1.Click
+	messageBox "指在角色与目标垂直距离上，每1屏距需要调高的角度值的平方根（适用于目标比角色站位高的情况）"
+End Event
+Event Form1.Button2.Click
+	messageBox "指在角色与目标垂直距离上，每1屏距需要降低的力度的平方根（适用于目标比角色站位低的情况）"
+End Event
