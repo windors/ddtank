@@ -71,12 +71,86 @@ End Sub
 Sub 打副本策略
 	round = round + 1
 	Form1.Label4.Caption = "第" & (n + 1) & "次副本，第" & round & "回合"
+	While isMyRound()
+		Call attackAuto
+	Wend
+	
+	/*
 	Select Case (Form1.ComboBox1.ListIndex * 4 + Form1.ComboBox2.ListIndex)
 		Case 0
 			Call attackWithAngle(20, 50, 1)
 		Case 1
 			Call attackWithAngle(20, 45, 1)
+		Case 2
+			Call attackWithAngle(25, 40, 1)
+		Case 3
+			Call attackWithAngle(20, 45, 1)
+		Case 4
+			Call attackWithAngle(20, 45, 1)
+		Case 5
+			Call attackWithAngle(20, 45, 1)
+		Case 6
+			Call attackWithAngle(20, 45, 1)
+		Case 7
+			Call attackWithAngle(20, 45, 1)
+		Case 8
+			Call attackWithAngle(30, 38, 1)	
+		Case 9
+			Call attackWithAngle(20, 46, 1)
+		Case 10
+			Call attackWithAngle(30, 38, 1)	
+		Case 11
+			Call attackWithAngle(20, 45, 1)
+		Case 12
+			Call attackWithAngle(20, 45, 1)
+		Case 13
+			// 斜坡未验证
+			Call attackWithAngle(20, 45, 1)
+		Case 14
+			Call attackWithAngle(20, 45, 1)
+		Case 15
+			Call attackWithAngle(20, 45, 1)
+		Case 16
+			Call attackWithAngle(20, 45, 1)
+		Case 17
+			Call attackWithAngle(20, 45, 1)
+		Case 18
+			Call attackWithAngle(20, 45, 1)
+		Case 19
+			Call attackWithAngle(20, 45, 1)
+		Case 20
+			Call attackWithAngle(20, 45, 1)
+		Case 21
+			Call attackWithAngle(20, 45, 1)
+		Case 22
+			Call attackWithAngle(20, 45, 1)
+		Case 23
+			Call attackWithAngle(30, 38, 1)
+		Case 24
+			Call attackWithAngle(30, 38, 1)
+		Case 25
+			Call attackWithAngle(20, 45, 1)
+		Case 26
+			Call attackWithAngle(20, 45, 1)
+		Case 27
+			alert ("懒得写这个本")
+		Case 28
+			Call attackWithAngle(20, 45, 1)
+		Case 29
+			Call attackWithAngle(20, 45, 1)
+		Case 30
+			Call attackWithAngle(20, 45, 1)
+		Case 31
+			Call attackWithAngle(20, 45, 1)
+		Case 32
+			Call attackWithAngle(20, 45, 1)
+		Case 33
+			Call attackWithAngle(20, 45, 1)
+		Case 34
+			Call attackWithAngle(20, 45, 1)
+		Case 35
 	End Select
+	*/
 End Sub
 
 // ok
@@ -182,12 +256,24 @@ Sub attackWithAngle(angle, strength, mis)
 		End If
 		If failCount > 3 Then 
 			// 超过3次尝试变更角度不动，说明需要移动
-			If dm.findColor(55, 500, 100, 590, "0000E1-000010", 1.0, 0, intX, intY) Then 
+			If dm.findColor(59, 497, 108, 590, "FF0000-200000", 1.0, 0, intX, intY) Then 
 				// 朝向右
 				// TODO 复杂情况（走到了边缘后走不动）的处理
 				dm.keyPressChar "d"
-			Else 
+				dm.keyPressChar "d"
+				dm.keyPressChar "d"
+				dm.keyPressChar "d"
+				dm.keyPressChar "d"
+				TracePrint "需要按d"
+			ElseIf dm.findColor(20, 500, 55, 590, "FF0000-200000", 1.0, 0, intX, intY) Then 
 				dm.keyPressChar "a"
+				dm.keyPressChar "a"
+				dm.keyPressChar "a"
+				dm.keyPressChar "a"
+				dm.keyPressChar "a"
+				TracePrint "需要按a"
+			Else 
+				
 			End If
 		End If
 		If getAngle() < (angle + mis)
@@ -198,16 +284,128 @@ Sub attackWithAngle(angle, strength, mis)
 			dm.keyPressChar "s"
 			Delay 88
 		End If
+		lastAngle = nowAngle
 		nowAngle = getAngle()
 	Wend
 	// 力度无误
 	Call attack(strength)
 End Sub
 
+/**
+ * 自动寻找屏距，兵计算攻击
+ **/
+Sub attackAuto
+	// 寻找符合颜色要求的，第一行连续超过n个，第二行少于n但大于0的图像位置，并且下方1-5个px的周围包含超过连续10个符合要求像素个数的位置
+	If dm.findStr(843, 20, 999, 114, "我", "00ccff-a01030", 0.8, x1, y1) = 0 Then 
+		// 找敌人坐标
+		If dm.findColor(843, 20, 999, 114, "ff0000-000000", 1, 0, x2, y2) Then 
+			Dim strength
+			TracePrint Fix((x2 - x1)/(Form1.InputBox3.Text) + 0.0001) + 1
+			Select Case Fix((x2 - x1)/(Form1.InputBox3.Text) + 0.0001) + 1
+				Case 1
+					strength = 14
+				Case 2
+					strength = 20
+				Case 3
+					strength = 24
+				Case 4
+					strength = 28
+				Case 5
+					strength = 32
+				Case 6
+					strength = 35
+				Case 7
+					strength = 38
+				Case 8
+					strength = 41
+				Case 9
+					strength = 44
+				Case 10
+					strength = 47
+				Case 11
+					strength = 50
+				Case 12
+					strength = 52
+				Case 13
+					strength = 55
+				Case 14
+					strength = 57
+				Case 15
+					strength = 60
+				Case 16
+					strength = 62
+				Case 17
+					strength = 65
+				Case 18
+					strength = 67
+				Case 19
+					strength = 69
+				Case 20
+					strength = 72
+			End Select
+			strength = strength + 3
+			Call attackWithAngle(30, strength, 1)
+		End If
+	Else 
+		Delay 1
+	End If
+End Sub
+
+/**
+ * 在某个像素点周围寻找颜色相似的像素个数
+ **/
+Function countContinuousColor(x1, y1, c)
+	Dim x, y, flag, nextX, nextY, alreadyX, alreadyY
+	x = x1
+	y = y1
+	flag = false
+	countContinuousColor = 0
+	// Step1：找到最左面（优先级高）、最上面的点
+	While flag = false
+		While dm.CmpColor(x - 1, y, c)
+			x = x - 1
+			flag = true
+		Wend
+		While dm.CmpColor(x, y - 1, c)
+			y = y - 1
+			flag = false
+		Wend
+	Wend
+	// Step2：统计每一列，同时当右面的像素符合要求时，向上爬取，直到最顶层
+	While dm.CmpColor(x, y, c)
+		countContinuousColor = countContinuousColor + 1
+		If dm.CpmColor(x + 1, y) Then 
+			nextX = x + 1
+			nextY = y
+			// 右面的点可行，寻找右面列符合要求的最上面的一个点
+			While dm.CmpColor(nextX, nextY - 1, c)
+				nextY = nextY - 1
+			Wend
+			alreadyX = nextX
+			alreadyY = nextY
+			If nextX <> alreadyX And nextY <> alreadyY Then 
+				// 说明找到了下一个列（防止出现统计类似“K”字型时仅统计上半部分的情况
+				While dm.CmpColor(alreadyX, alreadyY)
+					countContinuousColor = countContinuousColor + 1
+					alreadyY = alreadyY + 1
+				Wend
+			End If
+		End If
+		// 当前向下爬取
+		y = y + 1
+	Wend
+	// 全部统计完毕后若alreadyX, alreadyY 都大于0，说明最后一个列未处理
+	If alreadyX > 0 And alreadyY > 0 Then 
+		While dm.CmpColor(alreadyX, alreadyY)
+			countContinuousColor = countContinuousColor + 1
+			alreadyY = alreadyY + 1
+		Wend
+	End If
+End Function
+
 Function getAngle()
 	// BGR：1a1a1a 0d261a 241710 16201a 2b2228 0d0d26 201d1c 321d17 1d1d21 030d1c
 	getAngle = dm.Ocr(40, 550, 85, 590, "1a1a1a-000000|1a260d-000000|101724-000000|1a2016-000000|28222b-000000|260d0d-000000|1c1d20-000000|211d1d-000000|171d32-000000|1c0d03-000000", 1) + 0
-	TracePrint getAngle
 End Function
 
 Sub attack(strength)
@@ -225,7 +423,7 @@ Sub attack(strength)
 	// 出手前检测是否能够出手，防止卡死
 	If isMyRound() Then 
 		dm.keyDown 32
-		While dm.getColor(159 + 4.97 * strength, 596) <> "6d2802"
+		While dm.getColor(156 + Fix(4.99 * strength) - 2, 596) <> "6d2802"
 			tried = tried + 1
 			Delay 1
 			If tried > 20000 Then 
@@ -255,13 +453,13 @@ Sub needChoseMap
 			TracePrint "第" & (n + 1) & "次" & "副本，开始"
 			Call 要打的副本
 		End If
-	dm.FindPic 910, 450, 970, 500, "C:\tmp\开始1.bmp", 101010, 0.6, 0, intX, intY
+	dm.FindPic 910, 450, 970, 500, "C:\tmp\开始1.bmp", 101010, 0.9, 0, intX, intY
 	If intX > 0 And intY > 0 Then 
 		dm.moveTo intX + 10, intY + 10
 		dm.leftClick 
 	End If
 
-	dm.FindPic 910, 450, 970, 510, "C:\tmp\开始2.bmp", 101010, 0.6, 0, intX, intY
+	dm.FindPic 910, 450, 970, 510, "C:\tmp\开始2.bmp", 101010, 0.9, 0, intX, intY
 	If intX > 0 And intY > 0 Then 
 		dm.moveTo intX, intY
 		dm.leftClick 
@@ -286,16 +484,17 @@ End Sub
 
 // 检测是否需要准备
 Sub needPrepare
-	dm.FindPic 886, 430, 970, 548, "C:\tmp\需要准备.bmp", 101010, 0.6, 0, intX, intY
+	dm.FindPic 900, 440, 970, 520, "C:\tmp\准备.bmp", 101010, 0.9, 0, intX, intY
 	If intX > 0 And intY > 0 Then 
 		// 购买怒气
-		//dm.moveTo 954, 339
-		//dm.leftClick 
-		//dm.leftClick 
-		//dm.leftClick 
+		dm.moveTo 878,337
+		dm.leftClick 
+		dm.leftClick 
+		dm.leftClick 
 		// 点击准备
 		dm.moveTo intX, intY
-		dm.leftClick
+		dm.leftClick 
+		Delay 3000
 	End If
 End Sub
 
@@ -316,7 +515,7 @@ End Function
 Sub needDraw
 	dm.FindPic 88, 59, 904, 571, "C:\tmp\翻牌卡.bmp", 101010, 0.8, 0, px, py
 	While px > 0 and py > 0
-		Form1.Label4.Caption = "第" & n & "次抽卡，祝好运 0v0~"
+		Form1.Label4.Caption = "第" & (n + 1) & "次抽卡，祝好运 0v0~"
 		For 3
 			While px > 0 and py > 0
 				dm.moveTo px, py
