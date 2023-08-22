@@ -84,7 +84,7 @@ Sub needPrepare
 	dm.FindPic 900, 440, 970, 520, "C:\tmp\准备.bmp", 101010, 0.8, 0, intX, intY
 	If intX > 0 And intY > 0 Then 
 		// 购买怒气
-		dm.moveTo 954, 339
+		dm.moveTo 878,337
 		dm.leftClick 
 		dm.leftClick 
 		dm.leftClick 
