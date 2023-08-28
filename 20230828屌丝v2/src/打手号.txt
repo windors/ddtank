@@ -8,49 +8,44 @@ Dim strengthTable30
 Dim roleColor
 // 小地图的左上和右下点
 Dim static_x1, static_x2, static_x3, static_x4
+// 我的坐标&敌人的坐标
+Dim positionX1, positionX2, positionY1, positionY2
 
 Call init
 Sub init
 	strengthTable30 = array(14, 20, 24, 28, 32, 35, 38, 41, 44, 47, 50, 52, 55, 57, 60, 62, 65, 67, 69, 72)
-	static_x1 = 795
-	static_y1 = 25
-	static_x2 = 998
-	static_y2 = 120
+	static_x1 = 796
+	static_y1 = 26
+	static_x2 = 997
+	static_y2 = 119
 	// 角色小地图颜色
 	roleColor = "00ccff"
 	// roleColor = "0033cc"
+	// 计数器初始化
+	checkTimes = 0
+	// 初始化已打副本次数
+	n = 0
 	If (Form1.InputBox1.Text + 0) <> - 1  Then 
-		MessageBox "选择了手动指定句柄"
+		MessageBox "选择了手动指定句柄	"
 		hwnd = Form1.InputBox1.Text
 	Else 
 		hwnd = Plugin.Window.MousePoint
 	End If
 	If (Plugin.Window.GetClass(hwnd) <> "MacromediaFlashPlayerActiveX") Then 
 		MessageBox "未检测到窗口，请重新运行脚本，启动时鼠标需要放在游戏内！"
-	Else
+	Else 
+		Call 大漠注册
+		Call bund(hwnd)
+		// 将主句柄保存
+		Call saveMaster(hwnd)
+		// 激活窗口
+		dm.moveTo 0, 0
+		dm.leftClick 
 		Call main
 	End If
 End Sub
 
 Sub main
-	Call 大漠注册
-	Call bund(hwnd)
-	// 将主句柄保存
-	Call saveMaster(hwnd)
-	// 激活窗口
-	dm.moveTo 0, 0
-	dm.leftClick 
-	// 计数器初始化
-	checkTimes = 0
-	// 初始化已打副本次数
-	n = 0
-	While false
-		// 测试
-		Call getAngle()
-		Delay 20
-		dm.keyPressChar "w"
-		Delay 20
-	Wend
 	While True
 		checkTimes = checkTimes + 1
 		If checkTimes > 100 Then 
@@ -77,12 +72,14 @@ End Sub
 
 
 Sub needCreateRoom
-	dm.FindPic 680, 450, 750, 525, "C:\tmp\蛋2-大厅标识.bmp", 101010, 0.8, 0, intX, intY
+	dm.FindPic 669, 463, 742, 539, "C:\tmp\蛋2-大厅标识.bmp", 101010, 0.8, 0, intX, intY
 	If intX > 0 And intY > 0 Then 
 	 	TracePrint "检测到在大厅内"
 		dm.moveTo intX + 10, intY + 10
 		dm.leftClick 
 		Delay 500
+		dm.moveTo 415, 442
+		dm.leftClick
 	End If
 End Sub
 
@@ -155,17 +152,15 @@ Sub attackAuto
 		Call attackWithAngle(Form1.InputBox4.Text, Form1.InputBox5.Text, Form1.InputBox7.Text)
 	Else 
 		// 寻找自身位置
-		If getMyPosition(x1, y1) Then 
-			TracePrint "我的坐标:" & x1 & ", " & y1
-			If getEnemyPosition(x2, y2) Then 
-				TracePrint "敌人的坐标:" & x2 & ", " & y2
-				Call adjustDirection(x1, x2, y1, y2)
-				If Form1.CheckBox2.Value = 0 And round = 1 Then 
-					// 计算屏距
-					Call calcUnitDistance()
-				End If
-				Call calcAndAttack(x1, y1, x2, y2)
+		If getMyPosition() and getEnemyPosition() Then 
+			TracePrint "我的坐标:" & positionX1 & ", " & positionY1
+			TracePrint "敌人的坐标:" & positionX2 & ", " & positionY2
+			Call adjustDirection()
+			If Form1.CheckBox2.Value = 0 And round = 1 Then 
+				// 计算屏距
+				Call calcUnitDistance()
 			End If
+			Call calcAndAttack()
 		Else 
 			// 未找到自身位置
 			Delay 1
@@ -175,17 +170,18 @@ End Sub
 
 // 尝试计算屏距
 Function calcUnitDistance
-	// 自动寻找屏距
-	Dim count, flag
-	flag = true
-	For 5
-		If isMyRound() Then 
+	// 自动寻找屏距，循环10次
+	Dim count, flag, arr(10)
+	For i = 0 To 10
+		arr(i) = -1
+		flag = true
+		For 5
 			If dm.findStr(static_x1, static_y1, static_x2, static_y2, "屏", "bcb7b1-202020|879aaa-202020", 1, x3, y3) = 0 Then 
 				If flag Then 
 					count = 2
 				End If
 				While flag
-					If dm.findColor(x3, y3, 998, y3 + 1, "bcb7b1-202020|879aaa-202020", 1, 0, x4, y4) Then 
+					If dm.findColor(x3, y3, 998, y3 + 1, "bcb7b1-303030|879aaa-303030", 1, 0, x4, y4) Then 
 						count = count + 1
 						x3 = x3 + 1
 					Else 
@@ -195,26 +191,45 @@ Function calcUnitDistance
 						flag = false
 					End If
 				Wend
-				// count / 10为1距，更新距离
-				Form1.InputBox3.Text = count / 10
-				TracePrint "一屏的距离为" & count
 				Exit For
+			End If
+		Next
+		arr(i) = count
+		Delay 100
+	Next
+	
+	// 投票选择出最佳屏距
+	Dim maxDistance, ticket
+	maxDistance = arr(0)
+	ticket = 1
+	For i = 1 To 10
+		If arr(i) <> - 1 Then 
+			If arr(i) = maxDistance Then 
+				ticket = ticket + 1
+			Else 
+				ticket = ticket - 1
+			End If
+			If ticket < 1 Then 
+				maxDistance = arr(i)
+				ticket = 1
 			End If
 		End If
 	Next
+	// count / 10为1距，更新距离
+	Form1.InputBox3.Text = maxDistance / 10
 End Function
 
 // 调整方向
-Sub adjustDirection(x1, x2, y1, y2)
+Sub adjustDirection
 	toward = -1
 	While toward = - 1 
 		toward = getToward()
-		If toward = 0 and x2 - x1 < 0 Then 
+		If toward = 1 and positionX2 - positionX1 < 0 Then 
 			// 朝向右，但敌人在左
 			dm.keyPressChar "a"
 			TracePrint "调整方向(左)"
 		End If
-		If toward = 1 and x2 - x1 > 0 Then 
+		If toward = 0 and positionX2 - positionX1 > 0 Then 
 			// 朝向左，但敌人在右
 			dm.keyPressChar "d"
 			TracePrint "调整方向(右)"
@@ -223,14 +238,14 @@ Sub adjustDirection(x1, x2, y1, y2)
 End Sub
 
 // 计算角度力度并攻击 x1, y1 : 我的坐标，y1, y2: 敌人的坐标
-Sub calcAndAttack(x1, y1, x2, y2)
+Sub calcAndAttack
 	Dim strength, angle
 	angle = 30
 	// 2距 + 13, 1距+7
-	TracePrint "屏距：" & Fix((Abs((x2 - x1)) / Form1.InputBox3.Text)+0.0001) + 1
-	strength = strengthTable30(Fix((Abs((x2 - x1)) / Form1.InputBox3.Text)+0.0001)) + 1
+	TracePrint "屏距：" & Fix((Abs((positionX2 - positionX1)) / Form1.InputBox3.Text)+0.0001) + 1
+	strength = strengthTable30(Fix((Abs((positionX2 - positionX1)) / Form1.InputBox3.Text)+0.0001)) + 1
 	// 计算垂直偏差
-	vertical = (y1 - y2) / Form1.InputBox3.Text
+	vertical = (positionY1 - positionY2) / Form1.InputBox3.Text
 	TracePrint "垂直偏差为:" & vertical
 	If vertical < 0 Then 
 		vertical = - vertical 
@@ -246,10 +261,10 @@ Sub calcAndAttack(x1, y1, x2, y2)
 End Sub
 
 // 寻找我的坐标
-Function getMyPosition(x, y)
-	If dm.findStr(static_x1, static_y1, static_x2, static_y2, "我", roleColor + "-a06030", 0.8, x, y) = 0 Then 
-		y = y + 13
-		x = x + 3
+Function getMyPosition
+	If dm.findStr(static_x1, static_y1, static_x2, static_y2, "我", roleColor + "-a06030", 0.8, intX, intY) = 0 Then 
+		positionX1 = intX
+		positionY1 = intY
 		getMyPosition = True
 	Else 
 		getMyPosition = False
@@ -257,16 +272,18 @@ Function getMyPosition(x, y)
 End Function
 
 // 寻找敌人的坐标
-Function getEnemyPosition(x, y)
-	If dm.findColor(static_x1, static_y1, static_x2, static_y2, "ff0000-000000", 1, 0, x, y) Then 
-		x = x + 3
-		y = y + 2
+Function getEnemyPosition
+	If dm.findColor(static_x1, static_y1, static_x2, static_y2, "ff0000-000000", 1, 0, intX, intY) Then 
+		positionX2 = intX
+		positionY2 = intY
 		getEnemyPosition = True
+	ElseIf dm.findColor(static_x1, static_y1, static_x2, static_y2, "99cc00-000000", 1, 0, intX, intY) Then
 		// 找绿色（小鸡本（淦））
-	ElseIf dm.findColor(static_x1, static_y1, static_x2, static_y2, "99cc00-000000", 1, 0, x, y) Then
-		x = x + 3
-		y = y + 2
+		positionX2 = intX
+		positionY2 = intY
+		
 		getEnemyPosition = True
+		TracePrint intX & ", " & intY
 	Else 	
 		TracePrint "未找到敌人"
 		Delay 1
@@ -277,7 +294,7 @@ End Function
 // 获取当前角度
 Function getAngle()
 	// BGR：1a1a1a 0d261a 241710 16201a 2b2228 0d0d26 201d1c 321d17 1d1d21 030d1c
-	getAngle = getAngle = dm.Ocr(40, 550, 85, 590, "1a1a1a-000000|1a260d-000000|101724-000000|1a2016-000000|28222b-000000|260d0d-000000|1c1d20-000000|211d1d-000000|171d32-000000|1c0d03-000000", 0.95)
+	getAngle = dm.Ocr(40, 550, 85, 590, "1a1a1a-000000|1a260d-000000|101724-000000|1a2016-000000|28222b-000000|260d0d-000000|1c1d20-000000|211d1d-000000|171d32-000000|1c0d03-000000", 0.95)
 	getAngle = Replace(getAngle, "我", "")
 	getAngle = Replace(getAngle, "屏", "")
 	getAngle = getAngle + 0
@@ -668,7 +685,7 @@ Sub bund(hwnd)
    		TracePrint "绑定成功"
 	End If
 	// 选择字库文件
-	dm_ret = dm.SetDict(0, "C:/tmp/ddtankLibrary5.2.txt")
+	dm_ret = dm.SetDict(0, "C:/tmp/ddtankLibrary.txt")
 	// 使用字库文件的编号
 	dm_ret = dm.UseDict(0)
 End Sub
