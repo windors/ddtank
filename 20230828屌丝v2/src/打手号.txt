@@ -4,13 +4,21 @@ Dim toward
 Dim n
 Dim checkTimes
 Dim strengthTable30
+// 小地图角色的颜色
 Dim roleColor
+// 小地图的左上和右下点
+Dim static_x1, static_x2, static_x3, static_x4
+
 Call init
 Sub init
 	strengthTable30 = array(14, 20, 24, 28, 32, 35, 38, 41, 44, 47, 50, 52, 55, 57, 60, 62, 65, 67, 69, 72)
+	static_x1 = 795
+	static_y1 = 25
+	static_x2 = 998
+	static_y2 = 120
 	// 角色小地图颜色
-	// roleColor = "00ccff"
-	roleColor = "0033cc"
+	roleColor = "00ccff"
+	// roleColor = "0033cc"
 	If (Form1.InputBox1.Text + 0) <> - 1  Then 
 		MessageBox "选择了手动指定句柄"
 		hwnd = Form1.InputBox1.Text
@@ -36,6 +44,13 @@ Sub main
 	checkTimes = 0
 	// 初始化已打副本次数
 	n = 0
+	While false
+		// 测试
+		Call getAngle()
+		Delay 20
+		dm.keyPressChar "w"
+		Delay 20
+	Wend
 	While True
 		checkTimes = checkTimes + 1
 		If checkTimes > 100 Then 
@@ -46,7 +61,7 @@ Sub main
 		
 		// 检测是否需要选地图
 		Call needPrepare
-		Call needChoseMap
+		Call needCloseMap
 		Call needCloseTip
 		Call needCloseEmail
 		// 检测是否需要出手
@@ -62,16 +77,12 @@ End Sub
 
 
 Sub needCreateRoom
-	dm.FindPic 670, 470, 735, 530, "C:\tmp\大厅标识.bmp", 101010, 0.8, 0, intX, intY
+	dm.FindPic 680, 450, 750, 525, "C:\tmp\蛋2-大厅标识.bmp", 101010, 0.8, 0, intX, intY
 	If intX > 0 And intY > 0 Then 
 	 	TracePrint "检测到在大厅内"
 		dm.moveTo intX + 10, intY + 10
 		dm.leftClick 
-		
 		Delay 500
-		dm.moveTo 411, 442
-		dm.leftClick 
-		Delay 1000
 	End If
 End Sub
 
@@ -83,7 +94,6 @@ Sub 打副本策略
 	Wend
 End Sub
 
-// ok
 Sub 要打的副本
 	Dim x, y
 	// x, y 待选择副本的位置
@@ -91,16 +101,21 @@ Sub 要打的副本
 	toward = 0
 	Form1.Label4.Caption = "第" & (n + 1) & "次副本，开始！"
 	
+	dm.moveTo 216 + 556 * (Form1.InputBox11.Text / 100), 305
+	dm.leftClick 
+	Delay 800
+	
 	Select Case Form1.ComboBox1.ListIndex Mod 3
 		// 选择行
 		Case 0
-			y = 324
+			y = 320
 		Case 1
-			y = 375
+			y = 374
 		Case 2
-			y = 428
+			y = 427
 	End Select
-	If Form1.ComboBox1.ListIndex > 3 Then 
+	// 需要向下翻页
+	If Form1.ComboBox1.ListIndex > 2 Then 
 		For Fix(Form1.ComboBox1.ListIndex / 3)
 			dm.moveTo 805, 430
 			dm.leftClick 
@@ -112,26 +127,388 @@ Sub 要打的副本
 	
 	Select Case Form1.ComboBox2.ListIndex Mod 4
 		Case 0
-			x = 329
+			x = 325
 		Case 1
-			x = 461
+			x = 460
 		Case 2
-			x = 604
+			x = 592
 		Case 3
-			x = 738
+			x = 725
 	End Select
-	
 	
 	dm.moveTo x, y
 	dm.leftClick 
-	// 难度，全简单
-	dm.moveTo 370,501
+	// 难度，根据输入框输入调整
+	dm.moveTo 268 + 525 * (Form1.InputBox10.Text / 100), 500
 	dm.leftClick
-	dm.moveTo 735, 568
+	dm.moveTo 753, 574
 	dm.leftClick 
 	Delay 300
 End Sub
 
+/**
+ * 自动寻找屏距，兵计算攻击
+ **/
+Sub attackAuto
+	If Form1.CheckBox1.Value Then 
+		// 指定角度力度攻击
+		Call attackWithAngle(Form1.InputBox4.Text, Form1.InputBox5.Text, Form1.InputBox7.Text)
+	Else 
+		// 寻找自身位置
+		If getMyPosition(x1, y1) Then 
+			TracePrint "我的坐标:" & x1 & ", " & y1
+			If getEnemyPosition(x2, y2) Then 
+				TracePrint "敌人的坐标:" & x2 & ", " & y2
+				Call adjustDirection(x1, x2, y1, y2)
+				If Form1.CheckBox2.Value = 0 And round = 1 Then 
+					// 计算屏距
+					Call calcUnitDistance()
+				End If
+				Call calcAndAttack(x1, y1, x2, y2)
+			End If
+		Else 
+			// 未找到自身位置
+			Delay 1
+		End If
+	End If
+End Sub
+
+// 尝试计算屏距
+Function calcUnitDistance
+	// 自动寻找屏距
+	Dim count, flag
+	flag = true
+	For 5
+		If isMyRound() Then 
+			If dm.findStr(static_x1, static_y1, static_x2, static_y2, "屏", "bcb7b1-202020|879aaa-202020", 1, x3, y3) = 0 Then 
+				If flag Then 
+					count = 2
+				End If
+				While flag
+					If dm.findColor(x3, y3, 998, y3 + 1, "bcb7b1-202020|879aaa-202020", 1, 0, x4, y4) Then 
+						count = count + 1
+						x3 = x3 + 1
+					Else 
+						flag = false
+					End If
+					If x3 >= static_x2 Then 
+						flag = false
+					End If
+				Wend
+				// count / 10为1距，更新距离
+				Form1.InputBox3.Text = count / 10
+				TracePrint "一屏的距离为" & count
+				Exit For
+			End If
+		End If
+	Next
+End Function
+
+// 调整方向
+Sub adjustDirection(x1, x2, y1, y2)
+	toward = -1
+	While toward = - 1 
+		toward = getToward()
+		If toward = 0 and x2 - x1 < 0 Then 
+			// 朝向右，但敌人在左
+			dm.keyPressChar "a"
+			TracePrint "调整方向(左)"
+		End If
+		If toward = 1 and x2 - x1 > 0 Then 
+			// 朝向左，但敌人在右
+			dm.keyPressChar "d"
+			TracePrint "调整方向(右)"
+		End If
+	Wend
+End Sub
+
+// 计算角度力度并攻击 x1, y1 : 我的坐标，y1, y2: 敌人的坐标
+Sub calcAndAttack(x1, y1, x2, y2)
+	Dim strength, angle
+	angle = 30
+	// 2距 + 13, 1距+7
+	TracePrint "屏距：" & Fix((Abs((x2 - x1)) / Form1.InputBox3.Text)+0.0001) + 1
+	strength = strengthTable30(Fix((Abs((x2 - x1)) / Form1.InputBox3.Text)+0.0001)) + 1
+	// 计算垂直偏差
+	vertical = (y1 - y2) / Form1.InputBox3.Text
+	TracePrint "垂直偏差为:" & vertical
+	If vertical < 0 Then 
+		vertical = - vertical 
+		// 角色比目标高，力度需要减少 （参数*距离）
+		strength = strength - (vertical * Form1.InputBox9.Text)
+	Else 
+		// 角色比目标低，力度需要提高
+		strength = strength + (vertical * Form1.InputBox8.Text)
+	End If
+	strength = strength + Form1.InputBox6.Text
+	TracePrint "角度" & angle & "力度:" & strength
+	Call attackWithAngle(angle, strength, Form1.InputBox7.Text)
+End Sub
+
+// 寻找我的坐标
+Function getMyPosition(x, y)
+	If dm.findStr(static_x1, static_y1, static_x2, static_y2, "我", roleColor + "-a06030", 0.8, x, y) = 0 Then 
+		y = y + 13
+		x = x + 3
+		getMyPosition = True
+	Else 
+		getMyPosition = False
+	End If
+End Function
+
+// 寻找敌人的坐标
+Function getEnemyPosition(x, y)
+	If dm.findColor(static_x1, static_y1, static_x2, static_y2, "ff0000-000000", 1, 0, x, y) Then 
+		x = x + 3
+		y = y + 2
+		getEnemyPosition = True
+		// 找绿色（小鸡本（淦））
+	ElseIf dm.findColor(static_x1, static_y1, static_x2, static_y2, "99cc00-000000", 1, 0, x, y) Then
+		x = x + 3
+		y = y + 2
+		getEnemyPosition = True
+	Else 	
+		TracePrint "未找到敌人"
+		Delay 1
+		getEnemyPosition = False
+	End If
+End Function
+
+// 获取当前角度
+Function getAngle()
+	// BGR：1a1a1a 0d261a 241710 16201a 2b2228 0d0d26 201d1c 321d17 1d1d21 030d1c
+	getAngle = getAngle = dm.Ocr(40, 550, 85, 590, "1a1a1a-000000|1a260d-000000|101724-000000|1a2016-000000|28222b-000000|260d0d-000000|1c1d20-000000|211d1d-000000|171d32-000000|1c0d03-000000", 0.95)
+	getAngle = Replace(getAngle, "我", "")
+	getAngle = Replace(getAngle, "屏", "")
+	getAngle = getAngle + 0
+End Function
+
+/**
+ * 带角度的攻击
+ * angle: 角度
+ * strength: 力度
+ * mis: 角度误差
+ **/
+Sub attackWithAngle(angle, strength, mis)
+	Dim failCount, lastAngle
+	failCount = 0
+	lastAngle = -2100000000
+	nowAngle = getAngle()
+	While nowAngle < angle - mis Or nowAngle > angle + mis
+		If nowAngle = lastAngle Then 
+			failCount = failCount + 1
+		Else 
+			failCount = 0
+		End If
+		If failCount > 8 Then 
+			// 超过3次尝试变更角度不动，说明需要移动
+			// TODO 复杂情况（走到了边缘后走不动）的处理
+			Select Case getToward()
+				Case 0
+					dm.keyPressChar "d"
+					Delay 10
+				Case 1
+					dm.keyPressChar "a"
+					Delay 10
+			End Select
+		End If
+		If getAngle() < (angle + mis)
+			dm.keyPressChar "w"
+			Delay 5
+		End If
+		If getAngle() > (angle - mis)
+			dm.keyPressChar "s"
+			Delay 5
+		End If
+		lastAngle = nowAngle
+		nowAngle = getAngle()
+	Wend
+	// 力度无误
+	Call attack(strength)
+End Sub
+
+// 获取当前朝向：0为左，1为右，-1表示未知
+Function getToward
+	If dm.findColor(59, 497, 108, 590, "FF0000-200000", 1.0, 0, intX, intY) Then 
+			getToward = 1
+		ElseIf dm.findColor(20, 500, 55, 590, "FF0000-200000", 1.0, 0, intX, intY) Then 
+			getToward = 0
+		Else 
+			getToward = -1
+	End If
+End Function
+
+Sub attack(strength)
+	Dim str, tried
+	tried = 0
+	str = LCase(LTrim(Form1.InputBox2.Text + ""))
+	While len(str) > 0
+		dm.keyPressChar Left(str, 1)
+		str = Right(str, Len(str) - 1)
+	Wend
+	// 计算力度
+	If strength > 95 Then 
+		strength = 95
+	End If
+	// 出手前检测是否能够出手，防止卡死
+	If isMyRound() Then 
+		dm.keyDown 32
+		If Form1.CheckBox4.Value Then 
+			// 攻击方式2，当目标点颜色变动时松手
+			Delay 100
+			Dim lastColor
+			lastColor = dm.getColorBGR(150 + 4.96 * strength - 1, 589)
+			While true
+				c = dm.getColorBGR(150 + 4.96 * strength - 1, 589)
+				If lastColor <> c Then 
+					// 找到了
+					dm.keyUp 32
+					While isMyRound()
+						Delay 1000
+					Wend
+					Exit Sub
+				Else 
+					lastColor = c
+				End If
+				Delay 1
+			Wend
+		Else 
+			dm.keyDown 32
+			While dm.getColor(156 + Fix(4.99 * strength) - 2, 596) <> "6d2802"
+				tried = tried + 1
+				Delay 1
+				If tried > 20000 Then 
+					dm.keyUp 32
+					exit Sub
+				End If
+			Wend
+		End If
+		dm.keyUp 32
+	End If
+End Sub
+
+Sub needCloseMap
+	// 先点击，然后再检测
+	// 先点击，然后再检测
+	dm.FindPic 511, 437, 685, 527, "C:\tmp\蛋2-随机地图.bmp", 101010, 0.8, 0, intX, intY
+	If intX > 0 And intY > 0 Then 
+		dm.moveTo intX + 10, intY + 10
+		dm.leftClick 
+		Delay 300
+		dm.FindPic 261, 71, 349, 122, "C:\tmp\蛋2-选副本页面.bmp", 101010, 0.8, 0, intX, intY
+		If intX > 0 And intY > 0 Then 
+			TracePrint "第" & (n + 1) & "次" & "副本，开始"
+			Call 要打的副本
+		End If
+	End If
+	dm.FindPic 261, 71, 349, 122, "C:\tmp\蛋2-选副本页面.bmp", 101010, 0.8, 0, intX, intY
+		If intX > 0 And intY > 0 Then 
+			TracePrint "第" & (n + 1) & "次" & "副本，开始"
+			Call 要打的副本
+		End If
+	dm.FindPic 910, 450, 970, 500, "C:\tmp\蛋2-开始1.bmp", 101010, 0.9, 0, intX, intY
+	If intX > 0 And intY > 0 Then 
+		dm.moveTo intX + 10, intY + 10
+		dm.leftClick 
+	End If
+
+	dm.FindPic 910, 450, 970, 510, "C:\tmp\蛋2-开始2.bmp", 101010, 0.9, 0, intX, intY
+	If intX > 0 And intY > 0 Then 
+		dm.moveTo intX, intY
+		dm.leftClick 
+	End If
+End Sub
+
+Sub needCloseTip
+	dm.FindPic 650, 228, 691, 258, "C:\tmp\蛋2-单人模式提示.bmp", 101010, 0.8, 0, intX, intY
+	If intX > 0 And intY > 0 Then 
+		dm.moveTo 432, 345
+		dm.leftClick
+	End If
+End Sub
+
+Sub needCloseEmail
+	dm.FindPic 125, 86, 344, 113, "C:\tmp\蛋2-邮件.bmp", 101010, 0.8, 0, intX, intY
+	If intX > 0 And intY > 0 Then 
+		dm.moveTo 836, 52
+		dm.leftClick
+	End If
+End Sub
+
+// 检测是否需要准备
+Sub needPrepare
+	dm.FindPic 900, 440, 970, 520, "C:\tmp\蛋2-准备.bmp", 101010, 0.9, 0, intX, intY
+	If intX > 0 And intY > 0 Then 
+		// 购买怒气
+		dm.moveTo 878,337
+		dm.leftClick 
+		dm.leftClick 
+		dm.leftClick 
+		// 点击准备
+		dm.moveTo intX, intY
+		dm.leftClick 
+		Delay 3000
+	End If
+End Sub
+
+Sub needAttack
+	If isMyRound() Then 
+		Call 打副本策略
+	End If
+End Sub
+
+Function isMyRound()
+	isMyRound = False
+	dm.FindPic 123, 114, 198, 135, "C:\tmp\蛋2-该出手了.bmp", 101010, 0.8, 0, intX, intY
+	If intX > 0 And intY > 0 Then 
+		isMyRound = True
+	End If
+End Function
+
+Sub needDraw
+	dm.FindPic 88, 59, 904, 571, "C:\tmp\蛋2-翻牌卡.bmp", 101010, 0.8, 0, px, py
+	While px > 0 and py > 0
+		Form1.Label4.Caption = "第" & (n + 1) & "次抽卡，祝好运 0v0~"
+		For 3
+			While px > 0 and py > 0
+				dm.moveTo px, py
+				dm.leftClick 
+				dm.FindPic 88, 59, 904, 571, "C:\tmp\蛋2-翻牌卡.bmp", 101010, 0.8, 0, px, py
+				dm.moveTo 438, 342
+				dm.leftClick 
+				Delay 1000 * Rnd()
+			Wend
+			Delay 1000
+		Next
+		dm.FindPic 88, 59, 904, 571, "C:\tmp\蛋2-翻牌卡.bmp", 101010, 0.8, 0, px, py
+	Wend
+	Call needPutInBag
+End Sub
+
+// 蛋2独有的副本结束后需要将物品放入背包 ok
+Sub needPutInBag
+	Dim isEnd
+	isEnd = False
+	dm.FindPic 385, 218, 407, 246, "C:\tmp\蛋2-全选进背包.bmp", 101010, 0.8, 0, px, py
+	While px > 0 and py > 0
+		TracePrint "检测到结束窗口"
+		isEnd = True
+		// 普通模式
+		dm.moveTo px, py
+		dm.leftClick 
+		Delay 5000
+		dm.FindPic 385, 218, 407, 246, "C:\tmp\蛋2-全选进背包.bmp", 101010, 0.8, 0, px, py
+	Wend
+	If isEnd Then 
+		n = n + 1
+		Form1.Label4.Caption = "第" & n & "次副本，结束！"
+	End If
+End Sub
+
+
+/**
+ * --------------------------备用函数区-------------------------------
+ **/
 // 获取角色位置，由于三角出现在角色上方3个像素~5个像素的位置，传进来小地图角色位置最上方中间像素（3个中的中间）
 Function getPlace(x1, y1, x2, y2, x3, y3, x4, y4)
 	getPlace = -1
@@ -161,264 +538,15 @@ Function getPlace(x1, y1, x2, y2, x3, y3, x4, y4)
 		End If
 	End If
 End Function
-
 Function roleInArea(x1, y1, x2, y2)
 	roleInArea = dm.findColor (x1, y1, x2, y2, roleColor + "-101010", 1.0, 0, intX, intY)
 End Function
 
-/**
- * 带角度的攻击
- * angle: 角度
- * strength: 力度
- * mis: 误差
- **/
-Sub attackWithAngle(angle, strength, mis)
-	Dim failCount, lastAngle
-	failCount = 0
-	lastAngle = -2100000000
-	nowAngle = getAngle()
-	While nowAngle < angle - mis Or nowAngle > angle + mis
-		If nowAngle = lastAngle Then 
-			failCount = failCount + 1
-		Else 
-			failCount = 0
-		End If
-		If failCount > 3 Then 
-			// 超过3次尝试变更角度不动，说明需要移动
-			// TODO 复杂情况（走到了边缘后走不动）的处理
-			Select Case getToward()
-				Case 0
-					dm.keyPressChar "d"
-					dm.keyPressChar "d"
-					dm.keyPressChar "d"
-					dm.keyPressChar "d"
-					dm.keyPressChar "d"
-				Case 1
-					dm.keyPressChar "a"
-					dm.keyPressChar "a"
-					dm.keyPressChar "a"
-					dm.keyPressChar "a"
-					dm.keyPressChar "a"
-			End Select
-		End If
-		If getAngle() < (angle + mis)
-			dm.keyPressChar "w"
-			Delay 88
-		End If
-		If getAngle() > (angle - mis)
-			dm.keyPressChar "s"
-			Delay 88
-		End If
-		lastAngle = nowAngle
-		nowAngle = getAngle()
-	Wend
-	// 力度无误
-	Call attack(strength)
-End Sub
 
-Function getToward
-	If dm.findColor(59, 497, 108, 590, "FF0000-200000", 1.0, 0, intX, intY) Then 
-			// 右
-			getToward = 1
-		ElseIf dm.findColor(20, 500, 55, 590, "FF0000-200000", 1.0, 0, intX, intY) Then 
-			// 左
-			getToward = 0
-		Else 
-			getToward = -1
-		End If
-End Function
 
 /**
- * 自动寻找屏距，兵计算攻击
- **/
-Sub attackAuto
-	If Form1.CheckBox1.Value Then 
-		Call attackWithAngle(Form1.InputBox4.Text, Form1.InputBox5.Text, Form1.InputBox7.Text)
-	Else 
-		// 寻找符合颜色要求的，第一行连续超过n个，第二行少于n但大于0的图像位置，并且下方1-5个px的周围包含超过连续10个符合要求像素个数的位置
-		If dm.findStr(843, 20, 999, 114, "我", roleColor + "-a01030", 0.8, x1, y1) = 0 Then 
-			// 找敌人坐标
-			If dm.findColor(843, 20, 999, 114, "ff0000-000000", 1, 0, x2, y2) Then 
-				Dim strength, angle
-				angle = 30
-				strength = strengthTable30(Fix((x2 - x1) / Form1.InputBox3.Text))
-				// 计算垂直偏差
-				vertical = (y1 - y2) / Form1.InputBox3.Text
-				If vertical > 0 Then 
-					// 角色比目标高，力度需要减少 （参数*距离）2
-					strength = strength - (vertical * Form1.InputBox9.Text) * (vertical * Form1.InputBox9.Text)
-				Else 
-					// 角色比目标低，角度需要调高 （参数*距离）2
-					angle = angle + (vertical * Form1.InputBox8.Text) * (vertical * Form1.InputBox8.Text)
-				End If
-				strength = strength + Form1.InputBox6.Text
-				Call attackWithAngle(angle, strength, Form1.InputBox7.Text)
-			End If
-		Else 
-			// 自动为
-			Delay 1
-		End If
-	End If
-
-	
-End Sub
-
-Function getAngle()
-	// BGR：1a1a1a 0d261a 241710 16201a 2b2228 0d0d26 201d1c 321d17 1d1d21 030d1c
-	getAngle = dm.Ocr(40, 550, 85, 590, "1a1a1a-000000|1a260d-000000|101724-000000|1a2016-000000|28222b-000000|260d0d-000000|1c1d20-000000|211d1d-000000|171d32-000000|1c0d03-000000", 1) + 0
-End Function
-
-Sub attack(strength)
-	Dim str, tried
-	tried = 0
-	str = LCase(LTrim(Form1.InputBox2.Text + ""))
-	While len(str) > 0
-		dm.keyPressChar Left(str, 1)
-		str = Right(str, Len(str) - 1)
-	Wend
-	// 计算力度
-	If strength > 95 Then 
-		strength = 95
-	End If
-	// 出手前检测是否能够出手，防止卡死
-	If isMyRound() Then 
-		dm.keyDown 32
-		While dm.getColor(156 + Fix(4.99 * strength) - 2, 596) <> "6d2802"
-			tried = tried + 1
-			Delay 1
-			If tried > 20000 Then 
-				dm.keyUp 32
-				exit Sub
-			End If
-		Wend
-		dm.keyUp 32
-	End If
-End Sub
-
-Sub needChoseMap
-	// 先点击，然后再检测
-	dm.FindPic 511, 437, 685, 527, "C:\tmp\随机地图.bmp", 101010, 0.8, 0, intX, intY
-	If intX > 0 And intY > 0 Then 
-		dm.moveTo intX + 10, intY + 10
-		dm.leftClick 
-		Delay 300
-		dm.FindPic 261, 71, 349, 122, "C:\tmp\选副本页面.bmp", 101010, 0.8, 0, intX, intY
-		If intX > 0 And intY > 0 Then 
-			TracePrint "第" & (n + 1) & "次" & "副本，开始"
-			Call 要打的副本
-		End If
-	End If
-	dm.FindPic 261, 71, 349, 122, "C:\tmp\选副本页面.bmp", 101010, 0.8, 0, intX, intY
-		If intX > 0 And intY > 0 Then 
-			TracePrint "第" & (n + 1) & "次" & "副本，开始"
-			Call 要打的副本
-		End If
-	dm.FindPic 910, 450, 970, 500, "C:\tmp\开始1.bmp", 101010, 0.9, 0, intX, intY
-	If intX > 0 And intY > 0 Then 
-		dm.moveTo intX + 10, intY + 10
-		dm.leftClick 
-	End If
-
-	dm.FindPic 910, 450, 970, 510, "C:\tmp\开始2.bmp", 101010, 0.9, 0, intX, intY
-	If intX > 0 And intY > 0 Then 
-		dm.moveTo intX, intY
-		dm.leftClick 
-	End If
-End Sub
-
-Sub needCloseTip
-	dm.FindPic 650, 228, 691, 258, "C:\tmp\单人模式提示.bmp", 101010, 0.8, 0, intX, intY
-	If intX > 0 And intY > 0 Then 
-		dm.moveTo 432, 345
-		dm.leftClick
-	End If
-End Sub
-
-Sub needCloseEmail
-	dm.FindPic 125, 86, 344, 113, "C:\tmp\邮件.bmp", 101010, 0.8, 0, intX, intY
-	If intX > 0 And intY > 0 Then 
-		dm.moveTo 836, 52
-		dm.leftClick
-	End If
-End Sub
-
-// 检测是否需要准备
-Sub needPrepare
-	dm.FindPic 900, 440, 970, 520, "C:\tmp\准备.bmp", 101010, 0.9, 0, intX, intY
-	If intX > 0 And intY > 0 Then 
-		// 购买怒气
-		dm.moveTo 878,337
-		dm.leftClick 
-		dm.leftClick 
-		dm.leftClick 
-		// 点击准备
-		dm.moveTo intX, intY
-		dm.leftClick 
-		Delay 3000
-	End If
-End Sub
-
-Sub needAttack
-	If isMyRound() Then 
-		Call 打副本策略
-	End If
-End Sub
-
-Function isMyRound()
-	isMyRound = False
-	dm.FindPic 123, 114, 198, 135, "C:\tmp\该出手了.bmp", 101010, 0.8, 0, intX, intY
-	If intX > 0 And intY > 0 Then 
-		isMyRound = True
-	End If
-End Function
-
-Sub needDraw
-	dm.FindPic 88, 59, 904, 571, "C:\tmp\翻牌卡.bmp", 101010, 0.8, 0, px, py
-	While px > 0 and py > 0
-		Form1.Label4.Caption = "第" & (n + 1) & "次抽卡，祝好运 0v0~"
-		For 3
-			While px > 0 and py > 0
-				dm.moveTo px, py
-				dm.leftClick 
-				dm.FindPic 88, 59, 904, 571, "C:\tmp\翻牌卡.bmp", 101010, 0.8, 0, px, py
-				dm.moveTo 438, 342
-				dm.leftClick 
-				Delay 1000 * Rnd()
-			Wend
-			Delay 1000
-		Next
-		dm.FindPic 88, 59, 904, 571, "C:\tmp\翻牌卡.bmp", 101010, 0.8, 0, px, py
-	Wend
-	Call needPutInBag
-End Sub
-
-// 蛋2独有的副本结束后需要将物品放入背包 ok
-Sub needPutInBag
-	Dim isEnd
-	isEnd = False
-	dm.FindPic 385, 218, 407, 246, "C:\tmp\全选进背包.bmp", 101010, 0.8, 0, px, py
-	While px > 0 and py > 0
-		TracePrint "检测到结束窗口"
-		isEnd = True
-		// 普通模式
-		dm.moveTo px, py
-		dm.leftClick 
-		Delay 5000
-		dm.FindPic 385, 218, 407, 246, "C:\tmp\全选进背包.bmp", 101010, 0.8, 0, px, py
-	Wend
-	If isEnd Then 
-		n = n + 1
-		Form1.Label4.Caption = "第" & n & "次副本，结束！"
-	End If
-End Sub
-
-Sub hwndCheck(hwnd)
-    // 窗口已经过期，结束线程即可
-	If Plugin.Window.IsWindow(hwnd) = 0  Then 
-		MsgBox "检测到窗口关闭，即将结束本次运行"
-		ExitScript
-	End If
-End Sub
+ * ---------------------------文件区-------------------------------
+ */
 
 // 保存所有打手的句柄，在运行挂机脚本时排除这些句柄
 Sub saveMaster(hwnd)
@@ -463,6 +591,17 @@ End Sub
 Function strToArray(str)
 	strToArray = Split(str, ",")
 End Function
+
+/**
+ * --------------------------固定函数区-------------------------------
+ */
+Sub hwndCheck(hwnd)
+    // 窗口已经过期，结束线程即可
+	If Plugin.Window.IsWindow(hwnd) = 0  Then 
+		MsgBox "检测到窗口关闭，即将结束本次运行"
+		ExitScript
+	End If
+End Sub
 
 /**
  * ---------------------------大漠区-------------------------------
@@ -529,7 +668,7 @@ Sub bund(hwnd)
    		TracePrint "绑定成功"
 	End If
 	// 选择字库文件
-	dm_ret = dm.SetDict(0, "C:/tmp/ddtankLibrary.txt")
+	dm_ret = dm.SetDict(0, "C:/tmp/ddtankLibrary5.2.txt")
 	// 使用字库文件的编号
 	dm_ret = dm.UseDict(0)
 End Sub
@@ -538,8 +677,8 @@ Sub OnScriptExit()
    dm.UnBindWindow
 End Sub
 Event Form1.Button1.Click
-	messageBox "指在角色与目标垂直距离上，每1屏距需要调高的角度值的平方根（适用于目标比角色站位高的情况）"
+	messageBox "指在角色与目标垂直距离上，每1屏距需要增加的力度值（适用于目标比角色站位高的情况）"
 End Event
 Event Form1.Button2.Click
-	messageBox "指在角色与目标垂直距离上，每1屏距需要降低的力度的平方根（适用于目标比角色站位低的情况）"
+	messageBox "指在角色与目标垂直距离上，每1屏距需要降低的力度值（适用于目标比角色站位低的情况）"
 End Event
