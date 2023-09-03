@@ -144,7 +144,7 @@ Sub 要打的副本
 End Sub
 
 /**
- * 自动寻找屏距，兵计算攻击
+ * 自动寻找屏距，并计算攻击
  **/
 Sub attackAuto
 	If Form1.CheckBox1.Value Then 
@@ -171,12 +171,12 @@ End Sub
 // 尝试计算屏距
 Function calcUnitDistance
 	// 自动寻找屏距，循环10次
-	Dim count, flag, arr(10)
-	For i = 0 To 10
+	Dim count, flag, arr(50)
+	For i = 0 To 50
 		arr(i) = -1
 		flag = true
 		For 5
-			If dm.findStr(static_x1, static_y1, static_x2, static_y2, "屏", "bcb7b1-202020|879aaa-202020", 1, x3, y3) = 0 Then 
+			If dm.findStr(static_x1, static_y1, static_x2, static_y2, "屏", "b0b0b0-202020|a0a0a0-202020", 1, x3, y3) = 0 Then 
 				If flag Then 
 					count = 2
 				End If
@@ -194,29 +194,29 @@ Function calcUnitDistance
 				Exit For
 			End If
 		Next
+		TracePrint count
 		arr(i) = count
-		Delay 100
 	Next
 	
 	// 投票选择出最佳屏距
 	Dim maxDistance, ticket
-	maxDistance = arr(0)
 	ticket = 1
-	For i = 1 To 10
-		If arr(i) <> - 1 Then 
+	For i = 1 To 50
+		If arr(i) <> - 1  Then 
+			If ticket = 0 Then 
+				maxDistance = arr(i)
+			End If
 			If arr(i) = maxDistance Then 
 				ticket = ticket + 1
 			Else 
 				ticket = ticket - 1
 			End If
-			If ticket < 1 Then 
-				maxDistance = arr(i)
-				ticket = 1
-			End If
 		End If
 	Next
+	TracePrint "1屏的距离为" & maxDistance & "px" & "最终票数：" & ticket
 	// count / 10为1距，更新距离
 	Form1.InputBox3.Text = maxDistance / 10
+	dm_ret = dm.UseDict(0)
 End Function
 
 // 调整方向
@@ -273,11 +273,11 @@ End Function
 
 // 寻找敌人的坐标
 Function getEnemyPosition
-	If dm.findColor(static_x1, static_y1, static_x2, static_y2, "ff0000-000000", 1, 0, intX, intY) Then 
+	If dm.findColor(static_x1, static_y1, static_x2, static_y2, "ff0000-000000", 1, Form1.ComboBox3.ListIndex, intX, intY) Then 
 		positionX2 = intX
 		positionY2 = intY
 		getEnemyPosition = True
-	ElseIf dm.findColor(static_x1, static_y1, static_x2, static_y2, "99cc00-000000", 1, 0, intX, intY) Then
+	ElseIf dm.findColor(static_x1, static_y1, static_x2, static_y2, "99cc00-000000", 1, Form1.ComboBox3.ListIndex, intX, intY) Then
 		// 找绿色（小鸡本（淦））
 		positionX2 = intX
 		positionY2 = intY
@@ -471,6 +471,15 @@ End Sub
 Sub needAttack
 	If isMyRound() Then 
 		Call 打副本策略
+	End If
+End Sub
+
+Sub isEnterLevel
+	dm.FindPic 960, 450, 1000, 510, "C:\tmp\蛋2-本内退出.bmp", 101010, 0.8, 0, px, py
+	If px > 0 and py > 0 Then 
+		isEnterLevel = true
+	Else 
+		isEnterLevel = False
 	End If
 End Sub
 
@@ -686,6 +695,7 @@ Sub bund(hwnd)
 	End If
 	// 选择字库文件
 	dm_ret = dm.SetDict(0, "C:/tmp/ddtankLibrary.txt")
+	dm_ret = dm.SetDict(1, "C:/tmp/ddtankLibrary_ai.txt")
 	// 使用字库文件的编号
 	dm_ret = dm.UseDict(0)
 End Sub
