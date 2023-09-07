@@ -18,13 +18,13 @@ Sub init
 	strengthTable50 = array(14, 20, 24, 28, 32, 35, 38, 42, 44, 48, 50, 53, 55, 58, 60, 63, 65, 68, 70, 72)
 	strengthTable65 = array(13, 20, 26, 31, 37, 41, 44, 48, 53, 56, 58, 61, 64, 67, 70, 73, 76, 79, 82, 85)
 	
-	static_x1 = 796
-	static_y1 = 26
-	static_x2 = 997
-	static_y2 = 119
+	static_x1 = 794
+	static_y1 = 23
+	static_x2 = 1000
+	static_y2 = 122
 	// 角色小地图颜色
-	roleColor = "00ccff"
-	// roleColor = "0033cc"
+	// roleColor = "00ccff"
+	roleColor = "0033cc"
 	// 计数器初始化
 	checkTimes = 0
 	// 初始化已打副本次数
@@ -102,47 +102,53 @@ Sub 要打的副本
 	toward = 0
 	Form1.Label4.Caption = "第" & (n + 1) & "次副本，开始！"
 	
-	dm.moveTo 216 + 556 * (Form1.InputBox11.Text / 100), 305
+	dm.moveTo 216 + 556 * (Form1.InputBox11.Text / 100), 300
 	dm.leftClick 
 	Delay 800
 	
-	Select Case Form1.ComboBox1.ListIndex Mod 3
+	Select Case Form1.ComboBox1.ListIndex Mod 2
 		// 选择行
 		Case 0
-			y = 320
+			y = 360
 		Case 1
-			y = 374
-		Case 2
-			y = 427
+			y = 420
 	End Select
 	// 需要向下翻页
-	If Form1.ComboBox1.ListIndex > 2 Then 
-		For Fix(Form1.ComboBox1.ListIndex / 3)
-			dm.moveTo 805, 430
-			dm.leftClick 
-			dm.moveTo 805, 431
-			dm.leftClick 
-			dm.leftClick
+	If Form1.ComboBox1.ListIndex > 1 Then 
+		Dim clickCount
+		clickCount = 0
+		For Fix(Form1.ComboBox1.ListIndex / 2)
+			dm.moveTo 767, 426
+			For 6
+				dm.leftClick 
+				Delay 100
+				clickCount = clickCount + 1
+				If clickCount = 9 Then 
+					// 该端的规则是每点9下就需要点一次下来保证8个图显示在一个框内
+					dm.moveTo 767, 427
+					dm.leftClick 
+				End If
+			Next
 		Next
 	End If
 	
 	Select Case Form1.ComboBox2.ListIndex Mod 4
 		Case 0
-			x = 325
+			x = 280
 		Case 1
-			x = 460
+			x = 420
 		Case 2
-			x = 592
+			x = 560
 		Case 3
-			x = 725
+			x = 700
 	End Select
-	
+	TracePrint x & ", " & y
 	dm.moveTo x, y
 	dm.leftClick 
 	// 难度，根据输入框输入调整
-	dm.moveTo 268 + 525 * (Form1.InputBox10.Text / 100), 500
+	dm.moveTo 214 + 567 * (Form1.InputBox10.Text / 100), 500
 	dm.leftClick
-	dm.moveTo 753, 574
+	dm.moveTo 500, 563
 	dm.leftClick 
 	Delay 300
 End Sub
@@ -162,8 +168,10 @@ Sub attackAuto
 			Call adjustDirection()
 			If Form1.CheckBox2.Value = 0 And round = 1 Then 
 				// 计算屏距
+				TracePrint "计算屏距"
 				Call calcUnitDistance()
 			End If
+			// 自动攻击
 			Call calcAndAttack()
 		Else 
 			// 未找到自身位置
@@ -175,17 +183,17 @@ End Sub
 // 尝试计算屏距
 Function calcUnitDistance
 	// 自动寻找屏距，循环10次
-	Dim count, flag, arr(50)
-	For i = 0 To 50
+	Dim count, flag, arr(10)
+	For i = 0 To 10
 		arr(i) = -1
 		flag = true
 		For 5
-			If dm.findStr(static_x1, static_y1, static_x2, static_y2, "屏", "b0b0b0-202020|a0a0a0-202020", 1, x3, y3) = 0 Then 
+			If dm.findStr(static_x1, static_y1, static_x2, static_y2, "屏", "999999-000000", 1, x3, y3) = 0 Then 
 				If flag Then 
-					count = 2
+					count = -1
 				End If
 				While flag
-					If dm.findColor(x3, y3, 998, y3 + 1, "bcb7b1-303030|879aaa-303030", 1, 0, x4, y4) Then 
+					If dm.findColor(x3, y3, static_x2, y3 + 1, "999999-000000", 1, 0, x4, y4) Then 
 						count = count + 1
 						x3 = x3 + 1
 					Else 
@@ -198,14 +206,13 @@ Function calcUnitDistance
 				Exit For
 			End If
 		Next
-		TracePrint count
 		arr(i) = count
 	Next
 	
 	// 投票选择出最佳屏距
 	Dim maxDistance, ticket
 	ticket = 1
-	For i = 1 To 50
+	For i = 1 To 10
 		If arr(i) <> - 1  Then 
 			If ticket = 0 Then 
 				maxDistance = arr(i)
@@ -266,9 +273,11 @@ End Sub
 
 // 寻找我的坐标
 Function getMyPosition
-	If dm.findStr(static_x1, static_y1, static_x2, static_y2, "我", roleColor + "-a06030", 0.8, intX, intY) = 0 Then 
+	If dm.findStr(static_x1, static_y1, static_x2, static_y2, "我", roleColor + "-000000", 0.8, intX, intY) = 0 Then 
 		positionX1 = intX
 		positionY1 = intY
+		// 大漠找字默认找的是最上方坐标
+		positionY1 = positionY1 + 10
 		getMyPosition = True
 	Else 
 		getMyPosition = False
@@ -298,7 +307,7 @@ End Function
 // 获取当前角度
 Function getAngle()
 	// BGR：1a1a1a 0d261a 241710 16201a 2b2228 0d0d26 201d1c 321d17 1d1d21 030d1c
-	getAngle = dm.Ocr(40, 550, 85, 590, "1a1a1a-000000|1a260d-000000|101724-000000|1a2016-000000|28222b-000000|260d0d-000000|1c1d20-000000|211d1d-000000|171d32-000000|1c0d03-000000", 0.95)
+	getAngle = dm.Ocr(23, 552, 77, 590, "000-000", 0.95)
 	getAngle = Replace(getAngle, "我", "")
 	getAngle = Replace(getAngle, "屏", "")
 	getAngle = getAngle + 0
@@ -313,8 +322,8 @@ End Function
 Sub attackWithAngle(angle, strength, mis)
 	Dim failCount, lastAngle
 	failCount = 0
-	lastAngle = -2100000000
 	nowAngle = getAngle()
+	lastAngle = nowAngle
 	While nowAngle < angle - mis Or nowAngle > angle + mis
 		If nowAngle = lastAngle Then 
 			failCount = failCount + 1
@@ -327,8 +336,12 @@ Sub attackWithAngle(angle, strength, mis)
 			Select Case getToward()
 				Case 0
 					dm.keyPressChar "d"
+					dm.keyPressChar "d"
+					dm.keyPressChar "d"
 					Delay 10
 				Case 1
+					dm.keyPressChar "a"
+					dm.keyPressChar "a"
 					dm.keyPressChar "a"
 					Delay 10
 			End Select
@@ -350,17 +363,26 @@ End Sub
 
 // 获取当前朝向：0为左，1为右，-1表示未知
 Function getToward
-	If dm.findColor(59, 497, 108, 590, "FF0000-200000", 1.0, 0, intX, intY) Then 
-			getToward = 1
-		ElseIf dm.findColor(20, 500, 55, 590, "FF0000-200000", 1.0, 0, intX, intY) Then 
+	// TODO 检测度提升的方法：获取角度值，若角度超过90则说明当前角度是反的，目前不考虑倒抛
+	If dm.findColor(0, 500, 50, 600, "FF0000-201010|f0f000-104010", 1.0, 0, intX, intY) Then 
 			getToward = 0
+		ElseIf dm.findColor(50, 500, 100, 600, "FF0000-201010|f0f000-104010", 1.0, 0, intX, intY) Then 
+			getToward = 1
 		Else 
-			getToward = -1
+			getToward = - 1 
+			TracePrint "朝向获取失败"
 	End If
 End Function
 
 Sub attack(strength)
-	Dim str, tried
+	Dim str, tried, startX, endX, checkY, strength1
+	// startX、endX：力度条的起始和终止位置
+	startX = 151
+	endX = 646
+	// 1力度的像素偏移值
+	strength1 = (endX - startX + 1) / 100
+	// checkY：检测力度条颜色变化的y轴
+	checkY = 591
 	tried = 0
 	str = LCase(LTrim(Form1.InputBox2.Text + ""))
 	While len(str) > 0
@@ -378,14 +400,14 @@ Sub attack(strength)
 			// 攻击方式2，当目标点颜色变动时松手
 			Delay 100
 			Dim lastColor
-			lastColor = dm.getColorBGR(150 + 4.96 * strength - 1, 589)
+			lastColor = dm.getColorBGR(startX + strength1 * strength - 1, checkY)
 			While true
-				c = dm.getColorBGR(150 + 4.96 * strength - 1, 589)
+				c = dm.getColorBGR(startX + strength1 * strength - 1, checkY)
 				If lastColor <> c Then 
 					// 找到了
 					dm.keyUp 32
 					While isMyRound()
-						Delay 1000
+						Delay 200
 					Wend
 					Exit Sub
 				Else 
@@ -395,9 +417,18 @@ Sub attack(strength)
 			Wend
 		Else 
 			dm.keyDown 32
-			While dm.getColor(156 + Fix(4.99 * strength) - 2, 596) <> "6d2802"
-				tried = tried + 1
+			Dim c
+			While true
+				c = dm.getColor(startX + strength1 * strength - 1, checkY)
+				If c = "ce351b" OR c = "ab622a" Then 
+					dm.keyUp 32
+					While isMyRound()
+						Delay 200
+					Wend
+					Exit Sub
+				End If
 				Delay 1
+				tried = tried + 1
 				If tried > 20000 Then 
 					dm.keyUp 32
 					exit Sub
@@ -489,9 +520,15 @@ End Sub
 
 Function isMyRound()
 	isMyRound = False
-	dm.FindPic 476, 158, 525, 176, "C:\tmp\蛋4.5-该出手了.bmp", 101010, 0.8, 0, intX, intY
+	dm.FindPic 960, 180, 990, 210, "C:\tmp\蛋4.5-该出手了.bmp", 101010, 0.8, 0, intX, intY
 	If intX > 0 And intY > 0 Then 
 		isMyRound = True
+		Exit Function
+	End If
+	dm.FindPic 960, 180, 990, 210, "C:\tmp\蛋4.5-该出手了2.bmp", 101010, 0.8, 0, intX, intY
+	If intX > 0 And intY > 0 Then 
+		isMyRound = True
+		Exit Function
 	End If
 End Function
 
@@ -513,7 +550,7 @@ Sub needDraw
 						Delay 1000
 					End If
 				End If
-				Delay 1000 * Rnd()
+				Delay 500 * Rnd()
 			Wend
 			Delay 1000
 		Next
@@ -688,8 +725,7 @@ Sub bund(hwnd)
    		TracePrint "绑定成功"
 	End If
 	// 选择字库文件
-	dm_ret = dm.SetDict(0, "C:/tmp/ddtankLibrary.txt")
-	dm_ret = dm.SetDict(1, "C:/tmp/ddtankLibrary_ai.txt")
+	dm_ret = dm.SetDict(0, "C:/tmp/ddtankLibrary4.5.txt")
 	// 使用字库文件的编号
 	dm_ret = dm.UseDict(0)
 End Sub
