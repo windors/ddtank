@@ -335,14 +335,14 @@ Sub attackWithAngle(angle, strength, mis)
 			// TODO 复杂情况（走到了边缘后走不动）的处理
 			Select Case getToward()
 				Case 0
-					dm.keyPressChar "d"
-					dm.keyPressChar "d"
-					dm.keyPressChar "d"
+					dm.keyPressChar "a"
+					dm.keyPressChar "a"
+					dm.keyPressChar "a"
 					Delay 10
 				Case 1
-					dm.keyPressChar "a"
-					dm.keyPressChar "a"
-					dm.keyPressChar "a"
+					dm.keyPressChar "d"
+					dm.keyPressChar "d"
+					dm.keyPressChar "d"
 					Delay 10
 			End Select
 		End If
@@ -364,13 +364,13 @@ End Sub
 // 获取当前朝向：0为左，1为右，-1表示未知
 Function getToward
 	// TODO 检测度提升的方法：获取角度值，若角度超过90则说明当前角度是反的，目前不考虑倒抛
-	If dm.findColor(0, 500, 50, 600, "FF0000-201010|f0f000-104010", 1.0, 0, intX, intY) Then 
-			getToward = 0
-		ElseIf dm.findColor(50, 500, 100, 600, "FF0000-201010|f0f000-104010", 1.0, 0, intX, intY) Then 
-			getToward = 1
-		Else 
-			getToward = - 1 
-			TracePrint "朝向获取失败"
+	If dm.findColor(0, 500, 50, 600, "FF0000-401010|f0f000-404010", 1.0, 0, intX, intY) Then 
+		getToward = 0
+	ElseIf dm.findColor(50, 500, 100, 600, "FF0000-401010|f0f000-404010", 1.0, 0, intX, intY) Then 
+		getToward = 1
+	Else 
+		getToward = - 1 
+		TracePrint "朝向获取失败"
 	End If
 End Function
 
@@ -520,15 +520,10 @@ End Sub
 
 Function isMyRound()
 	isMyRound = False
-	dm.FindPic 960, 180, 990, 210, "C:\tmp\蛋4.5-该出手了.bmp", 101010, 0.8, 0, intX, intY
-	If intX > 0 And intY > 0 Then 
+	If dm.FindPic(960, 180, 990, 210, "C:\tmp\蛋4.5-出手判定1.bmp", 101010, 0.8, 0, intX, intY) = - 1  and dm.FindPic(960, 180, 990, 210, "C:\tmp\蛋4.5-出手判定2.bmp", 101010, 0.8, 0, intX, intY) = - 1  Then 
+		isMyRound = False
+	ElseIf dm.FindPic(476, 158, 525, 176, "C:\tmp\蛋4.5-该出手了.bmp", 303030, 0.4, 0, intX, intY) > - 1  Then
 		isMyRound = True
-		Exit Function
-	End If
-	dm.FindPic 960, 180, 990, 210, "C:\tmp\蛋4.5-该出手了2.bmp", 101010, 0.8, 0, intX, intY
-	If intX > 0 And intY > 0 Then 
-		isMyRound = True
-		Exit Function
 	End If
 End Function
 
