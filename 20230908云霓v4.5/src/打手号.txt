@@ -41,23 +41,6 @@ Sub init
 End Sub
 
 Sub main
-	// 测试用
-	
-	If true Then 
-		// Call calcUnitDistance()
-		While true
-			If getMyPosition() and getEnemyPosition() Then 
-				Dim angle, strength
-				TracePrint "我的坐标:" & positionX1 & ", " & positionY1
-				TracePrint "敌人的坐标:" & positionX2 & ", " & positionY2
-				angle = getBestAngle()
-				strength = getStrength(angle, Abs((positionX2 - positionX1) / Form1.InputBox3.Text), ((positionY1 - positionY2) / Form1.InputBox3.Text))
-				TracePrint "最终角度" & angle & "最终力度:" & strength
-			End If
-			Delay 1000
-		Wend
-	End If
-	
 	While True
 		checkTimes = checkTimes + 1
 		If checkTimes > 100 Then 
@@ -254,7 +237,7 @@ End Function
 // 调整方向
 Sub adjustDirection
 	toward = -1
-	While toward = - 1 
+	While isMyRound() and toward = - 1 
 		toward = getToward()
 		If toward = 1 and positionX2 - positionX1 < 0 Then 
 			// 朝向右，但敌人在左
