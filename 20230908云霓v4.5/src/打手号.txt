@@ -3,21 +3,15 @@ Dim round
 Dim toward
 Dim n
 Dim checkTimes
-Dim strengthTable20, strengthTable30, strengthTable50, strengthTable65
 // 小地图角色的颜色
 Dim roleColor
 // 小地图的左上和右下点
 Dim static_x1, static_x2, static_x3, static_x4
 // 我的坐标&敌人的坐标
 Dim positionX1, positionX2, positionY1, positionY2
-
 Call init
+
 Sub init
-	strengthTable20 = array(10, 19, 25, 30, 36, 40, 44, 48, 51, 54, 57, 60, 63, 66, 69, 72, 74, 76, 78, 80)
-	strengthTable30 = array(14, 20, 24, 28, 32, 35, 38, 41, 44, 47, 50, 52, 55, 57, 60, 62, 65, 67, 69, 72)
-	strengthTable50 = array(14, 20, 24, 28, 32, 35, 38, 42, 44, 48, 50, 53, 55, 58, 60, 63, 65, 68, 70, 72)
-	strengthTable65 = array(13, 20, 26, 31, 37, 41, 44, 48, 53, 56, 58, 61, 64, 67, 70, 73, 76, 79, 82, 85)
-	
 	static_x1 = 794
 	static_y1 = 23
 	static_x2 = 1000
@@ -29,14 +23,9 @@ Sub init
 	checkTimes = 0
 	// 初始化已打副本次数
 	n = 0
-	If (Form1.InputBox1.Text + 0) <> - 1  Then 
-		MessageBox "选择了手动指定句柄	"
-		hwnd = Form1.InputBox1.Text
-	Else 
-		hwnd = Plugin.Window.MousePoint
-	End If
+	hwnd = Plugin.Window.MousePoint
 	If (Plugin.Window.GetClass(hwnd) <> "MacromediaFlashPlayerActiveX") Then 
-		MessageBox "未检测到窗口，请重新运行脚本，启动时鼠标需要放在游戏内！"
+		MessageBox "未检测到窗口，启动时鼠标需要放在游戏内！"
 	Else 
 		Call 大漠注册
 		Call bund(hwnd)
@@ -49,7 +38,7 @@ Sub init
 	End If
 End Sub
 
-Sub main
+Sub main	
 	While True
 		checkTimes = checkTimes + 1
 		If checkTimes > 100 Then 
@@ -57,18 +46,31 @@ Sub main
 		End If
 		// 检测hwnd是否失效
 		Call hwndCheck(hwnd)
-		
-		// 检测是否需要选地图
-		Call needPrepare
-		Call needCloseMap
-		Call needCloseTip
-		Call needCloseEmail
-		// 检测是否需要出手
-		Call needAttack
-		// 检测是否需要将奖励放进背包
-		If checkTimes Mod 5 = 0 Then 
-			Call needCreateRoom
-			Call needDraw
+		If isEnterLevel() Then
+			// 已进入副本，优先判断屏距
+			
+			If Form1.CheckBox2.Value = 0 And round = 0 Then 
+				// 计算屏距
+				TracePrint "计算屏距"
+				Call calcUnitDistance()
+				While isMyRound <> True
+					Delay 1000
+				Wend
+			End If
+			If isMyRound() Then
+				Call 打副本策略
+			End If
+		Else 
+			// 检测是否需要选地图
+			Call needPrepare
+			Call needCloseMap
+			Call needCloseTip
+			Call needCloseEmail
+			// 检测是否需要将奖励放进背包
+			If checkTimes Mod 5 = 0 Then 
+				Call needCreateRoom
+				Call needDraw
+			End If
 		End If
 		Delay 700 * (1 - (Form1.Slider1.Value / 1000))
 	Wend
@@ -102,7 +104,7 @@ Sub 要打的副本
 	toward = 0
 	Form1.Label4.Caption = "第" & (n + 1) & "次副本，开始！"
 	
-	dm.moveTo 216 + 556 * (Form1.InputBox11.Text / 100), 300
+	dm.moveTo 216 + 556 * (Form1.Form1.Slider2.Value / 10), 300
 	dm.leftClick 
 	Delay 800
 	
@@ -146,7 +148,7 @@ Sub 要打的副本
 	dm.moveTo x, y
 	dm.leftClick 
 	// 难度，根据输入框输入调整
-	dm.moveTo 214 + 567 * (Form1.InputBox10.Text / 100), 500
+	dm.moveTo 214 + 567 * (Form1.Slider3.Value / 10), 500
 	dm.leftClick
 	dm.moveTo 500, 563
 	dm.leftClick 
@@ -166,11 +168,7 @@ Sub attackAuto
 			TracePrint "我的坐标:" & positionX1 & ", " & positionY1
 			TracePrint "敌人的坐标:" & positionX2 & ", " & positionY2
 			Call adjustDirection()
-			If Form1.CheckBox2.Value = 0 And round = 1 Then 
-				// 计算屏距
-				TracePrint "计算屏距"
-				Call calcUnitDistance()
-			End If
+			
 			// 自动攻击
 			Call calcAndAttack()
 		Else 
@@ -181,7 +179,7 @@ Sub attackAuto
 End Sub
 
 // 尝试计算屏距
-Function calcUnitDistance
+Function calcUnitDistance()
 	// 自动寻找屏距，循环10次
 	Dim count, flag, arr(10)
 	For i = 0 To 10
@@ -251,28 +249,21 @@ End Sub
 // 计算角度力度并攻击 x1, y1 : 我的坐标，y1, y2: 敌人的坐标
 Sub calcAndAttack
 	Dim strength, angle
-	angle = 30
-	// 2距 + 13, 1距+7
-	TracePrint "屏距：" & Fix((Abs((positionX2 - positionX1)) / Form1.InputBox3.Text)+0.0001) + 1
-	strength = strengthTable30(Fix((Abs((positionX2 - positionX1)) / Form1.InputBox3.Text)+0.0001)) + 1
-	// 计算垂直偏差
-	vertical = (positionY1 - positionY2) / Form1.InputBox3.Text
-	TracePrint "垂直偏差为:" & vertical
-	If vertical < 0 Then 
-		vertical = - vertical 
-		// 角色比目标高，力度需要减少 （参数*距离）
-		strength = strength - (vertical * Form1.InputBox9.Text)
-	Else 
-		// 角色比目标低，力度需要提高
-		strength = strength + (vertical * Form1.InputBox8.Text)
+	If Form1.CheckBox1.Value Then 
+		// 手动攻击
+		angle = Form1.InputBox4.Text
+		strength = Form1.InputBox5.Text
 	End If
-	strength = strength + Form1.InputBox6.Text
+	angle = getBestAngle()
+	strength = getStrength(angle, Abs((positionX2 - positionX1) / Form1.InputBox3.Text), ((positionY2 - positionY1) / Form1.InputBox3.Text))
+	
+	
 	TracePrint "角度" & angle & "力度:" & strength
 	Call attackWithAngle(angle, strength, Form1.InputBox7.Text)
 End Sub
 
 // 寻找我的坐标
-Function getMyPosition
+Function getMyPosition()
 	If dm.findStr(static_x1, static_y1, static_x2, static_y2, "我", roleColor + "-000000", 0.8, intX, intY) = 0 Then 
 		positionX1 = intX
 		positionY1 = intY
@@ -285,7 +276,7 @@ Function getMyPosition
 End Function
 
 // 寻找敌人的坐标
-Function getEnemyPosition
+Function getEnemyPosition()
 	If dm.findColor(static_x1, static_y1, static_x2, static_y2, "ff0000-000000", 1, Form1.ComboBox3.ListIndex, intX, intY) Then 
 		positionX2 = intX
 		positionY2 = intY
@@ -311,6 +302,97 @@ Function getAngle()
 	getAngle = Replace(getAngle, "我", "")
 	getAngle = Replace(getAngle, "屏", "")
 	getAngle = getAngle + 0
+End Function
+
+// 根据敌我的位置获取最佳角度
+Function getBestAngle()
+	Dim theta, vertical
+	theta = - Atn((positionY2 - positionY1) / Abs(positionX2 - positionX1))  * 180 / (4 * Atn(1))
+	TracePrint theta
+	// 如果敌人在下面，那么直接20度或30度就可以
+	If theta < -10 Then 
+		getBestAngle = 30
+		Exit Function
+	ElseIf theta < 0 Then
+		getBestAngle = 20
+		Exit Function
+	End If
+	vertical = Abs(positionY2 - positionY1) / Form1.InputBox3.Text
+	// 以夹角为界限，低于某个值的直接使用30度，其余情况的视垂直偏差情况使用50、65、70度
+	If theta <= 18 Then 
+		getBestAngle = 30
+	ElseIf theta <= 20 Then
+		getBestAngle = 40
+	ElseIf theta <= 30 Then
+		getBestAngle = 50
+	ElseIf theta <= 40 Then
+		getBestAngle = 65
+	Else 
+		getBestAngle = 70
+	End If
+	// TODO 再检测垂直距离，如果垂直距离过高，则提高角度，ddtank中1屏高6距，超过半屏就该
+End Function
+
+// 根据角度、水平距离、垂直距离、1距的距离来就按力度，并对角度进行修正
+// 水平距离：永远大于0，垂直距离：如果是正数表示Boss在自己的下面，否则Boss在上面
+Function getStrength(angle, horizontal, vertical)
+	Dim strengthTable20, strengthTable30, strengthTable35, strengthTable40, strengthTable45, strengthTable50, strengthTable65, strengthTable70
+	strengthTable20 = array(10, 19, 25, 30, 36, 40, 44, 48, 51, 54, 57, 60, 63, 66, 69, 72, 74, 76, 78, 80)
+	strengthTable30 = array(14, 20, 24, 28, 32, 35, 38, 41, 44, 47, 50, 52, 55, 57, 60, 62, 65, 67, 69, 72)
+	strengthTable35 = array(10, 16, 22, 26, 30, 33, 37, 40, 43, 45, 49, 51, 53, 55, 57, 59, 61, 63, 65, 67)
+	strengthTable40 = array(12, 16, 20, 25, 30, 33, 35, 40, 43, 45, 48, 50, 53, 55, 58, 60, 62, 64, 67, 70)
+	strengthTable45 = array(13, 16, 20, 25, 30, 33, 35, 38, 41, 45, 48, 51, 53, 55, 57, 59, 60, 63, 66, 68)
+	strengthTable50 = array(14, 20, 24, 28, 32, 35, 38, 42, 44, 48, 50, 53, 55, 58, 60, 63, 65, 68, 70, 72)
+	strengthTable65 = array(13, 20, 26, 31, 37, 41, 44, 48, 53, 56, 58, 61, 64, 67, 70, 73, 76, 79, 82, 85)
+	strengthTable70 = array(18.5, 26.4, 32.6, 37.9, 42.7, 47.2, 51.3, 55.3, 59.1, 62.8, 66.3, 69.8, 73.1, 76.5, 79.7, 82.9, 86.1, 89.2, 92.3, 95.3)
+	upOffset = Array(12, 6.5, 6.2, 5.7, 5.3, 3.4, 1.5, 1.15)
+	TracePrint "垂直距离" & vertical
+	TracePrint "水平距离" & horizontal
+	If angle <= 20 Then 
+		angle = 20
+		getStrength = strengthTable20(Fix(horizontal + 0.000001) + 1)
+	ElseIf angle <= 30 Then
+		angle = 30
+		getStrength = strengthTable30(Fix(horizontal + 0.000001) + 1)
+	ElseIf angle <= 35 Then
+		angle = 35
+		getStrength = strengthTable35(Fix(horizontal + 0.000001) + 1)
+	ElseIf angle <= 40 Then
+		angle = 40
+		getStrength = strengthTable40(Fix(horizontal + 0.000001) + 1)
+	ElseIf angle <= 45 Then
+		angle = 45
+		getStrength = strengthTable45(Fix(horizontal + 0.000001) + 1)
+	ElseIf angle <= 50 Then
+		angle = 50
+		getStrength = strengthTable50(Fix(horizontal + 0.000001) + 1)
+	ElseIf angle <= 65 Then
+		angle = 65
+		getStrength = strengthTable65(Fix(horizontal + 0.000001) + 1)
+	Else
+		angle = 70
+		getStrength = strengthTable70(Fix(horizontal + 0.000001) + 1)
+	End If
+	If vertical > 0 Then 
+		Select Case getStrength
+			Case 20
+				getStrength = getStrength + upOffset(0) * vertical
+			Case 30
+				getStrength = getStrength + upOffset(1) * vertical
+			Case 35
+				getStrength = getStrength + upOffset(2) * vertical
+			Case 40
+				getStrength = getStrength + upOffset(3) * vertical
+			Case 45
+				getStrength = getStrength + upOffset(4) * vertical
+			Case 50
+				getStrength = getStrength + upOffset(5) * vertical
+			Case 65
+				getStrength = getStrength + upOffset(6) * vertical
+			Case 70
+				getStrength = getStrength + upOffset(7) * vertical
+		End Select
+	End If
 End Function
 
 /**
@@ -362,8 +444,8 @@ Sub attackWithAngle(angle, strength, mis)
 End Sub
 
 // 获取当前朝向：0为左，1为右，-1表示未知
-Function getToward
-	// TODO 检测度提升的方法：获取角度值，若角度超过90则说明当前角度是反的，目前不考虑倒抛
+// TODO 检测度提升的方法：获取角度值，若角度超过90则说明当前角度是反的，目前不考虑倒抛
+Function getToward()
 	If dm.findColor(0, 500, 50, 600, "FF0000-401010|f0f000-404010", 1.0, 0, intX, intY) Then 
 		getToward = 0
 	ElseIf dm.findColor(50, 500, 100, 600, "FF0000-401010|f0f000-404010", 1.0, 0, intX, intY) Then 
@@ -374,6 +456,7 @@ Function getToward
 	End If
 End Function
 
+// 指定力度攻击
 Sub attack(strength)
 	Dim str, tried, startX, endX, checkY, strength1
 	// startX、endX：力度条的起始和终止位置
@@ -440,8 +523,7 @@ Sub attack(strength)
 End Sub
 
 Sub needCloseMap
-	// 先点击，然后再检测
-	// 先点击，然后再检测
+	// 先点击进入选副本页面
 	dm.FindPic 510, 430, 710, 530, "C:\tmp\蛋4.5-随机地图.bmp", 101010, 0.8, 0, intX, intY
 	If intX > 0 And intY > 0 Then 
 		dm.moveTo intX + 10, intY + 10
@@ -503,20 +585,14 @@ Sub needPrepare
 	End If
 End Sub
 
-Sub needAttack
-	If isMyRound() Then 
-		Call 打副本策略
-	End If
-End Sub
-
-Sub isEnterLevel
-	dm.FindPic 960, 0, 1000, 30, "C:\tmp\蛋4.5-本内退出.bmp", 101010, 0.8, 0, px, py
+Function isEnterLevel()
+	dm.FindPic 960, 0, 999, 23, "C:\tmp\蛋4.5-本内退出.bmp", 303030, 0.8, 0, px, py
 	If px > 0 and py > 0 Then 
 		isEnterLevel = true
 	Else 
 		isEnterLevel = False
 	End If
-End Sub
+End Function
 
 Function isMyRound()
 	isMyRound = False
@@ -728,9 +804,3 @@ End Sub
 Sub OnScriptExit()
    dm.UnBindWindow
 End Sub
-Event Form1.Button1.Click
-	messageBox "指在角色与目标垂直距离上，每1屏距需要增加的力度值（适用于目标比角色站位高的情况）"
-End Event
-Event Form1.Button2.Click
-	messageBox "指在角色与目标垂直距离上，每1屏距需要降低的力度值（适用于目标比角色站位低的情况）"
-End Event

@@ -8,7 +8,7 @@ StopHotkey=123
 StopHotkeyMod=0
 RunOnce=1
 EnableWindow=
-MacroID=54a03504-1821-42f9-9022-4210ae2cea4a
+MacroID=f74d1e21-c4fe-48e2-bbca-71cb706a08be
 Description=打手号1
 Enable=0
 AutoRun=0
@@ -27,7 +27,7 @@ UEsDBBQAAgAIAEw/CkFpA+Qdl5wLAACQDAAGABEAZG0uZGxsVVQNAAcuvyRQgwPlZOYijmTs/XlUE8kf
 
 
 [UIPackage]
-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
+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
 
 
 [Script]
@@ -36,21 +36,15 @@ Dim round
 Dim toward
 Dim n
 Dim checkTimes
-Dim strengthTable20, strengthTable30, strengthTable50, strengthTable65
 // 小地图角色的颜色
 Dim roleColor
 // 小地图的左上和右下点
 Dim static_x1, static_x2, static_x3, static_x4
 // 我的坐标&敌人的坐标
 Dim positionX1, positionX2, positionY1, positionY2
-
 Call init
+
 Sub init
-	strengthTable20 = array(10, 19, 25, 30, 36, 40, 44, 48, 51, 54, 57, 60, 63, 66, 69, 72, 74, 76, 78, 80)
-	strengthTable30 = array(14, 20, 24, 28, 32, 35, 38, 41, 44, 47, 50, 52, 55, 57, 60, 62, 65, 67, 69, 72)
-	strengthTable50 = array(14, 20, 24, 28, 32, 35, 38, 42, 44, 48, 50, 53, 55, 58, 60, 63, 65, 68, 70, 72)
-	strengthTable65 = array(13, 20, 26, 31, 37, 41, 44, 48, 53, 56, 58, 61, 64, 67, 70, 73, 76, 79, 82, 85)
-	
 	static_x1 = 794
 	static_y1 = 23
 	static_x2 = 1000
@@ -62,14 +56,9 @@ Sub init
 	checkTimes = 0
 	// 初始化已打副本次数
 	n = 0
-	If (Form1.InputBox1.Text + 0) <> - 1  Then 
-		MessageBox "选择了手动指定句柄	"
-		hwnd = Form1.InputBox1.Text
-	Else 
-		hwnd = Plugin.Window.MousePoint
-	End If
+	hwnd = Plugin.Window.MousePoint
 	If (Plugin.Window.GetClass(hwnd) <> "MacromediaFlashPlayerActiveX") Then 
-		MessageBox "未检测到窗口，请重新运行脚本，启动时鼠标需要放在游戏内！"
+		MessageBox "未检测到窗口，启动时鼠标需要放在游戏内！"
 	Else 
 		Call 大漠注册
 		Call bund(hwnd)
@@ -82,7 +71,7 @@ Sub init
 	End If
 End Sub
 
-Sub main
+Sub main	
 	While True
 		checkTimes = checkTimes + 1
 		If checkTimes > 100 Then 
@@ -90,18 +79,31 @@ Sub main
 		End If
 		// 检测hwnd是否失效
 		Call hwndCheck(hwnd)
-		
-		// 检测是否需要选地图
-		Call needPrepare
-		Call needCloseMap
-		Call needCloseTip
-		Call needCloseEmail
-		// 检测是否需要出手
-		Call needAttack
-		// 检测是否需要将奖励放进背包
-		If checkTimes Mod 5 = 0 Then 
-			Call needCreateRoom
-			Call needDraw
+		If isEnterLevel() Then
+			// 已进入副本，优先判断屏距
+			
+			If Form1.CheckBox2.Value = 0 And round = 0 Then 
+				// 计算屏距
+				TracePrint "计算屏距"
+				Call calcUnitDistance()
+				While isMyRound <> True
+					Delay 1000
+				Wend
+			End If
+			If isMyRound() Then
+				Call 打副本策略
+			End If
+		Else 
+			// 检测是否需要选地图
+			Call needPrepare
+			Call needCloseMap
+			Call needCloseTip
+			Call needCloseEmail
+			// 检测是否需要将奖励放进背包
+			If checkTimes Mod 5 = 0 Then 
+				Call needCreateRoom
+				Call needDraw
+			End If
 		End If
 		Delay 700 * (1 - (Form1.Slider1.Value / 1000))
 	Wend
@@ -135,7 +137,7 @@ Sub 要打的副本
 	toward = 0
 	Form1.Label4.Caption = "第" & (n + 1) & "次副本，开始！"
 	
-	dm.moveTo 216 + 556 * (Form1.InputBox11.Text / 100), 300
+	dm.moveTo 216 + 556 * (Form1.Form1.Slider2.Value / 10), 300
 	dm.leftClick 
 	Delay 800
 	
@@ -179,7 +181,7 @@ Sub 要打的副本
 	dm.moveTo x, y
 	dm.leftClick 
 	// 难度，根据输入框输入调整
-	dm.moveTo 214 + 567 * (Form1.InputBox10.Text / 100), 500
+	dm.moveTo 214 + 567 * (Form1.Slider3.Value / 10), 500
 	dm.leftClick
 	dm.moveTo 500, 563
 	dm.leftClick 
@@ -199,11 +201,7 @@ Sub attackAuto
 			TracePrint "我的坐标:" & positionX1 & ", " & positionY1
 			TracePrint "敌人的坐标:" & positionX2 & ", " & positionY2
 			Call adjustDirection()
-			If Form1.CheckBox2.Value = 0 And round = 1 Then 
-				// 计算屏距
-				TracePrint "计算屏距"
-				Call calcUnitDistance()
-			End If
+			
 			// 自动攻击
 			Call calcAndAttack()
 		Else 
@@ -214,7 +212,7 @@ Sub attackAuto
 End Sub
 
 // 尝试计算屏距
-Function calcUnitDistance
+Function calcUnitDistance()
 	// 自动寻找屏距，循环10次
 	Dim count, flag, arr(10)
 	For i = 0 To 10
@@ -284,28 +282,21 @@ End Sub
 // 计算角度力度并攻击 x1, y1 : 我的坐标，y1, y2: 敌人的坐标
 Sub calcAndAttack
 	Dim strength, angle
-	angle = 30
-	// 2距 + 13, 1距+7
-	TracePrint "屏距：" & Fix((Abs((positionX2 - positionX1)) / Form1.InputBox3.Text)+0.0001) + 1
-	strength = strengthTable30(Fix((Abs((positionX2 - positionX1)) / Form1.InputBox3.Text)+0.0001)) + 1
-	// 计算垂直偏差
-	vertical = (positionY1 - positionY2) / Form1.InputBox3.Text
-	TracePrint "垂直偏差为:" & vertical
-	If vertical < 0 Then 
-		vertical = - vertical 
-		// 角色比目标高，力度需要减少 （参数*距离）
-		strength = strength - (vertical * Form1.InputBox9.Text)
-	Else 
-		// 角色比目标低，力度需要提高
-		strength = strength + (vertical * Form1.InputBox8.Text)
+	If Form1.CheckBox1.Value Then 
+		// 手动攻击
+		angle = Form1.InputBox4.Text
+		strength = Form1.InputBox5.Text
 	End If
-	strength = strength + Form1.InputBox6.Text
+	angle = getBestAngle()
+	strength = getStrength(angle, Abs((positionX2 - positionX1) / Form1.InputBox3.Text), ((positionY2 - positionY1) / Form1.InputBox3.Text))
+	
+	
 	TracePrint "角度" & angle & "力度:" & strength
 	Call attackWithAngle(angle, strength, Form1.InputBox7.Text)
 End Sub
 
 // 寻找我的坐标
-Function getMyPosition
+Function getMyPosition()
 	If dm.findStr(static_x1, static_y1, static_x2, static_y2, "我", roleColor + "-000000", 0.8, intX, intY) = 0 Then 
 		positionX1 = intX
 		positionY1 = intY
@@ -318,7 +309,7 @@ Function getMyPosition
 End Function
 
 // 寻找敌人的坐标
-Function getEnemyPosition
+Function getEnemyPosition()
 	If dm.findColor(static_x1, static_y1, static_x2, static_y2, "ff0000-000000", 1, Form1.ComboBox3.ListIndex, intX, intY) Then 
 		positionX2 = intX
 		positionY2 = intY
@@ -344,6 +335,97 @@ Function getAngle()
 	getAngle = Replace(getAngle, "我", "")
 	getAngle = Replace(getAngle, "屏", "")
 	getAngle = getAngle + 0
+End Function
+
+// 根据敌我的位置获取最佳角度
+Function getBestAngle()
+	Dim theta, vertical
+	theta = - Atn((positionY2 - positionY1) / Abs(positionX2 - positionX1))  * 180 / (4 * Atn(1))
+	TracePrint theta
+	// 如果敌人在下面，那么直接20度或30度就可以
+	If theta < -10 Then 
+		getBestAngle = 30
+		Exit Function
+	ElseIf theta < 0 Then
+		getBestAngle = 20
+		Exit Function
+	End If
+	vertical = Abs(positionY2 - positionY1) / Form1.InputBox3.Text
+	// 以夹角为界限，低于某个值的直接使用30度，其余情况的视垂直偏差情况使用50、65、70度
+	If theta <= 18 Then 
+		getBestAngle = 30
+	ElseIf theta <= 20 Then
+		getBestAngle = 40
+	ElseIf theta <= 30 Then
+		getBestAngle = 50
+	ElseIf theta <= 40 Then
+		getBestAngle = 65
+	Else 
+		getBestAngle = 70
+	End If
+	// TODO 再检测垂直距离，如果垂直距离过高，则提高角度，ddtank中1屏高6距，超过半屏就该
+End Function
+
+// 根据角度、水平距离、垂直距离、1距的距离来就按力度，并对角度进行修正
+// 水平距离：永远大于0，垂直距离：如果是正数表示Boss在自己的下面，否则Boss在上面
+Function getStrength(angle, horizontal, vertical)
+	Dim strengthTable20, strengthTable30, strengthTable35, strengthTable40, strengthTable45, strengthTable50, strengthTable65, strengthTable70
+	strengthTable20 = array(10, 19, 25, 30, 36, 40, 44, 48, 51, 54, 57, 60, 63, 66, 69, 72, 74, 76, 78, 80)
+	strengthTable30 = array(14, 20, 24, 28, 32, 35, 38, 41, 44, 47, 50, 52, 55, 57, 60, 62, 65, 67, 69, 72)
+	strengthTable35 = array(10, 16, 22, 26, 30, 33, 37, 40, 43, 45, 49, 51, 53, 55, 57, 59, 61, 63, 65, 67)
+	strengthTable40 = array(12, 16, 20, 25, 30, 33, 35, 40, 43, 45, 48, 50, 53, 55, 58, 60, 62, 64, 67, 70)
+	strengthTable45 = array(13, 16, 20, 25, 30, 33, 35, 38, 41, 45, 48, 51, 53, 55, 57, 59, 60, 63, 66, 68)
+	strengthTable50 = array(14, 20, 24, 28, 32, 35, 38, 42, 44, 48, 50, 53, 55, 58, 60, 63, 65, 68, 70, 72)
+	strengthTable65 = array(13, 20, 26, 31, 37, 41, 44, 48, 53, 56, 58, 61, 64, 67, 70, 73, 76, 79, 82, 85)
+	strengthTable70 = array(18.5, 26.4, 32.6, 37.9, 42.7, 47.2, 51.3, 55.3, 59.1, 62.8, 66.3, 69.8, 73.1, 76.5, 79.7, 82.9, 86.1, 89.2, 92.3, 95.3)
+	upOffset = Array(12, 6.5, 6.2, 5.7, 5.3, 3.4, 1.5, 1.15)
+	TracePrint "垂直距离" & vertical
+	TracePrint "水平距离" & horizontal
+	If angle <= 20 Then 
+		angle = 20
+		getStrength = strengthTable20(Fix(horizontal + 0.000001) + 1)
+	ElseIf angle <= 30 Then
+		angle = 30
+		getStrength = strengthTable30(Fix(horizontal + 0.000001) + 1)
+	ElseIf angle <= 35 Then
+		angle = 35
+		getStrength = strengthTable35(Fix(horizontal + 0.000001) + 1)
+	ElseIf angle <= 40 Then
+		angle = 40
+		getStrength = strengthTable40(Fix(horizontal + 0.000001) + 1)
+	ElseIf angle <= 45 Then
+		angle = 45
+		getStrength = strengthTable45(Fix(horizontal + 0.000001) + 1)
+	ElseIf angle <= 50 Then
+		angle = 50
+		getStrength = strengthTable50(Fix(horizontal + 0.000001) + 1)
+	ElseIf angle <= 65 Then
+		angle = 65
+		getStrength = strengthTable65(Fix(horizontal + 0.000001) + 1)
+	Else
+		angle = 70
+		getStrength = strengthTable70(Fix(horizontal + 0.000001) + 1)
+	End If
+	If vertical > 0 Then 
+		Select Case getStrength
+			Case 20
+				getStrength = getStrength + upOffset(0) * vertical
+			Case 30
+				getStrength = getStrength + upOffset(1) * vertical
+			Case 35
+				getStrength = getStrength + upOffset(2) * vertical
+			Case 40
+				getStrength = getStrength + upOffset(3) * vertical
+			Case 45
+				getStrength = getStrength + upOffset(4) * vertical
+			Case 50
+				getStrength = getStrength + upOffset(5) * vertical
+			Case 65
+				getStrength = getStrength + upOffset(6) * vertical
+			Case 70
+				getStrength = getStrength + upOffset(7) * vertical
+		End Select
+	End If
 End Function
 
 /**
@@ -395,8 +477,8 @@ Sub attackWithAngle(angle, strength, mis)
 End Sub
 
 // 获取当前朝向：0为左，1为右，-1表示未知
-Function getToward
-	// TODO 检测度提升的方法：获取角度值，若角度超过90则说明当前角度是反的，目前不考虑倒抛
+// TODO 检测度提升的方法：获取角度值，若角度超过90则说明当前角度是反的，目前不考虑倒抛
+Function getToward()
 	If dm.findColor(0, 500, 50, 600, "FF0000-401010|f0f000-404010", 1.0, 0, intX, intY) Then 
 		getToward = 0
 	ElseIf dm.findColor(50, 500, 100, 600, "FF0000-401010|f0f000-404010", 1.0, 0, intX, intY) Then 
@@ -407,6 +489,7 @@ Function getToward
 	End If
 End Function
 
+// 指定力度攻击
 Sub attack(strength)
 	Dim str, tried, startX, endX, checkY, strength1
 	// startX、endX：力度条的起始和终止位置
@@ -473,8 +556,7 @@ Sub attack(strength)
 End Sub
 
 Sub needCloseMap
-	// 先点击，然后再检测
-	// 先点击，然后再检测
+	// 先点击进入选副本页面
 	dm.FindPic 510, 430, 710, 530, "C:\tmp\蛋4.5-随机地图.bmp", 101010, 0.8, 0, intX, intY
 	If intX > 0 And intY > 0 Then 
 		dm.moveTo intX + 10, intY + 10
@@ -536,20 +618,14 @@ Sub needPrepare
 	End If
 End Sub
 
-Sub needAttack
-	If isMyRound() Then 
-		Call 打副本策略
-	End If
-End Sub
-
-Sub isEnterLevel
-	dm.FindPic 960, 0, 1000, 30, "C:\tmp\蛋4.5-本内退出.bmp", 101010, 0.8, 0, px, py
+Function isEnterLevel()
+	dm.FindPic 960, 0, 999, 23, "C:\tmp\蛋4.5-本内退出.bmp", 303030, 0.8, 0, px, py
 	If px > 0 and py > 0 Then 
 		isEnterLevel = true
 	Else 
 		isEnterLevel = False
 	End If
-End Sub
+End Function
 
 Function isMyRound()
 	isMyRound = False
@@ -761,9 +837,3 @@ End Sub
 Sub OnScriptExit()
    dm.UnBindWindow
 End Sub
-Event Form1.Button1.Click
-	messageBox "指在角色与目标垂直距离上，每1屏距需要增加的力度值（适用于目标比角色站位高的情况）"
-End Event
-Event Form1.Button2.Click
-	messageBox "指在角色与目标垂直距离上，每1屏距需要降低的力度值（适用于目标比角色站位低的情况）"
-End Event
