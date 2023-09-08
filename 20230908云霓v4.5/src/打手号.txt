@@ -50,14 +50,6 @@ Sub main
 		Call hwndCheck(hwnd)
 		If isEnterLevel() Then
 			// 已进入副本，优先判断屏距
-			If Form1.CheckBox2.Value = 0 And round = 0 Then 
-				// 计算屏距
-				TracePrint "计算屏距"
-				Call calcUnitDistance()
-				If isMyRound <> True Then 
-					Delay 1000
-				End If
-			End If
 			If isMyRound() Then
 				Call 打副本策略
 			End If
@@ -93,6 +85,12 @@ End Sub
 Sub 打副本策略
 	round = round + 1
 	Form1.Label4.Caption = "第" & (n + 1) & "次副本，第" & round & "回合"
+	TracePrint "第" & round & "回合"
+	If round = 1 and Form1.CheckBox2.Value = 0 Then 
+		// 计算屏距
+		TracePrint "计算屏距"
+		Call calcUnitDistance()
+	End If
 	While isMyRound()
 		Call attackAuto
 	Wend
@@ -145,7 +143,6 @@ Sub 要打的副本
 		Case 3
 			x = 700
 	End Select
-	TracePrint x & ", " & y
 	dm.moveTo x, y
 	dm.leftClick 
 	// 难度，根据输入框输入调整
@@ -211,23 +208,35 @@ Function calcUnitDistance()
 		arr(i) = count
 	Next
 	
-	// 投票选择出最佳屏距
-	Dim maxDistance, ticket
-	ticket = 1
-	For i = 1 To 10
-		If arr(i) <> - 1  Then 
-			If ticket = 0 Then 
-				maxDistance = arr(i)
+	// 先排序
+	For i = 0 To UBound(arr) - 1
+		For j = i + 1 To UBound(arr)
+			If arr(i) > arr(j) Then 
+				Dim tmp
+				tmp = arr(i)
+				arr(i) = arr(j)
+				arr(j) = tmp
 			End If
-			If arr(i) = maxDistance Then 
-				ticket = ticket + 1
-			Else 
-				ticket = ticket - 1
-			End If
+		Next
+	Next
+	
+	Dim maxTimes, times, nowDistance, maxDistance
+	For i = 0 To UBound(arr)
+		If arr(i) <> nowDistance Then 
+			times = 1
+			nowDistance = arr(i)
+		Else 
+			times = times + 1
+		End If
+		If times > maxTimes Then 
+			maxTimes = times
+			maxDistance = nowDistance
 		End If
 	Next
+	
+	// 投票选择出最佳屏距
 	If debug Then 
-		TracePrint "1屏的距离为" & maxDistance & "px" & "最终票数：" & ticket
+		TracePrint "1屏的距离为" & maxDistance & "px" & "出现次数" & times
 	End If
 	// count / 10为1距，更新距离
 	Form1.InputBox3.Text = maxDistance / 10
@@ -383,7 +392,6 @@ Function getStrength(angle, horizontal, vertical)
 		strength = strengthTable70(Fix(horizontal + 0.000001) + 1)
 	End If
 	
-	TracePrint "垂直距离为0时的力度：----------" & strength
 	strength = strength + 0
 	
 	If vertical > 0 Then 
@@ -391,8 +399,7 @@ Function getStrength(angle, horizontal, vertical)
 		close = 1 / (horizontal / 100)
 		close = close / 10
 		close = close * close + 1
-		
-		TracePrint "水平距离参数：（（（（（（（（" & close
+
 		Select Case angle
 			// 当水平距离越近时，垂直距离越远，力度越大
 			// 当水平距离越远时，垂直距离越远，力度增大的幅度变小
