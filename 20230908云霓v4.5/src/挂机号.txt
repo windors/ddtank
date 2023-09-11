@@ -1,0 +1,452 @@
+// tmp给线程传递句柄，tmp2传递模式
+Dimenv tmp, tmp2
+// 偏移用
+Dimenv dx, dy
+Dim dmode
+dx = 0
+dy = 0
+Call ajjl_main
+Sub ajjl_main
+	Dim hwndFile, slaveNum
+	
+	// 将master句柄换为数组
+	hwndFile = "C:/tmp/hwnds.txt"
+	slaveNum = 0
+	str = Lib.文件.读取指定行文本内容(hwndFile, 0)
+	masterHwnds = Split(str, ",")
+	Call 大漠注册
+
+
+	str = findDdtHwnds()
+	TracePrint str
+	Dim hwnds, isMaster, modes
+	hwnds = Split(str, ",")
+	modes = Split(dmode)
+	For i = 0 To UBound(hwnds)
+		isMaster = false
+		tmp = hwnds(i)
+		tmp2 = modes(i)
+		// 去除master句柄
+		For j = 0 To UBound(masterHwnds)
+			If UBound(masterHwnds) = - 1  Then 
+				Exit For 
+			End If
+			If (tmp = masterHwnds(j)) Then 
+				isMaster = true
+				Exit For
+			End If
+		Next
+		If isMaster = False Then 
+			slaveNum = slaveNum + 1
+			
+			thread = BeginThread(main)
+			TracePrint "等待启动线程中..."
+			While tmp <> - 1 
+				Delay 100
+			Wend
+			Delay 100
+		End If
+	Next
+	MsgBox "共找到窗口" & UBound(hwnds) + 1 & "个，启动了挂机号" & slaveNum & "个"
+End Sub
+
+Sub main
+	Dim hwnd, keyHwnd, mode
+	mode = tmp2
+	hwnd = tmp
+	tmp = - 1 
+	tmp2 = -1
+
+	If mode = "1" Then 
+		// 后台模式
+		TracePrint "后台模式"
+		keyHwnd = hwnd
+	ElseIf mode = "2" Then
+		// 急速模式（前台模式）
+		TracePrint "前台模式"
+		Dim nextHwnd
+		nextHwnd = Plugin.Window.FindEx(hwnd, 0, 0, 0)
+		While nextHwnd <> 0
+			keyHwnd = nextHwnd
+			nextHwnd = Plugin.Window.FindEx(nextHwnd, 0, 0, 0)
+		Wend
+	End If
+	
+	// 激活窗口并运行代码
+	Call bund(hwnd, mode)
+	
+	While True
+		// 检测是否需要激活窗口
+		Call needActiveWindow
+		// 检测hwnd是否失效
+		Call hwndCheck(hwnd, keyHwnd)
+		// 检测是否需要准备
+		Call needPrepare
+		// 检测是否需要按p	
+		Call needPressPass(hwnd, keyHwnd)
+		// 检测是否需要将奖励放进背包
+		Call needDraw
+		Delay 1000 * (1 - (Form1.Slider1.Value / 1000))
+	Wend
+End Sub
+
+
+
+Function needActiveWindow
+	If dm.FindPic(450 + dx, 250 + dy, 530 + dx, 330 + dy, "C:\tmp\蛋4.5-需要激活窗口.bmp", 303030, 0.8, 0, intX, intY) > - 1  Then 
+		myMoveTo 870, 130
+		dm.leftClick
+	End If
+End Function
+
+// 检测是否需要按p
+Sub needPressPass(hwnd, keyHwnd)
+	If isMyRound() Then 
+		Dim str
+		str = LCase(LTrim(Form1.InputBox1.Text + ""))
+		While len(str) > 0
+			myKeyPressChar hwnd, keyHwnd, Left(str, 1)
+			str = Right(str, Len(str) - 1)
+		Wend
+	End If
+End Sub
+
+Function isMyRound()
+	isMyRound = False
+	If dm.FindPic(960 + dx, 180 + dy, 990 + dx, 210 + dy, "C:\tmp\蛋4.5-出手判定1.bmp", 101010, 0.8, 0, intX, intY) = - 1  and dm.FindPic(960 + dx, 180 + dy, 990 + dx, 210 + dy, "C:\tmp\蛋4.5-出手判定2.bmp", 101010, 0.8, 0, intX, intY) = - 1  Then 
+		isMyRound = False
+	ElseIf dm.FindPic(476 + dx, 158 + dy, 525 + dx, 176 + dy, "C:\tmp\蛋4.5-该出手了.bmp", 303030, 0.4, 0, intX, intY) > - 1  Then
+		isMyRound = True
+	End If
+End Function
+
+// 检测是否需要准备
+Sub needPrepare
+	dm.FindPic 920 + dx, 430 + dy, 980 + dx, 500 + dy, "C:\tmp\蛋4.5-准备1.bmp", 101010, 0.9, 0, intX, intY
+	If intX > 0 And intY > 0 Then 
+		// 购买怒气
+		myMoveTo 878,337
+		dm.leftClick 
+		dm.leftClick 
+		dm.leftClick 
+		// 点击准备
+		myMoveTo intX, intY
+		dm.leftClick 
+		Delay 3000
+	End If
+End Sub
+
+
+Sub needDraw
+	Dim isEnd
+	isEnd = False
+	dm.FindPic 88 + dx, 59 + dy, 904 + dx, 571 + dy, "C:\tmp\蛋4.5-卡牌.bmp", 101010, 0.8, 0, px, py
+	While px > 0 and py > 0
+		Form1.Label4.Caption = "第" & (n + 1) & "次抽卡，祝好运 0v0~"
+		For 3
+			While px > 0 and py > 0
+				myMoveTo px, py
+				dm.leftClick 
+				dm.FindPic 88 + dx, 59 + dy, 904 + dx, 571 + dy, "C:\tmp\蛋4.5-卡牌.bmp", 101010, 0.8, 0, px, py
+				If Form1.CheckBox3.Value Then 
+					If dm.FindPic(650 + dx, 200 + dy, 780 + dx, 300 + dy, "C:\tmp\蛋4.5-翻第三张牌.bmp", 101010, 0.8, 0, px2, py2) Then 
+						myMoveTo 382, 340
+						dm.leftClick 
+						Delay 1000
+					End If
+				End If
+				Delay 500 * Rnd()
+			Wend
+			Delay 1000
+		Next
+		dm.FindPic 88 + dx, 59 + dy, 904 + dx, 571 + dy, "C:\tmp\蛋4.5-卡牌.bmp", 101010, 0.8, 0, px, py
+	Wend
+	If isEnd Then 
+		n = n + 1
+		Form1.Label4.Caption = "第" & n & "次副本，结束！"
+	End If
+End Sub
+
+Sub hwndCheck(hwnd, keyHwnd)
+    // 窗口已经过期，结束线程即可
+	if Plugin.Window.IsWindow(hwnd) = 0 Or Plugin.Window.IsWindow(keyHwnd) = 0 Then
+		StopThread GetThreadID()
+	End If
+End Sub
+
+Sub myMoveTo(x, y)
+	dm.moveTo x + dx, y + dy
+End Sub
+
+
+// 寻找糖果浏览器下的所有ddt句柄，返回字符串，句柄1,句柄2,句柄3
+Function findDdtHwnds
+	Dim HwndEx, parentHwnd, resultStr
+	// 糖果浏览器
+	If Form1.CheckBox1.Value Then 
+		HwndEx = Plugin.Window.SearchEx("Afx:00400000:8:00010003:00000006:00000000", "", 1)
+		HwndEx = removeLastChapter(HwndEx)
+		parentHwnd = Split(HwndEx, "|")
+		For i = 0 To UBOUND(parentHwnd)
+			str = Plugin.Window.FindEx(parentHwnd(i), 0, "Afx:00400000:8:00010003:00000006:00000000", "")
+			If str <> 0 Then 
+				str = Plugin.Window.FindEx(str, 0, "Shell Embedding", "")
+				If str <> 0 Then 
+					str = Plugin.Window.FindEx(str, 0, "Shell DocObject View", "")
+					If str <> 0 Then 
+						str = Plugin.Window.FindEx(str, 0, "Internet Explorer_Server", "")
+						If str <> 0 Then 
+							str = Plugin.Window.FindEx(str, 0, "MacromediaFlashPlayerActiveX", "")
+							If str <> 0 Then 
+								resultStr = resultStr & str & ","
+								dmode = dmode & "1"
+								TracePrint "糖果浏览器"
+							End If
+						End If
+					End If
+				End If
+			End If
+		Next
+	End If
+	
+	// 360急速
+	If Form1.CheckBox2.Value Then 
+	HwndEx = Plugin.Window.SearchEx("Chrome_WidgetWin_1", "", 1)
+	HwndEx = removeLastChapter(HwndEx)
+	parentHwnd = Split(HwndEx, "|")
+		For i = 0 To UBOUND(parentHwnd)
+			str = Plugin.Window.FindEx(parentHwnd(i), 0, "Chrome_RenderWidgetHostHWND", "Chrome Legacy Window")
+			If str <> 0 Then 
+				str = Plugin.Window.FindEx(str, 0, "Container", "Browser")
+				If str <> 0 Then 
+					str = Plugin.Window.FindEx(str, 0, "Shell Embedding", "")
+					If str <> 0 Then 
+						str = Plugin.Window.FindEx(str, 0, "Shell DocObject View", "")
+						If str <> 0 Then 
+							str = Plugin.Window.FindEx(str, 0, "Internet Explorer_Server", "")
+							If str <> 0 Then 
+								str = Plugin.Window.FindEx(str, 0, "MacromediaFlashPlayerActiveX", "")
+								If str <> 0 Then 
+									resultStr = resultStr & str & ","
+									dmode = dmode & "1"
+									TracePrint "360极速浏览器"
+								End If
+							End If
+						End If
+					End If
+				End If
+			End If
+		Next
+	End If
+	
+	// QQ浏览器
+	If Form1.CheckBox4.Value Then 
+		HwndEx = Plugin.Window.SearchEx("QQBrowser_WidgetWin_1", "", 1)
+		HwndEx = removeLastChapter(HwndEx)
+		parentHwnd = Split(HwndEx, "|")
+		For i = 0 To UBOUND(parentHwnd)
+			str = Plugin.Window.FindEx(parentHwnd(i), 0, "Chrome_WidgetWin_1", 0)
+			If str <> 0 Then 
+				str = Plugin.Window.FindEx(str, 0, "Chrome_RenderWidgetHostHWND", 0)
+				If str <> 0 Then 
+					str = Plugin.Window.FindEx(str, 0, "HungHostWindow", 0)
+					If str <> 0 Then 
+						str = Plugin.Window.FindEx(str, 0, "QQBrowserMiniAx", 0)
+						If str <> 0 Then 
+							str = Plugin.Window.FindEx(str, 0, "Shell Embedding", 0)
+							If str <> 0 Then 
+								str = Plugin.Window.FindEx(str, 0, "Shell DocObject View", 0)
+								If str <> 0 Then 
+									str = Plugin.Window.FindEx(str, 0, "Internet Explorer_Server", 0)
+									If str <> 0 Then 
+										If Lib.ddt.offsetRepair() Then 
+											resultStr = resultStr & parentHwnd(i) & ","
+											dmode = dmode & "2"
+										End If
+									End If
+								End If
+							End If
+						End If
+					End If
+				End If
+			End If
+		Next
+	End If
+	
+	
+	// 极速模式
+	If Form1.CheckBox5.Value Then 
+		If Form1.CheckBox2.Value Then 
+			// 360极速
+			HwndEx = Plugin.Window.SearchEx("Chrome_WidgetWin_1", "弹弹堂", 0)
+			HwndEx = removeLastChapter(HwndEx)
+			parentHwnd = Split(HwndEx, "|")
+			For i = 0 To UBOUND(parentHwnd)
+				str = Plugin.Window.FindEx(parentHwnd(i), 0, "Chrome_RenderWidgetHostHWND", "Chrome Legacy Window")
+				If str <> 0 Then 
+					// 急速模式，需要调整窗口大小
+					If Lib.ddt.offsetRepair() Then 
+						resultStr = resultStr & parentHwnd(i) & ","
+						dmode = dmode & "2"
+					End If
+				End If
+			Next
+		End If
+		
+		If Form1.CheckBox4.Value Then 
+			// QQ浏览器
+			HwndEx = Plugin.Window.SearchEx("QQBrowser_WidgetWin_1", "弹弹堂", 0)
+			HwndEx = removeLastChapter(HwndEx)
+			parentHwnd = Split(HwndEx, "|")
+			For i = 0 To UBOUND(parentHwnd)
+				str = Plugin.Window.FindEx(parentHwnd(i), 0, "Chrome_WidgetWin_1", 0)
+				If str <> 0 Then 
+					If str <> 0 Then 
+						str = Plugin.Window.FindEx(str, 0, "Chrome_RenderWidgetHostHWND", "Chrome Legacy Window")
+						If str <> 0 Then 
+							// 急速模式，需要调整窗口大小
+							If Lib.ddt.offsetRepair() Then 
+								resultStr = resultStr & parentHwnd(i) & ","
+								dmode = dmode & "2"
+							End If
+						End If
+					End If
+				End If
+			Next
+		End If
+		
+		If Form1.CheckBox6.Value Then 
+			// Flash自带
+			HwndEx = Plugin.Window.SearchEx("Qt5152QWindowIcon", "FCBrowser", 0)
+			HwndEx = removeLastChapter(HwndEx)
+			parentHwnd = Split(HwndEx, "|")
+			For i = 0 To UBOUND(parentHwnd)
+				str = Plugin.Window.FindEx(parentHwnd(i), 0, "Qt5152QWindowIcon", "FCBrowser")
+				If str <> 0 Then 
+					str = Plugin.Window.FindEx(str, 0, "Qt5152QWindowIcon", "FCBrowser")
+					If str <> 0 Then 
+						str = Plugin.Window.FindEx(str, 0, "CefBrowserWindow", "")
+						If str <> 0 Then 
+							str = Plugin.Window.FindEx(str, 0, "Chrome_WidgetWin_0", "")
+							If str <> 0 Then 
+								str = Plugin.Window.FindEx(str, 0, "Chrome_RenderWidgetHostHWND", "Chrome Legacy Window")
+								If str <> 0 Then 
+									// 急速模式，需要调整窗口大小
+									If Lib.ddt.offsetRepair() Then 
+										resultStr = resultStr & parentHwnd(i) & ","
+										dmode = dmode & "2"
+									End If
+								End If
+							End If
+						End If
+					End If
+				End If
+			Next
+		End If
+	End If
+	
+	TracePrint resultStr
+	findDdtHwnds = removeLastChapter(resultStr)
+End Function
+
+Function removeLastChapter(str)
+	If Len(str) > 0 Then 
+		removeLastChapter = Left(str, Len(str) - 1)
+	End If
+End Function
+
+/**
+ * ---------------------------大漠区-------------------------------
+**/
+
+Sub 大漠注册
+	need_ver = "3.1233"
+	// 防止被系统精简掉导致的中注册失败
+	Set ws=createobject("Wscript.Shell")
+	ws.run "regsvr32 atl.dll /s"
+	Set ws = nothing
+	// 释放插件
+	PutAttachment "c:\tmp", "*.*"
+	PutAttachment ".\Plugin", "RegDll.dll"
+	// 使用RegDll注册
+	Call Plugin.RegDll.Reg("c:\tmp\dm.dll")
+	set dm = createobject("dm.dmsoft")
+	ver = dm.Ver()
+	if ver <> need_ver then
+		// 先释放先前创建的dm
+		set dm = nothing
+		// 再尝试用regsvr32 来注册. 这里必须使用绝对路径。以免有别人把dm.dll释放在系统目录.造成版本错误.
+		set ws=createobject("Wscript.Shell")
+		ws.run "regsvr32 c:\tmp\dm.dll /s"
+		set ws=nothing
+		Delay 1500  
+		// 再判断插件是否注册成功
+		set dm = createobject("dm.dmsoft")
+		ver = dm.Ver()
+		if ver <> need_ver then
+			// 这时，已经确认插件注册失败了。 弹出一些调试信息，以供分析.
+			messagebox "插件版本错误,当前使用的版本是:"&ver&",插件所在目录是:"&dm.GetBasePath()
+			messagebox "请关闭程序,重新打开本程序再尝试"
+    		endscript
+  		End If
+	Else 
+  		TracePrint "注册成功"
+	End If
+	dm.SetPath "c:\tmp"
+End Sub
+
+Sub bund(hwnd, mode)
+	Set dm = createobject("dm.dmsoft")
+	TracePrint hwnd
+	If mode = "1" Then 
+		dm_ret = dm.BindWindowEx(hwnd, "dx2", "dx2", "dx", "dx.public.active.message", 4)
+	ElseIf mode = "2" Then
+		dm_ret = dm.BindWindowEx(hwnd, "dx2", "windows3", "dx", "dx.public.active.message", 4)
+	End If
+	
+	if dm_ret = 0 then
+   	last_error = dm.GetLastError()
+	// 如果是WIN7 VISTA WIN2008系统,检测当前系统是否有开启UAC
+   	if dm.GetOsType() = 3 then
+    	// 有开启UAC的话，尝试关闭
+			if dm.CheckUAC() = 1 then
+     			if dm.SetUAC(0) = 1 then
+          			// 关闭UAC之后，必须重启系统才可以生效
+          			messagebox "已经关闭系统UAC设置，必须重启系统才可以生效。点击确定重启系统"
+         			dm.ExitOs 2
+                	Delay 2000
+         			endscript
+     			end if
+			end if
+   	end if
+   	// 具体错误码的含义，可以参考函数GetLastError的说明.
+   	messagebox "绑定失败，错误码是:"&last_error & ", 窗口句柄为："& hwnd
+   	EndScript
+	Else 
+   	TracePrint "绑定成功"
+	end if
+End Sub
+
+Sub OnScriptExit()
+   dm.UnBindWindow
+End Sub
+
+
+Sub myKeyPressChar(hwnd, keyHwnd, char)
+	If hwnd = keyHwnd Then 
+		dm.keyDownChar char
+		dm.keyUpChar char
+	Else 
+		c = Lib.键盘.getASCII(char)
+		Plugin.Bkgnd.KeyDown keyHwnd, c
+		Plugin.Bkgnd.KeyUp keyHwnd, c
+	End If
+End Sub
+
+Event Form1.CheckBox5.Click
+	MsgBox "即将开启前台模式，切勿调整窗口大小及缩小，尽量不要移动窗口位置，多开需要注意将窗口分离出来", 48, "警告"
+End Event
+
+Event Form1.CheckBox4.Click
+	MsgBox "即将开启前台模式，切勿调整窗口大小及缩小，尽量不要移动窗口位置，多开需要注意将窗口分离出来", 48, "警告"
+End Event
