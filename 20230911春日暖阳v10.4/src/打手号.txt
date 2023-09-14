@@ -42,7 +42,7 @@ Sub init
 	ElseIf className = "Internet Explorer_Server" Then
 		// QQ浏览器
 		success = true
-		If Lib.ddt.offsetRepair() Then 
+		If Lib.ddt.offsetRepair(hwnd) Then 
 			success = true
 			MsgBox "QQ浏览器（前台模式，切勿调整大小及缩小）", 48, "警告"
 		End If
@@ -56,7 +56,7 @@ Sub init
 				// 360极速
 				hwnd = Plugin.Window.GetParentWindow(hwnd)
 				If Plugin.Window.GetParentWindow(hwnd) = 0 Then 
-					If Lib.ddt.offsetRepair() Then 
+					If Lib.ddt.offsetRepair(hwnd) Then 
 						success = true
 						MsgBox "360极速浏览器（前台模式，切勿调整窗口大小及缩小，关闭弹窗后尽量不要移动窗口位置，多开需要注意将窗口分离出来）", 48, "警告"
 					End If
@@ -67,7 +67,7 @@ Sub init
 						If Plugin.Window.GetClass(hwnd) = "QQBrowser_WidgetWin_1" Then 
 							If Plugin.Window.GetParentWindow(hwnd) = 0 Then 
 								// TODO QQ浏览器
-								If Lib.ddt.offsetRepair() Then 
+								If Lib.ddt.offsetRepair(hwnd) Then 
 									success = true
 									MsgBox "QQ浏览器（前台模式，切勿调整窗口大小及缩小，关闭弹窗后尽量不要移动窗口位置，多开需要注意将窗口分离出来）", 48, "警告"
 								End If
@@ -85,7 +85,7 @@ Sub init
 									If Plugin.Window.GetClass(hwnd) = "Qt5152QWindowIcon" Then 
 										If Plugin.Window.GetParentWindow(hwnd) = 0 Then 
 											success = true
-											If Lib.ddt.offsetRepair() Then 
+											If Lib.ddt.offsetRepair(hwnd) Then 
 												success = true
 												MsgBox "Flash自带浏览器（前台模式，切勿调整窗口大小及缩小，关闭弹窗后尽量不要移动窗口位置，多开需要注意将窗口分离出来）", 48, "警告"
 											End If
@@ -100,6 +100,8 @@ Sub init
 		End If
 	End If
 	If success Then 
+		Form1.Label4.Caption = "脚本启动成功，句柄：" & hwnd
+		Form1.debug1.Text = hwnd : Form1.debug2.Text = keyHwnd : Form1.debug3.Text = dx : Form1.debug4.Text = dy : Form1.debug5.Text = mode
 		Call Lib.ddt.大漠注册
 		Call Lib.ddt.bund(hwnd, mode)
 		// 选择字库文件，改1
@@ -109,6 +111,10 @@ Sub init
 		// 将主句柄保存
 		Call Lib.ddt.saveMaster(hwnd)
 		TracePrint "偏移量：" & dx & ", " & dy
+		
+		dm.FindPic 0, 0, 1000, 600, "C:\tmp\矫正标识.bmp", 303030, 0.8, 0, intX, intY
+		TracePrint "后台模式标准值：" & intX & ", " & intY
+		
 		Call main
 	Else 
 		MessageBox "未检测到游戏窗口，请将游戏放至游戏窗口内启动"
@@ -117,34 +123,36 @@ End Sub
 
 Sub main
 	While True
-		checkTimes = checkTimes + 1
-		If checkTimes > 100 Then 
-			checkTimes = 0
-		End If
-		If checkTimes Mod 5 = 1 Then 
-			Call needActiveWindow
-		End If
-		// 检测hwnd是否失效
-		Call hwndCheck(hwnd)
-		If isEnterLevel() Then
-			// 已进入副本，优先判断屏距
-			If isMyRound() Then
-				Call 打副本策略
+		While Form1.debug0.Text
+			checkTimes = checkTimes + 1
+			If checkTimes > 100 Then 
+				checkTimes = 0
 			End If
-		Else 
-			// 检测是否需要选地图
-			Call needPrepare
-			Call needChooseMap
-			Call needCloseTip
-			Call needCloseEmail
-			// 检测是否需要将奖励放进背包
-			If checkTimes Mod 5 = 0 Then 
-				Call needGoingToWharf
-				Call needCreateRoom
-				Call needDraw
+			If checkTimes Mod 5 = 1 Then 
+				Call needActiveWindow
 			End If
-		End If
-		Delay 700 * (1 - (Form1.Slider1.Value / 1000))
+			// 检测hwnd是否失效
+			Call hwndCheck(hwnd)
+			If isEnterLevel() Then
+				// 已进入副本，优先判断屏距
+				If isMyRound() Then
+					Call 打副本策略
+				End If
+			Else 
+				// 检测是否需要选地图
+				Call needPrepare
+				Call needChooseMap
+				Call needCloseTip
+				Call needCloseEmail
+				// 检测是否需要将奖励放进背包
+				If checkTimes Mod 5 = 0 Then 
+					Call needGoingToWharf
+					Call needCreateRoom
+					Call needDraw
+				End If
+			End If
+			Delay 700 * (1 - (Form1.Slider1.Value / 1000))
+		Wend
 	Wend
 End Sub
 
@@ -191,28 +199,47 @@ Sub 打副本策略
 	round = round + 1
 	Form1.Label4.Caption = "第" & (n + 1) & "次副本，第" & round & "回合"
 	TracePrint "第" & round & "回合"
-	If InStr(Form1.InputBox2.Text, "p") > 0 Then 
+	If round = 1 and Form1.CheckBox2.Value = 0 Then 
+		// 计算屏距
+		TracePrint "计算屏距"
+		Call calcUnitDistance()
+	End If
+	If Form1.controlInput1.Text Then 
+		Select Case round Mod 6
+			Case 0
+				Call roundAttackLogicCore(Form1.InputBox9.Text)
+			Case 1
+				Call roundAttackLogicCore(Form1.InputBox9.Text)
+			Case 2
+				Call roundAttackLogicCore(Form1.InputBox9.Text)
+			Case 3
+				Call roundAttackLogicCore(Form1.InputBox9.Text)
+			Case 4
+				Call roundAttackLogicCore(Form1.InputBox9.Text)
+			Case 5
+				Call roundAttackLogicCore(Form1.InputBox9.Text)
+		End Select
+	Else 
+		Call roundAttackLogicCore(Form1.InputBox2.Text)
+	End If
+	
+	
+	
+End Sub
+
+Sub roundAttackLogicCore(str)
+	If InStr(str, "p") > 0 Then 
 		// 技能带p，直接按技能即可
-		str = LCase(LTrim(Form1.InputBox2.Text + ""))
+		str = LCase(str + "")
 		While len(str) > 0
 			Lib.键盘.myKeyPressChar hwnd, keyHwnd, Left(str, 1)
 			str = Right(str, Len(str) - 1)
 		Wend
-	Else 
-		If round = 1 and Form1.CheckBox2.Value = 0 Then 
-			// 收起
-			//offsetMoveTo 972, 443
-			//dm.leftClick
-			// 计算屏距
-			TracePrint "计算屏距"
-			Call calcUnitDistance()
-		End If
-		
+	Else
 		While isMyRound()
-			Call attackAuto
-		Wend	
+			Call attackAuto(str)
+		Wend
 	End If
-	
 End Sub
 
 // 改4
@@ -223,7 +250,7 @@ Sub 要打的副本
 	Form1.Label4.Caption = "第" & (n + 1) & "次副本，开始！"
 	
 	// 副本模式
-	offsetMoveTo 221 + 525 * (Form1.Slider3.Value / 10), 190
+	offsetMoveTo 221 + 525 * (Form1.Slider3.Value / 100), 190
 	dm.leftClick 
 	Delay 800
 	
@@ -242,9 +269,12 @@ Sub 要打的副本
 			For 2
 				offsetMoveTo 775, 300
 				dm.leftClick 
+				Delay 100
 				dm.leftClick 
+				Delay 100
 				offsetMoveTo 775, 310
-				dm.leftClick
+				dm.leftClick 
+				Delay 100
 			Next
 		Next
 	End If
@@ -261,8 +291,9 @@ Sub 要打的副本
 	End Select
 	offsetMoveTo x, y
 	dm.leftClick 
+	Delay 100
 	// 难度，根据输入框输入调整
-	offsetMoveTo 224 + 554 * (Form1.Slider2.Value / 10), 500
+	offsetMoveTo 224 + 554 * (Form1.Slider2.Value / 100), 500
 	dm.leftClick 
 	
 	// 点击确定
@@ -274,10 +305,10 @@ End Sub
 /**
  * 自动寻找屏距，并计算攻击
  **/
-Sub attackAuto
+Sub attackAuto(str)
 	If Form1.CheckBox1.Value Then 
 		// 指定角度力度攻击
-		Call attackWithAngle(Form1.InputBox4.Text, Form1.InputBox5.Text, Form1.InputBox7.Text)
+		Call attackWithAngle(Form1.InputBox4.Text, Form1.InputBox5.Text, Form1.InputBox7.Text, str)
 	Else 
 		// 寻找自身位置
 		If getMyPosition() and getEnemyPosition() Then 
@@ -286,7 +317,7 @@ Sub attackAuto
 			Call adjustDirection()
 			
 			// 自动攻击
-			Call calcAndAttack()
+			Call calcAndAttack(str)
 		Else 
 			// 未找到自身位置
 			Delay 1
@@ -380,7 +411,7 @@ Sub adjustDirection
 End Sub
 
 // 计算角度力度并攻击 x1, y1 : 我的坐标，y1, y2: 敌人的坐标
-Sub calcAndAttack
+Sub calcAndAttack(str)
 	Dim strength, angle
 	If Form1.CheckBox1.Value Then 
 		// 手动攻击
@@ -393,7 +424,7 @@ Sub calcAndAttack
 	strength = strength + Form1.InputBox6.Text
 	
 	TracePrint "角度" & angle & "力度:" & strength
-	Call attackWithAngle(angle, strength, Form1.InputBox7.Text)
+	Call attackWithAngle(angle, strength, Form1.InputBox7.Text, str)
 End Sub
 
 // 寻找我的坐标
@@ -412,13 +443,13 @@ End Function
 // 寻找敌人的坐标
 Function getEnemyPosition()
 	If dm.findColor(static_x1 + dx, static_y1 + dy, static_x2 + dx, static_y2 + dy, "ff0000-000000", 1, Form1.ComboBox3.ListIndex, intX, intY) Then 
-		positionX2 = intX
-		positionY2 = intY
+		positionX2 = intX - 2
+		positionY2 = intY + 1
 		getEnemyPosition = True
 	ElseIf dm.findColor(static_x1 + dx, static_y1 + dy, static_x2 + dx, static_y2 + dy, "99cc00-000000", 1, Form1.ComboBox3.ListIndex, intX, intY) Then
 		// 找绿色（小鸡本（淦））
-		positionX2 = intX
-		positionY2 = intY
+		positionX2 = intX - 2
+		positionY2 = intY + 1
 		
 		getEnemyPosition = True
 		TracePrint intX & ", " & intY
@@ -446,7 +477,7 @@ End Function
  * strength: 力度
  * mis: 角度误差
  **/
-Sub attackWithAngle(angle, strength, mis)
+Sub attackWithAngle(angle, strength, mis, str)
 	Dim failCount, lastAngle
 	failCount = 0
 	angle = angle + Form1.InputBox1.Text
@@ -486,38 +517,41 @@ Sub attackWithAngle(angle, strength, mis)
 		nowAngle = getAngle()
 	Wend
 	// 力度无误
-	Call attack(strength)
+	Call attack(strength, str)
 End Sub
 
 // 获取当前朝向：0为左，1为右，-1表示未知
 // TODO 检测度提升的方法：获取角度值，若角度超过90则说明当前角度是反的，目前不考虑倒抛
 Function getToward()
+	Dim left, right
 	angle = Abs(getAngle())
 	If angle <= 70 Then 
-		If dm.findColor(60 + dx, 500 + dy, 100 + dx, 600 + dy, "B27F2C-101010|F0C040-101010|B00000-300000|F00000-101010", 1.0, 0, intX, intY) Then 
+		right = dm.GetResultCount(dm.findColorEx(60 + dx, 500 + dy, 100 + dx, 600 + dy, "B27F2C-101010|F0C040-101010|B00000-300000|F00000-101010", 1.0, 0))
+		left = dm.GetResultCount(dm.findColorEx(0 + dx, 500 + dy, 40 + dx, 600 + dy, "B27F2C-101010|F0C040-101010|B00000-300000|F00000-101010", 1.0, 0))
+		If right > left Then 
 			getToward = 1
-		ElseIf dm.findColor(0 + dx, 500 + dy, 40 + dx, 600 + dy, "B27F2C-101010|F0C040-101010|B00000-300000|F00000-101010", 1.0, 0, intX, intY) Then 
+		Elseif right < left Then
 			getToward = 0
 		Else 
-			getToward = - 1 
+			getToward = -1
 		End If
 	Else 
-		If dm.findColor(50 + dx, 500 + dy, 100 + dx, 600 + dy, "B27F2C-101010|F0C040-101010|B00000-300000|F00000-101010", 1.0, 0, intX, intY) Then 
+		right = dm.GetResultCount(dm.findColorEx(50 + dx, 500 + dy, 100 + dx, 600 + dy, "B27F2C-101010|F0C040-101010|B00000-300000|F00000-101010", 1.0, 0))
+		left = dm.GetResultCount(dm.findColorEx(0 + dx, 500 + dy, 50 + dx, 600 + dy, "B27F2C-101010|F0C040-101010|B00000-300000|F00000-101010", 1.0, 0))
+		If right > left Then 
 			If angle <= 90 Then 
 				getToward = 1
 			Else 
 				getToward = 0
 			End If
-			
-		ElseIf dm.findColor(0 + dx, 500 + dy, 50 + dx, 600 + dy, "B27F2C-101010|F0C040-101010|B00000-300000|F00000-101010", 1.0, 0, intX, intY) Then 
+		Elseif right < left Then
 			If angle <= 90 Then 
 				getToward = 0
 			Else 
 				getToward = 1
 			End If
 		Else 
-			getToward = - 1 
-			TracePrint "朝向获取失败"
+			getToward = -1
 		End If
 	End If
 	If debug Then 
@@ -532,8 +566,8 @@ Function getToward()
 End Function
 
 // 指定力度攻击
-Sub attack(strength)
-	Dim str, tried, startX, endX, checkY, strength1
+Sub attack(strength, str)
+	Dim tried, startX, endX, checkY, strength1
 	// startX、endX：力度条的起始和终止位置
 	startX = 151 + dx
 	endX = 646 + dx
@@ -542,7 +576,6 @@ Sub attack(strength)
 	// checkY：检测力度条颜色变化的y轴
 	checkY = 591 + dy
 	tried = 0
-	str = LCase(LTrim(Form1.InputBox2.Text + ""))
 	While len(str) > 0
 		Lib.键盘.myKeyPressChar hwnd, keyHwnd, Left(str, 1)
 		str = Right(str, Len(str) - 1)
@@ -725,7 +758,7 @@ Sub needDraw
 	If isEnd Then 
 		n = n + 1
 		Form1.Label4.Caption = "第" & n & "次副本，结束！"
-		Delay Form1.InputBox8.Text + 0
+		Delay 1000* (Form1.InputBox8.Text + 0)
 	End If
 End Sub
 
@@ -756,3 +789,59 @@ End Sub
 Sub OnScriptExit()
    dm.UnBindWindow
 End Sub
+
+
+Event Form1.Button1.Click
+	Form1.Container2.Top = - 2
+End Event
+
+Event Form1.Button2.Click
+	Form1.Container2.Top = 300
+End Event
+
+
+// 点击了自定义回合
+Event Form1.Button5.Click
+	MessageBox "本版本不添加自定义回合攻击"
+	// Form4.Top = 0
+End Event
+Event Form1.Button4.Click
+	Form1.controlInput1.Text = 1
+	MessageBox "本次脚本将按自定义的回合来进行攻击"
+End Event
+
+// 副本模式
+Event Form1.Slider3.Slide
+	hwnd = Form1.debug1.Text
+	// offsetMoveTo 221 + 525 * (Form1.Slider3.Value / 10), 190
+	If Plugin.Window.IsWindow(hwnd) Then 
+		Call showPointWindow
+		places = Plugin.Window.GetClientRect(hwnd)
+		places = Split(places, "|")
+		Plugin.Window.Move Form4.Hwnd, places(0) + dx + 221 + 525 * (Form1.Slider3.Value / 100) - Form4.Width / 2, places(1) + dy + 190 - Form4.Height - 32
+	End If
+End Event
+// 难度矫正
+Event Form1.Slider2.Slide
+	hwnd = Form1.debug1.Text
+	// offsetMoveTo 224 + 554 * (Form1.Slider2.Value / 100), 500
+	If Plugin.Window.IsWindow(hwnd) Then 
+		Call showPointWindow
+		places = Plugin.Window.GetClientRect(hwnd)
+		places = Split(places, "|")
+		Plugin.Window.Move Form4.Hwnd, places(0) + dx + 224 + 554 * (Form1.Slider2.Value / 100) - Form4.Width / 2, places(1) + dy + 500 - Form4.Height - 32
+	End If
+End Event
+Sub showPointWindow
+	If Form1.showInput1.Text Then 
+	Else 
+		Form4.Show 
+		Plugin.Window.Top Form4.hwnd, 0
+	End If
+End Sub
+Event Form4.LoadOver
+	Form1.showInput1.Text = 1
+End Event
+Event Form4.UnLoad
+	Form1.showInput1.Text = 0
+End Event

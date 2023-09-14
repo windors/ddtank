@@ -56,7 +56,7 @@ End Function
  * --------------------------主函数区-------------------------------
  **/
  
-Function offsetRepair
+Function offsetRepair(hwnd)
 	Plugin.Window.SetClientSize hwnd, 1200, 900
 	sRect = Plugin.Window.GetWindowRect(hwnd)
 	TracePrint sRect
@@ -65,8 +65,8 @@ Function offsetRepair
 	W2 = Clng(sRect(2)) : H2 = Clng(sRect(3))
 	If FindPic(W1, H1, W2, H2, "C:\tmp\矫正标识.bmp", 0.8, intX, intY) > - 1  Then 
 		TracePrint intX
-		dx = intX - 385 - W1
-		dy = intY - 575 - H1
+		dx = intX - 381 - W1
+		dy = intY - 572 - H1
 		offsetRepair = true
 	Else 
 		offsetRepair = false
@@ -128,33 +128,36 @@ Function getStrength(angle, horizontal, vertical)
 	upOffset = Array(3, 2.425, 2, 1.55, 1.9, 1.15, 0.58, 0.24)
 	Dim strength
 	strength = 0
+	If horizontal - Fix(horizontal) = 0 Then 
+		horizontal = horizontal + 0.000001
+	End If
 	If angle <= 20 Then 
 		angle = 20
-		strength = strengthTable20(Fix(horizontal + 0.000001) + 1)
+		strength = strengthTable20(Fix(horizontal)) + (strengthTable20(Fix(horizontal) + 1) - strengthTable20(Fix(horizontal))) * (horizontal - Fix(horizontal))
 	ElseIf angle <= 30 Then
 		angle = 30
-		strength = strengthTable30(Fix(horizontal + 0.000001) + 1)
+		strength = strengthTable30(Fix(horizontal)) + (strengthTable30(Fix(horizontal) + 1) - strengthTable30(Fix(horizontal))) * (horizontal - Fix(horizontal))
 	ElseIf angle <= 35 Then
 		angle = 35
-		strength = strengthTable35(Fix(horizontal + 0.000001) + 1)
+		strength = strengthTable35(Fix(horizontal)) + (strengthTable35(Fix(horizontal) + 1) - strengthTable35(Fix(horizontal))) * (horizontal - Fix(horizontal))
 	ElseIf angle <= 40 Then
 		angle = 40
-		strength = strengthTable40(Fix(horizontal + 0.000001) + 1)
+		strength = strengthTable40(Fix(horizontal)) + (strengthTable40(Fix(horizontal) + 1) - strengthTable40(Fix(horizontal))) * (horizontal - Fix(horizontal))
 	ElseIf angle <= 45 Then
 		angle = 45
-		strength = strengthTable45(Fix(horizontal + 0.000001) + 1)
+		strength = strengthTable45(Fix(horizontal)) + (strengthTable45(Fix(horizontal) + 1) - strengthTable45(Fix(horizontal))) * (horizontal - Fix(horizontal))
 	ElseIf angle <= 50 Then
 		angle = 50
-		strength = strengthTable50(Fix(horizontal + 0.000001) + 1)
+		strength = strengthTable50(Fix(horizontal)) + (strengthTable50(Fix(horizontal) + 1) - strengthTable50(Fix(horizontal))) * (horizontal - Fix(horizontal))
 	ElseIf angle <= 65 Then
 		angle = 65
-		strength = strengthTable65(Fix(horizontal + 0.000001) + 1)
+		strength = strengthTable65(Fix(horizontal)) + (strengthTable65(Fix(horizontal) + 1) - strengthTable65(Fix(horizontal))) * (horizontal - Fix(horizontal))
 	Else
 		angle = 70
-		strength = strengthTable70(Fix(horizontal + 0.000001) + 1)
+		strength = strengthTable70(Fix(horizontal)) + (strengthTable70(Fix(horizontal) + 1) - strengthTable70(Fix(horizontal))) * (horizontal - Fix(horizontal))
 	End If
 	
-	If vertical > 2 Then 
+	If vertical > 0.8 Then 
 		Dim close
 		close = 1 / (horizontal / 100)
 		close = close / 10
@@ -239,6 +242,7 @@ End Sub
 Sub bund(hwnd, mode)
 	Set dm = createobject("dm.dmsoft")
 	If mode = "1" Then 
+		TracePrint "后台模式"
 		dm_ret = dm.BindWindowEx(hwnd, "dx2", "dx2", "dx", "dx.public.active.message", 4)
 	ElseIf mode = "2" Then
 		dm_ret = dm.BindWindowEx(hwnd, "dx2", "windows3", "dx", "dx.public.active.message", 4)
@@ -265,8 +269,6 @@ Sub bund(hwnd, mode)
    		TracePrint "绑定成功"
 	End If
 End Sub
-
-
 
 
 /**
