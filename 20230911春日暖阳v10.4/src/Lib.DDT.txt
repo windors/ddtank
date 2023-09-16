@@ -110,6 +110,7 @@ Function getBestAngle(vertical, horizontal, unitDistance)
 	// TODO 再检测垂直距离，如果垂直距离过高，则提高角度，ddtank中1屏高6距，超过半屏就该
 End Function
 
+
 // 根据角度、水平距离、垂直距离、1距的距离来就按力度，并对角度进行修正
 // 水平距离：永远大于0，垂直距离：如果是正数表示Boss在自己的下面，否则Boss在上面
 Function getStrength(angle, horizontal, vertical)

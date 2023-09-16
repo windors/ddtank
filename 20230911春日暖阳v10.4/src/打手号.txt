@@ -12,6 +12,7 @@ Dim static_x1, static_x2, static_x3, static_x4
 Dim positionX1, positionX2, positionY1, positionY2
 // 偏移量
 Dim dx, dy, mode
+Dim isCaledUnitDistance
 
 Call init
 
@@ -25,8 +26,7 @@ Sub init
 	// roleColor = "00ccff"
 	roleColor = "0033cc"
 	// 计数器初始化
-	checkTimes = 0
-	// 初始化已打副本次数
+	checkTimes = 0	// 初始化已打副本次数
 	n = 0
 	dx = 0
 	dy = 0
@@ -133,11 +133,16 @@ Sub main
 			End If
 			// 检测hwnd是否失效
 			Call hwndCheck(hwnd)
-			If isEnterLevel() Then
-				// 已进入副本，优先判断屏距
-				If isMyRound() Then
-					Call 打副本策略
+			If isEnterLevel() Then 
+				If Form1.CheckBox7.Value Then 
+					If isCaledUnitDistance = false Then 
+						isCaledUnitDistance = true
+						Call calcUnitDistance
+					End If
 				End If
+				While isMyRound() and isEnterLevel()
+					Call 打副本策略
+				Wend
 			Else 
 				// 检测是否需要选地图
 				Call needPrepare
@@ -161,7 +166,12 @@ Function isEnterLevel()
 	If px > 0 and py > 0 Then 
 		isEnterLevel = true
 	Else 
-		isEnterLevel = False
+		dm.FindPic 960 + dx, 0 + dy, 999 + dx, 32 + dy, "C:\tmp\蛋10.4-本内退出2.bmp", 303030, 0.7, 0, px, py
+		If px > 0 and py > 0 Then 
+			isEnterLevel = true
+		Else 
+			isEnterLevel = False
+		End If
 	End If
 End Function
 
@@ -199,11 +209,6 @@ Sub 打副本策略
 	round = round + 1
 	Form1.Label4.Caption = "第" & (n + 1) & "次副本，第" & round & "回合"
 	TracePrint "第" & round & "回合"
-	If round = 1 and Form1.CheckBox2.Value = 0 Then 
-		// 计算屏距
-		TracePrint "计算屏距"
-		Call calcUnitDistance()
-	End If
 	If Form1.controlInput1.Text Then 
 		Select Case round Mod 6
 			Case 0
@@ -228,14 +233,19 @@ Sub 打副本策略
 End Sub
 
 Sub roundAttackLogicCore(str)
+	str = LCase(str + "")
 	If InStr(str, "p") > 0 Then 
 		// 技能带p，直接按技能即可
-		str = LCase(str + "")
 		While len(str) > 0
 			Lib.键盘.myKeyPressChar hwnd, keyHwnd, Left(str, 1)
 			str = Right(str, Len(str) - 1)
 		Wend
-	Else
+	Else 
+		If isCaledUnitDistance = False Then 
+		 	TracePrint "计算屏距"
+			Call calcUnitDistance()
+			isCaledUnitDistance = True
+		End If
 		While isMyRound()
 			Call attackAuto(str)
 		Wend
@@ -244,7 +254,7 @@ End Sub
 
 // 改4
 Sub 要打的副本
-	round = 0
+	Call initEveryTimes
 	Dim x, y
 	// x, y 待选择副本的位置
 	Form1.Label4.Caption = "第" & (n + 1) & "次副本，开始！"
@@ -257,9 +267,9 @@ Sub 要打的副本
 	Select Case Form1.ComboBox1.ListIndex Mod 2
 		// 选择行
 		Case 0
-			y = 240
+			y = 230
 		Case 1
-			y = 300
+			y = 290
 	End Select
 	
 	// 对于需要翻页的副本将那些的操作，该端的翻页逻辑是点两下滑块，再点一下按钮
@@ -419,13 +429,55 @@ Sub calcAndAttack(str)
 		strength = Form1.InputBox5.Text
 	End If
 
-	angle = Lib.ddt.getBestAngle(positionY2 - positionY1, Abs(positionX2 - positionX1), Form1.InputBox3.Text)
+	If Form1.CheckBox6.Value Then 
+		Select Case Form1.ComboBox4.ListIndex
+			Case 0
+				angle = 20
+			Case 1
+				angle = 30
+			Case 2
+				angle = 35
+			Case 3
+				angle = 40
+			Case 4
+				angle = 45
+			Case 5
+				angle = 50
+			Case 6
+				angle = 65
+			Case 7
+				angle = 70
+		End Select
+	ElseIf Form1.CheckBox8.Value Then
+		angle = getClosestAngle()
+	Else 
+		angle = Lib.ddt.getBestAngle(positionY2 - positionY1, Abs(positionX2 - positionX1), Form1.InputBox3.Text)
+	End If
+	
 	strength = Lib.ddt.getStrength(angle, Abs((positionX2 - positionX1) / Form1.InputBox3.Text), ((positionY1 - positionY2) / Form1.InputBox3.Text))
 	strength = strength + Form1.InputBox6.Text
 	
 	TracePrint "角度" & angle & "力度:" & strength
 	Call attackWithAngle(angle, strength, Form1.InputBox7.Text, str)
 End Sub
+
+Function getClosestAngle()
+	Dim nowAngle
+	nowAngle = getAngle()
+	If nowAngle < 30 Then 
+		getClosestAngle = 30
+	ElseIf nowAngle < 40 Then
+		getClosestAngle = 40
+	ElseIf nowAngle < 45 Then
+		getClosestAngle = 45
+	ElseIf nowAngle < 50 Then
+		getClosestAngle = 50
+	ElseIf nowAngle < 65 Then
+		getClosestAngle = 65
+	Else 
+		getClosestAngle = 70
+	End If
+End Function
 
 // 寻找我的坐标
 Function getMyPosition()
@@ -484,12 +536,12 @@ Sub attackWithAngle(angle, strength, mis, str)
 	nowAngle = getAngle()
 	lastAngle = nowAngle
 	While (nowAngle < angle - mis Or nowAngle > angle + mis) and isEnterLevel()
-		If nowAngle = lastAngle Then 
+		If nowAngle = lastAngle Then
 			failCount = failCount + 1
 		Else 
 			failCount = 0
 		End If
-		If failCount > 8 Then 
+		If failCount > 3 Then 
 			// 超过3次尝试变更角度不动，说明需要移动
 			// TODO 复杂情况（走到了边缘后走不动）的处理
 			Select Case getToward()
@@ -505,13 +557,19 @@ Sub attackWithAngle(angle, strength, mis, str)
 					Delay 10
 			End Select
 		End If
-		If getAngle() < (angle + mis)
-			Lib.键盘.myKeyPressChar hwnd, keyHwnd,  "w"
-			Delay 5
+		If nowAngle < (angle + mis) Then 
+			For angle + mis - nowAngle
+				Lib.键盘.myKeyDownChar hwnd, keyHwnd, "w"
+				Lib.键盘.myKeyUpChar hwnd, keyHwnd, "w"
+			Next
+			Delay 80
 		End If
-		If getAngle() > (angle - mis)
-			Lib.键盘.myKeyPressChar hwnd, keyHwnd,  "s"
-			Delay 5
+		If nowAngle > (angle - mis)
+			For nowAngle - angle + mis
+				Lib.键盘.myKeyDownChar hwnd, keyHwnd, "s"
+				Lib.键盘.myKeyUpChar hwnd, keyHwnd,  "s"
+			Next
+			Delay 80
 		End If
 		lastAngle = nowAngle
 		nowAngle = getAngle()
@@ -618,7 +676,6 @@ Sub attack(strength, str)
 					Wend
 					Exit Sub
 				End If
-				Delay 1
 				tried = tried + 1
 				If tried Mod 100 = 0 Then
 					If isMyRound() = False Then 
@@ -633,6 +690,11 @@ Sub attack(strength, str)
 		End If
 		Lib.键盘.myKeyUpChar hwnd, keyHwnd, " "
 	End If
+End Sub
+
+Sub initEveryTimes
+	isCaledUnitDistance = false
+	round = 0
 End Sub
 
 Sub needChooseMap
@@ -656,8 +718,8 @@ Sub needChooseMap
 	End If
 	dm.FindPic 900 + dx, 430 + dy, 990 + dx, 550 + dy, "C:\tmp\蛋10.4-开始1.bmp", 101010, 0.9, 0, intX, intY
 	If intX > 0 And intY > 0 Then 
+		Call initEveryTimes
 		TracePrint "第" & (n + 1) & "次" & "副本，开始"
-		round = 0
 		dm.moveTo intX + 10, intY + 10
 		dm.leftClick 
 	End If

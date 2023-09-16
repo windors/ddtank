@@ -88,7 +88,6 @@ Sub myKeyPressChar(hwnd, keyHwnd, char)
 	If hwnd = keyHwnd Then 
 		dm.keyPress c
 	Else 
-		
 		Plugin.Bkgnd.KeyDown keyHwnd, c
 		Plugin.Bkgnd.KeyUp keyHwnd, c
 	End If
@@ -99,7 +98,6 @@ Sub myKeyDownChar(hwnd, keyHwnd, char)
 	If hwnd = keyHwnd Then 
 		dm.keyDown c
 	Else 
-		
 		Plugin.Bkgnd.KeyDown keyHwnd, c
 	End If
 End Sub
@@ -109,7 +107,6 @@ Sub myKeyUpChar(hwnd, keyHwnd, char)
 	If hwnd = keyHwnd Then 
 		dm.keyUp c
 	Else 
-		
 		Plugin.Bkgnd.KeyUp keyHwnd, c
 	End If
 End Sub
