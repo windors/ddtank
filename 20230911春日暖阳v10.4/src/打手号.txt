@@ -44,7 +44,7 @@ Sub init
 		success = true
 		If Lib.ddt.offsetRepair(hwnd) Then 
 			success = true
-			MsgBox "QQ浏览器（前台模式，切勿调整大小及缩小）", 48, "警告"
+			Call Plugin.Msg.Tips("警告：QQ浏览器（前台模式，切勿调整大小及缩小）")
 		End If
 	Else 
 		// 勾选了极速模式
@@ -58,7 +58,7 @@ Sub init
 				If Plugin.Window.GetParentWindow(hwnd) = 0 Then 
 					If Lib.ddt.offsetRepair(hwnd) Then 
 						success = true
-						MsgBox "360极速浏览器（前台模式，切勿调整窗口大小及缩小，关闭弹窗后尽量不要移动窗口位置，多开需要注意将窗口分离出来）", 48, "警告"
+						Call Plugin.Msg.Tips ("警告：360极速浏览器（前台模式，切勿调整窗口大小及缩小，关闭弹窗后尽量不要移动窗口位置，多开需要注意将窗口分离出来）")
 					End If
 				Else
 					// 确认是否是QQ浏览器，这俩最下边的句柄类名和标题都一样
@@ -69,7 +69,7 @@ Sub init
 								// TODO QQ浏览器
 								If Lib.ddt.offsetRepair(hwnd) Then 
 									success = true
-									MsgBox "QQ浏览器（前台模式，切勿调整窗口大小及缩小，关闭弹窗后尽量不要移动窗口位置，多开需要注意将窗口分离出来）", 48, "警告"
+									Call Plugin.Msg.Tips("警告：QQ极速浏览器（前台模式，切勿调整窗口大小及缩小，关闭弹窗后尽量不要移动窗口位置，多开需要注意将窗口分离出来）")
 								End If
 							End If
 						End If
@@ -87,7 +87,7 @@ Sub init
 											success = true
 											If Lib.ddt.offsetRepair(hwnd) Then 
 												success = true
-												MsgBox "Flash自带浏览器（前台模式，切勿调整窗口大小及缩小，关闭弹窗后尽量不要移动窗口位置，多开需要注意将窗口分离出来）", 48, "警告"
+												Call Plugin.Msg.Tips ("警告：Flash自带浏览器（前台模式，切勿调整窗口大小及缩小，关闭弹窗后尽量不要移动窗口位置，多开需要注意将窗口分离出来）")
 											End If
 										End If
 									End If
@@ -278,12 +278,15 @@ Sub 要打的副本
 		For Fix(Form1.ComboBox1.ListIndex / 2)
 			For 2
 				offsetMoveTo 775, 300
-				dm.leftClick 
+				dm.leftDown 
+				dm.leftUp
 				Delay 100
-				dm.leftClick 
+				dm.leftDown 
+				dm.leftUp
 				Delay 100
 				offsetMoveTo 775, 310
-				dm.leftClick 
+				dm.leftDown 
+				dm.leftUp
 				Delay 100
 			Next
 		Next
@@ -464,15 +467,17 @@ End Sub
 Function getClosestAngle()
 	Dim nowAngle
 	nowAngle = getAngle()
-	If nowAngle < 30 Then 
+	If nowAngle <= 20 Then 
+		getClosestAngle = 20
+	ElseIf nowAngle <= 30 Then 
 		getClosestAngle = 30
-	ElseIf nowAngle < 40 Then
+	ElseIf nowAngle <= 40 Then
 		getClosestAngle = 40
-	ElseIf nowAngle < 45 Then
+	ElseIf nowAngle <= 45 Then
 		getClosestAngle = 45
-	ElseIf nowAngle < 50 Then
+	ElseIf nowAngle <= 50 Then
 		getClosestAngle = 50
-	ElseIf nowAngle < 65 Then
+	ElseIf nowAngle <= 65 Then
 		getClosestAngle = 65
 	Else 
 		getClosestAngle = 70
@@ -635,7 +640,8 @@ Sub attack(strength, str)
 	checkY = 591 + dy
 	tried = 0
 	While len(str) > 0
-		Lib.键盘.myKeyPressChar hwnd, keyHwnd, Left(str, 1)
+		Lib.键盘.myKeyDownChar hwnd, keyHwnd, Left(str, 1)
+		Lib.键盘.myKeyUpChar hwnd, keyHwnd, Left(str, 1)
 		str = Right(str, Len(str) - 1)
 	Wend
 	// 计算力度
