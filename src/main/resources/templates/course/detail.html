@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" th:replace="~{base/main :: main (title=~{::title}?:_, content=~{::body}, link=~{::link}?:~{}, script=~{::script}?:~{}, style=~{::style}?:~{}, contentBefore=~{}, contentAfter=~{},
+      h1='课程笔记')}">
+<head>
+    <meta charset="UTF-8">
+    <title>我的课程记录</title>
+    <link rel="stylesheet" href="/static/css/jquery.sTags.css" th:href="@{/static/css/jquery.sTags.css}"/>
+    <style>
+        .eps{
+            margin: 20px 15px;
+        }
+
+        .describe {
+            color: #666;
+            background-color: #f8f9fb;
+            border-radius: 10px;
+            padding: 16px 18px 5px 16px;
+            margin: 10px 0 0;
+        }
+
+        .statistics{
+            color: #666;
+            background-color: #f8fdff;
+            border-radius: 10px;
+            padding: 16px 18px 5px 16px;
+            margin: 10px 0 0;
+        }
+
+        .tags.sTags, h4 {
+            display: inline-block;
+        }
+
+        .tags.sTags div[tagid] {
+            font-size: 12px;
+            padding: 3px 6px;
+        }
+    </style>
+</head>
+<body>
+<div class="row">
+    <div class="col-sm-6">
+        <img th:src="${course.cover}" style="width: 100%"/>
+    </div>
+    <div class="col-sm-6">
+        <h2 th:text="${course.name}"></h2>
+        <div class="describe">
+            <p><b>课程简介：</b><span style="display: inline" th:utext="${course.introduction}"></span></p>
+            <p><b>课程数：</b><span th:text="${course.aggregate}"></span></p>
+        </div>
+        <div class="statistics">
+            <p><b>已做笔记进度：</b><span>[[${summaries.size()}]]/[[${course.aggregate}]]</span></p>
+        </div>
+        <div><a th:href="@{/course/edit/{id}(id=${course.id})}">修改信息</a></div>
+        <div><a th:href="@{/summary/add/{id}(id=${course.id})}">添加笔记</a></div>
+    </div>
+</div>
+<div class="row eps">
+
+</div>
+<div class="row">
+    <div th:each="summary:${summaries}">
+        <a th:href="@{/summary/details/ep/{summaryEpId}(summaryEpId=${summary.id})}" ><h4>P[[${summary.ep}]]：[[${summary.title}]]</h4></a>
+        <div class="tags" th:attr="tagIds = ${summary.tagIds}"></div>
+    </div>
+</div>
+</body>
+<script>
+    var TagsData = []
+    getAjax('/tag/list', {}, function (data) {
+        TagsData = [];
+        for(let tag of data.data) {
+            TagsData.push({id: tag.id, name: tag.name, screen: tag.search})
+        }
+        $(".tags").each(function () {
+            let data = $(this).attr("tagids");
+            $(this).removeAttr("tagids");
+            data = data.substring(1, data.length - 1).split(",")
+            data.forEach(function (item, index) {
+                data[index] = parseInt(item);
+            })
+            console.log(data)
+            $(this).sTags({
+                defaultData: data,
+                data: TagsData,
+                screen: false
+            })
+        })
+    })
+</script>
+<script src="/static/js/jquery.sTags.js" th:src="@{/static/js/jquery.sTags.js}"></script>
+</html>

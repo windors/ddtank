@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" th:replace="~{base/main :: main (title=~{::title}?:_, content=~{::body}, link=~{::link}?:~{}, script=~{::script}?:~{}, style=~{::style}?:~{}, contentBefore=~{}, contentAfter=~{},
+      h1=null)}">
+<head>
+    <meta charset="UTF-8">
+    <title>DDTank挂机管理</title>
+    <link rel="stylesheet" href="/static/css/iconfont.css" th:href="@{/static/css/iconfont.css}">
+    <link rel="stylesheet" href="/static/css/index.css" th:href="@{/static/css/index.css}">
+    <style>
+        .date_box .day_item .day_list.day_signed .day_center{
+            background: rgba(83, 202, 47, 0.75);
+            border-color: rgba(83, 202, 47, 0.3);
+        }
+
+        .date_box .day_item .day_list.day_signed .day_center div{
+            color: #fff5ed;
+        }
+    </style>
+</head>
+<body>
+<div class="row">
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>句柄</th>
+        <th>状态</th>
+    </tr>
+    </thead>
+    <tbody>
+
+    </tbody>
+</table>
+</div>
+</body>
+</html>

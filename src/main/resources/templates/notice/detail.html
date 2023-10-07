@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" th:replace="~{base/main :: main (title=~{::title}?:_, content=~{::body}, link=~{::link}?:~{}, script=~{::script}?:~{}, style=~{::style}?:~{}, contentBefore=~{}, contentAfter=~{},
+      h1=null)}">
+<head>
+    <meta charset="UTF-8">
+    <title>[[${notice.title}]]</title>
+</head>
+<body>
+<div class="row">
+    <div class="col-xs-12">
+        <div class="windor-title-flex">
+            <h1>[[${notice.title}]]</h1>
+            <div>
+                <a class="btn btn-link" th:href="@{/notice/edit/{noticeId}(noticeId=${notice.id})}">编辑</a>
+            </div>
+        </div>
+    </div>
+</div>
+<hr/>
+<div class="row" th:if="${notice.cover != null}">
+    <div class="col-xs-12" style="text-align: center">
+        <img th:src="${@environment.getProperty('windor.file-download-address') + notice.cover}"/>
+    </div>
+</div>
+<hr th:if="${notice.cover != null}"/>
+<div class="row">
+    <div class="col-xs-12" th:utext="${notice.content}"></div>
+</div>
+</body>
+</html>

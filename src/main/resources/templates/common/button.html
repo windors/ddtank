@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<!--提供给card-records-charts使用，调用此框架时会传入record变量，因此可以直接用-->
+    <th:block  th:fragment="delete(functionName)">
+        <button class="btn btn-default" type="button"
+                th:attr="onclick=*{functionName} + '(' + ${record.id} + ')'">删除
+        </button>
+    </th:block>
+</body>
+</html>

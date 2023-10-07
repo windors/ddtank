@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" th:replace="~{base/main :: main (title=~{::title}?:_, content=~{::body}, link=~{::link}?:~{}, script=~{::script}?:~{}, style=~{::style}?:~{}, contentBefore=~{}, contentAfter=~{},
+      h1='课程添加')}">
+<head>
+    <meta charset="UTF-8">
+    <title>课程添加</title>
+    <link th:href="@{/static/css/summernote.css}" rel="stylesheet">
+    <script th:src="@{/static/js/summernote.min.js}"></script>
+    <script th:src="@{/static/js/summernote-zh-CN.js}"></script>
+</head>
+<body>
+<div class="row">
+    <form id="addForm" class="form-horizontal">
+        <input id="id" type="hidden" name="id"/>
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="name">课程名称</label>
+            <div class="col-sm-10">
+                <input id="name" class="form-control" name="name" type="text"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="address">课程地址</label>
+            <div class="col-sm-10">
+                <input id="address" class="form-control" name="address" type="text"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="aggregate">总集数</label>
+            <div class="col-sm-10">
+                <input id="aggregate" class="form-control" name="aggregate" type="number"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-sm-2 control-label" for="introduction">简介</label>
+            <div class="col-sm-10">
+               <textarea id="introduction" class="summernote hidden" name="introduction"></textarea>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-sm-offset-10 col-sm-2">
+                <button class="btn btn-primary col-sm-12">提交</button>
+            </div>
+        </div>
+    </form>
+</div>
+</body>
+<script>
+    $("#addForm").submit(function () {
+        if($("#id").val() === "") {
+            postAjax("/course/add", $(this).serialize(), function (data) {
+                windorAlert("温馨提示", "课程信息添加成功，祝您学业蒸蒸日上!");
+                // 将data(id)保存
+                $("#id").val(data.data);
+            })
+        }else{
+            if(confirm("课程信息已提交，是否继续添加？")) {
+                postAjax("/course/add", $(this).serialize(), function (data) {
+                    windorAlert("温馨提示", "课程信息添加成功，祝您学业蒸蒸日上!");
+                    // 将data(id)保存
+                    $("#id").val(data.data);
+                })
+            }
+        }
+        return false;
+    })
+</script>
+<script>
+    /*富文本编辑器*/
+    $(function () {
+        var active;
+        let summernote = $('.summernote');
+        summernote.summernote({
+            height: 300,                 // set editor height
+            minHeight: null,             // set minimum height of editor
+            maxHeight: null,             // set maximum height of editor
+            focus: true,                  // set focus to editable area after initializing summernote
+            lang: "zh-CN",
+            callbacks: {
+                // 图片上传
+                onImageUpload: function (files, editor, $editable) {
+                    // upload image to server and create imgNode...
+                    sendFile(files[0], editor, $editable);
+                },
+                onFocus: function () {
+                    active = this;
+                }
+            }
+        });
+
+        //上传图片
+        function sendFile(file, editor, $editable) {
+            var formData = new FormData();
+            formData.append('file', file)
+            $.ajax({
+                url: "[[@{/upload/image}]]",
+                type: "post",
+                data: formData,
+                cache: false,
+                contentType: false,  // 不用任何编码 因为formdata对象自带编码 django能够识别该对象
+                processData: false,  // 告诉浏览器不要处理我的数据 直接发就行
+                success: function (data) {
+                    let src = "[[${@environment.getProperty('windor.file-download-address')}]]" + data.data + "?t=" + new Date().getTime();
+                    // $('.summernote').summernote('editor.getLastRange');
+                    $(active).summernote('insertImage', src, file[name]);
+                },
+                error: function () {
+                    windorAlert("提示", "上传失败");
+                }
+            })
+        }
+    });
+</script>
+</html>

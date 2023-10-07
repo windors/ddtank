@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+scan：当此属性设置为true时，配置文件如果发生改变，将会被重新加载，默认值为true。
+scanPeriod：设置监测配置文件是否有修改的时间间隔，如果没有给出时间单位，默认单位是毫秒当scan为true时，此属性生效。默认的时间间隔为1分钟。
+debug：当此属性设置为true时，将打印出logback内部日志信息，实时查看logback运行状态。默认值为false。
+-->
+<!--文件名称需要采取官方规定的方式  带后缀-->
+<configuration  scan="true" scanPeriod="60 seconds" debug="false">
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- 在IDE中运行, 控制台输出全部日志 -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+        </filter>
+        <encoder>
+            <pattern>%date{yyyy-MM-dd HH:mm} | %highlight(%-5level) | %boldYellow(%thread) | %boldGreen(%logger{36}) | %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="RollingFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <!-- 在IDE中运行, 不输出日志文件, 打包时level被portable-config-maven-plugin插件改为DEBUG, 输出日志文件 -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+        <File>logs/logback.log</File>
+        <!-- 按每小时滚动文件，如果一个小时内达到10M也会滚动文件, 滚动文件将会压缩成zip格式, 最多保留672个滚动文件 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/jx-film-%d{yyyy-MM-dd-HH}.%i.zip</fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>10MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+            <maxHistory>672</maxHistory>
+        </rollingPolicy>
+        <encoder>
+            <pattern>%d{MM:dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="ErrorConsole" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- 在IDE中运行, 控制台输出全部日志, 打包时level被portable-config-maven-plugin插件改为OFF, 控制台不输出日志 -->
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+        <encoder>
+            <pattern>%date{yyyy-MM-dd HH:mm:ss} | %highlight(%-5level) | %boldYellow(%thread) | %boldGreen(%logger{36}) | %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <!-- project default level -->
+    <logger name="pers.windyuan.malodystore" level="DEBUG"/>
+    <logger name="org.springframework.web" level="DEBUG"/>
+    <logger name="org.springframework.core.env.PropertySourcesPropertyResolver" level="WARN"/>
+
+
+    <!--日志级别-->
+    <root level="INFO">
+        <!--日志输出的目的地-->
+        <appender-ref ref="Console"/>
+<!--        <appender-ref ref="RollingFile"/>-->
+    </root>
+</configuration>

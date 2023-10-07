@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" th:replace="~{base/main :: main (title=~{::title}?:_, content=~{::body}, link=~{::link}?:~{}, script=~{::script}?:~{}, style=~{::style}?:~{}, contentBefore=~{}, contentAfter=~{},
+      h1='课程列表')}">
+<head>
+    <meta charset="UTF-8">
+    <title>life track</title>
+</head>
+<body>
+<div class="row">
+    <form class="form-inline">
+        <div class="form-group">
+            <input id="reelNumber" class="form-control" name="reelNumber" placeholder="盘号"
+                   th:value="${reelNumber}"/>
+        </div>
+        <div class="form-group">
+            <input id="specification" class="form-control" name="specification" placeholder="规格型号"
+                   th:value="${specification}"/>
+        </div>
+        <div class="form-group">
+            <input id="cores" class="form-control" name="cores" placeholder="芯数" th:value="${cores}"/>
+        </div>
+        <div class="form-group">
+            <input id="orderQuantity" class="form-control" name="orderQuantity" placeholder="订货量"
+                   th:value="${orderQuantity}"/>
+        </div>
+        <div class="form-group">
+            <button class="btn btn-default">搜索</button>
+        </div>
+    </form>
+</div>
+<div class="row">
+    <table class="table">
+        <thead>
+        <tr>
+            <th>序号</th>
+            <th>盘号</th>
+            <th>规格型号</th>
+            <th>芯数</th>
+            <th>订货量</th>
+            <th>包装</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!--设置userinfos-->
+        <tr th:each="course, n:${coursePage.records}">
+            <td th:text="${(page - 1) * size + n.count}">序号</td>
+            <td>
+                <div>
+                    <a th:href="@{/course/edit/{cid}(cid=${course.id})}">编辑</a>
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<div class="row">
+    <div class="text-center">共[[${coursePage.pages}]]页，[[${coursePage.total}]]条</div>
+    <div class="center-block text-center">
+        <nav aria-label="Page navigation">
+            <ul id="pagination" class="pagination">
+                <li id="previous-page" th:classappend="${coursePage.current == 1 ? 'disabled' : ''}">
+                    <a href="#" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+                <!--js添加-->
+                <li id="next-page" th:classappend="${coursePage.current == coursePage.pages ? 'disabled' : ''}">
+                    <a href="#" aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+    <div class=""></div>
+</div>
+</body>
+</html>

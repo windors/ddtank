@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div th:fragment="cards(songs)"
+     class="malody-song col-xs-12 col-sm-6 col-md-4 col-lg-3" th:each="song:${songs}">
+    <div class="malody-song-wrapper thumbnail">
+        <a class="thumbnail thumbnail-img malody-card-img"
+           th:attr="data-song-id=${song.id}"
+           th:style="'background-image:url(' + ${@environment.getProperty('malody.file-image-address') + song.cover} +');'">
+        </a>
+
+        <!--使用弹性盒均匀分布-->
+        <div class="card-song-caption">
+            <!--            <div class="card-song-operation col-xs-12">-->
+            <!--                <span><i class="glyphicon glyphicon-eye-open"></i> 9999</span>-->
+            <!--                &lt;!&ndash; /star/{cid} &ndash;&gt;-->
+            <!--                <span><i class="glyphicon glyphicon-heart"></i> 8888</span>-->
+            <!--                <span><i class="glyphicon glyphicon-star"></i> 7777</span>-->
+            <!--            </div>-->
+            <div class="col-xs-12">
+                <a th:href="@{/song/{sid}(sid=${song.id})}"><h4 class="card-song-title" data-toggle="tooltip"
+                                                                data-placement="top" th:title="${song.title}"
+                                                                th:text="${song.title}">Song title</h4></a>
+                <p class="card-song-artist"><b>作曲家</b> : <span data-toggle="tooltip" data-placement="top"
+                                                               th:title="${song.artist}"
+                                                               th:text="${song.artist}"></span></p>
+                <p><b>长度</b> : <span class="song-length" th:text="${song.length}"></span></p>
+                <p>
+                    <a class="pull-left" th:each="chart:${song.charts}"
+                       th:href="@{/chart/{id}(id=${chart.id})}"
+                       type="button" data-toggle="tooltip" data-placement="top"
+                       th:title="${chart.version + ' [' + chart.creator} + ']'">
+                        <img
+                                th:src="@{/static/img/mode-{type}.png(type=${chart.mode == null ? '' : chart.mode.value})}"
+                                style="height: 32px;width: 32px;"/>
+                    </a>
+                </p>
+            </div>
+            <div class="card-song-operation col-xs-12">
+                <a class="btn btn-default" th:href="@{/download/song/{sid}(sid=${song.id})}">下载</a>
+                <a class="btn btn-default" th:href="@{/admin/song/{sid}(sid=${song.id})}" th:if="${@authorizeUtils.hasRole('ROLE_ADMIN_DATA_SONG')}">编辑</a>
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+</div>
+
+<div th:fragment="card(song)"
+     class="malody-song col-xs-12 col-sm-6 col-md-4 col-lg-3">
+    <div class="malody-song-wrapper thumbnail">
+        <a class="thumbnail thumbnail-img"
+           th:href="@{/song/{sid}(sid=${song.id})}"
+           th:style="'background-image:url(' + ${@environment.getProperty('malody.file-image-address') + song.cover} +');'">
+        </a>
+
+        <!--使用弹性盒均匀分布-->
+        <div class="card-song-caption">
+            <!--            <div class="card-song-operation col-xs-12">-->
+            <!--                <span><i class="glyphicon glyphicon-eye-open"></i> 9999</span>-->
+            <!--                &lt;!&ndash; /star/{cid} &ndash;&gt;-->
+            <!--                <span><i class="glyphicon glyphicon-heart"></i> 8888</span>-->
+            <!--                <span><i class="glyphicon glyphicon-star"></i> 7777</span>-->
+            <!--            </div>-->
+            <div class="col-xs-12">
+                <h4 class="card-song-title" data-toggle="tooltip" data-placement="top" th:title="${song.title}"
+                    th:text="${song.title}">Song title</h4>
+                <p class="card-song-artist"><b>作曲家</b> : <span data-toggle="tooltip" data-placement="top"
+                                                               th:title="${song.artist}"
+                                                               th:text="${song.artist}"></span></p>
+                <p><b>长度</b> : <span class="song-length" th:text="${song.length}"></span></p>
+                <p>
+                    <a class="pull-left" th:each="chart:${song.charts}"
+                       th:href="@{/chart/{id}(id=${chart.id})}"
+                       type="button" data-toggle="tooltip" data-placement="top"
+                       th:title="${chart.version + ' [' + chart.creator} + ']'">
+                        <img
+                                th:src="@{/static/img/mode-{type}.png(type=${chart.mode == null ? '' : chart.mode.value})}"
+                                style="height: 32px;width: 32px;"/>
+                    </a>
+                </p>
+            </div>
+            <div class="card-song-operation col-xs-12">
+                <a class="btn btn-default" th:href="@{/song/download/{sid}(sid=${song.id})}">下载</a>
+                <a class="btn btn-default" th:href="@{/admin/song/{sid}(sid=${song.id})}">编辑</a>
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+</div>
+
+<!--用于展示谱面-->
+<div th:fragment="card-charts(charts, blank)" class="malody-song col-xs-12 col-sm-6 col-md-4 col-lg-3"
+     th:each="chart:${charts}">
+    <div class="malody-song-wrapper thumbnail">
+        <a class="thumbnail thumbnail-img malody-card-img"
+           th:href="@{/chart/{cid}(cid=${chart.id})}" th:attrappend="target=*{blank} ? '_blank' : '_self'"
+           th:attr="data-song-id=${chart.id}"
+           th:style="'background-image:url(' + ${@environment.getProperty('malody.file-image-address') + chart.background} +');'">
+        </a>
+
+        <!--使用弹性盒均匀分布-->
+        <div class="card-song-caption">
+            <div class="col-xs-12">
+                <a th:href="@{/chart/{cid}(cid=${chart.id})}" th:attrappend="target=*{blank} ? '_blank' : '_self' "
+                >
+                    <h4 class="card-song-title" data-toggle="tooltip" data-placement="top" th:title="${chart.version}"
+                                                                         th:text="${chart.version}">Song title</h4>
+                </a>
+                <p class="card-song-artist"><b>铺师</b> : <span data-toggle="tooltip" data-placement="top"
+                                                              th:title="${chart.creator}"
+                                                              th:text="${chart.creator}"></span></p>
+                <p><b>长度</b> : <span class="song-length" th:text="${chart.length}"></span></p>
+                <p>
+                    <a class="pull-left"
+                       type="button" data-toggle="tooltip" data-placement="top"
+                       th:href="@{/chart/{cid}(cid=${chart.id})}" th:attrappend="target=*{blank} ? '_blank' : '_self' "
+                       th:title="${chart.version + ' [' + chart.creator} + ']'">
+                        <img
+                                th:src="@{/static/img/mode-{type}.png(type=${chart.mode == null ? '' : chart.mode.value})}"
+                                style="height: 32px;width: 32px;"/>
+                    </a>
+                </p>
+            </div>
+            <div class="card-song-operation col-xs-12">
+                <!--                <button class="btn btn-default" th:onclick="'malodyDeleteEventRecord(' + ${chart.id} + ')'">删除</button>-->
+            </div>
+            <div class="clearfix"></div>
+        </div>
+    </div>
+</div>
+
+
+
+<!--提供给活动页面及活动编辑页面的card, records由Chart、id组成-->
+<div th:fragment="card-records-charts(records, buttonDiv)" class="malody-song col-xs-12 col-sm-6 col-md-4 col-lg-3"
+     th:each="record:${records}">
+    <div class="malody-song-wrapper thumbnail">
+        <a class="thumbnail thumbnail-img malody-card-img"
+           th:attr="data-song-id=${record.chart.id}"
+           th:style="'background-image:url(' + ${@environment.getProperty('malody.file-image-address') + record.chart.background} +');'">
+        </a>
+
+        <!--使用弹性盒均匀分布-->
+        <div class="card-song-caption">
+            <div class="col-xs-12">
+                <a th:href="@{/chart/{cid}(cid=${record.chart.id})}"><h4 class="card-song-title" data-toggle="tooltip"
+                                                                         data-placement="top"
+                                                                         th:title="${record.chart.version}"
+                                                                         th:text="${record.chart.version}">Song
+                    title</h4></a>
+                <p class="card-song-artist"><b>铺师</b> : <span data-toggle="tooltip" data-placement="top"
+                                                              th:title="${record.chart.creator}"
+                                                              th:text="${record.chart.creator}"></span></p>
+                <p><b>长度</b> : <span class="song-length" th:text="${record.chart.length}"></span></p>
+                <p>
+                    <a class="pull-left"
+                       type="button" data-toggle="tooltip" data-placement="top"
+                       th:href="@{/chart/{cid}(cid=${record.chart.id})}"
+                       th:title="${record.chart.version + ' [' + record.chart.creator} + ']'">
+                        <img
+                                th:src="@{/static/img/mode-{type}.png(type=${record.chart.mode == null ? '' : record.chart.mode.value})}"
+                                style="height: 32px;width: 32px;"/>
+                    </a>
+                </p>
+            </div>
+            <div class="card-song-operation col-xs-12">
+                <div th:replace="*{buttonDiv}">
+                    <!--自定义按钮, 会传入参数-->
+                </div>
+            </div>
+
+            <div class="clearfix"></div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
