@@ -5,21 +5,23 @@ public interface DDTankPic {
 
     boolean isMyRound();
 
-    void needActiveWindow();
+    boolean needActiveWindow();
 
-    void needChooseMap();
+    boolean needChooseMap();
 
-    void needClickStart();
+    boolean needClickStart();
 
-    void needClickPrepare();
+    boolean needClickPrepare();
 
-    void needCloseEmail();
+    boolean needCloseEmail();
 
-    void needCloseTip();
+    boolean needCloseTip();
 
-    void needCreateRoom();
+    boolean needCreateRoom();
 
-    void needDraw(boolean isThirdDraw);
+    boolean needDraw(boolean isThirdDraw);
 
-    void needGoingToWharf();
+    boolean needGoingToWharf();
+
+    int getAngle();
 }

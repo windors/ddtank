@@ -1,5 +1,7 @@
 package cn.windor.ddtank.service;
 
+import cn.windor.ddtank.core.DDtankCoreThread;
+
 import java.util.Map;
 
 public interface DDtankThreadService {
@@ -16,5 +18,5 @@ public interface DDtankThreadService {
      */
     void removeStartShortcut();
 
-    Map<Long, Thread> getAllStartedThreadMap();
+    Map<Long, DDtankCoreThread> getAllStartedThreadMap();
 }

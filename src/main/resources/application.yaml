@@ -2,3 +2,22 @@ server:
   port: 8080
 logging:
   config: classpath:logback.xml
+spring:
+  mvc:
+    static-path-pattern: /static/**
+ddtank:
+  bind-display: dx2
+  bind-mouse: dx2
+  bind-keypad: dx
+  bind-public: dx.public.active.message
+  bind-mode: 0
+  level-mode: 10
+  level-line: 1
+  level-row: 1
+  level-difficulty: 50
+  level-end-wait-time: 0.8
+  static-x1: 794
+  static-y1: 23
+  static-x2: 1000
+  static-y2: 122
+  role-color: 0033cc

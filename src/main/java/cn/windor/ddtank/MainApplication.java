@@ -8,9 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 @Slf4j
 public class MainApplication {
-
-    private static ActiveXComponent dm = null;
-    public static void main(String[] args) throws ClassNotFoundException {
+    public static void main(String[] args) {
         SpringApplication.run(MainApplication.class, args);
         log.info("项目已启动");
     }

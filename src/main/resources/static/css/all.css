@@ -1,0 +1,68 @@
+ol li {
+    list-style: none;
+}
+
+ul li {
+    list-style: none;
+}
+
+img{
+    max-width: 100%;
+}
+
+textarea {
+    height: 100%;
+    width: 100%;
+}
+
+.main-body {
+    /*border: 1px dashed springgreen;*/
+}
+
+/*Malody详细页标题，子元素将在一行展示*/
+.windor-title-flex {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+
+/*公告、等封面*/
+.carousel-img {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+    filter: brightness(90%);
+}
+@media (max-width: 768px){
+    .carousel-img {
+        padding: 0 0 60% 0;
+        border-radius: 0;
+    }
+}
+/* 小屏幕（平板，大于等于 768px） */
+@media (min-width: 768px) {
+    .carousel-img {
+        padding: 0 0 66% 0;
+        border-radius: 0;
+    }
+}
+
+/* 中等屏幕（桌面显示器，大于等于 992px） */
+@media (min-width: 992px) {
+    .carousel-img {
+        padding: 0 0 44% 0;
+        border-radius: 10px;
+    }
+}
+
+/* 大屏幕（大桌面显示器，大于等于 1200px） */
+@media (min-width: 1200px) {
+    .carousel-img {
+        padding: 0 0 33% 0;
+        border-radius: 10px;
+    }
+}

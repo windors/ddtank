@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div class="row">
+    <table class="table table-striped">
+        <thead>
+        <tr>
+            <th>句柄</th>
+            <th>状态</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="key:${threadMap.keySet()}">
+            <td th:text="${key}"></td>
+            <td th:text="${threadMap.get(key).state}"></td>
+            <td><a class="btn btn-danger" target="_blank" th:href="@{/thread/stop(hwnd=${key})}">停止</a></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

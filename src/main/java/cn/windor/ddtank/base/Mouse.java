@@ -1,7 +1,16 @@
 package cn.windor.ddtank.base;
 
 public interface Mouse {
-    void moveTo(int x, int y);
+    void moveTo(double x, double y);
+
+    void moveTo(Point point);
+
+    void moveAndClick(double x, double y);
+    void moveAndClick(Point point);
+
+    void leftClick();
+
+
 
     void leftDown();
 

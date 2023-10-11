@@ -1,0 +1,60 @@
+@media (max-width: 991px) {
+    .carousel-img {
+        height: 38vw;
+    }
+}
+@media (min-width: 992px) {
+    .index_top {
+        display: flex;
+        align-content: inherit;
+    }
+
+    .carousel, .carousel-inner, .item, .center-block {
+        height: 100%;
+    }
+}
+h3 {
+    margin-top: 15px;
+    font-size: 2.5rem;
+}
+
+.cover {
+    margin-top: 10px;
+    padding-left: 0;
+}
+
+.course{
+    display: flex;
+    flex-wrap: wrap;
+    margin: 20px 0;
+}
+
+.course-introduce{
+    display: flex;
+    flex-wrap: wrap;
+    padding-right: 0;
+}
+
+.course .cover {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+}
+
+.course .cover img {
+    width: 100%;
+    border-radius: 1rem;
+}
+
+.describe {
+    color: #666;
+    width: 100%;
+    background-color: #f8f9fb;
+    border-radius: 10px;
+    padding: 16px 18px 5px 16px;
+    margin: 10px 0 0;
+}
+
+.date_center {
+    margin-bottom: 10px;
+}

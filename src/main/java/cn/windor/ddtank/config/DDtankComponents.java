@@ -1,6 +1,10 @@
 package cn.windor.ddtank.config;
 
-import cn.windor.ddtank.base.impl.DMLibrary;
+import cn.windor.ddtank.base.DDTankOperate;
+import cn.windor.ddtank.base.DDTankPic;
+import cn.windor.ddtank.base.Keyboard;
+import cn.windor.ddtank.base.Mouse;
+import cn.windor.ddtank.base.impl.*;
 import com.jacob.activeX.ActiveXComponent;
 import com.jacob.com.Variant;
 import lombok.extern.slf4j.Slf4j;
@@ -30,11 +34,37 @@ public class DDtankComponents {
 
     /**
      * 新建大漠库
-     * @param dm
      * @return
      */
     @Bean
-    public DMLibrary getDMLibrary(ActiveXComponent dm) {
-        return new DMLibrary(dm);
+    public DMLibrary getDMLibrary() {
+        return new DMLibrary(getDmActiveXComponent());
+    }
+
+    /**
+     * 由于鼠标是调用dll，所以可以设为单例
+     * @return
+     */
+    @Bean
+    public Mouse getMouse() {
+        return new DMMouse(getDmActiveXComponent());
+    }
+
+    /**
+     * 由于键盘是调用dll，所以可以设为单例
+     * @return
+     */
+    @Bean
+    public Keyboard getKeyboard() {
+        return new DMKeyboard(getDmActiveXComponent());
+    }
+
+    /**
+     * 由于找图没有自己的成员变量，所以可以是单例
+     * @return
+     */
+    @Bean
+    public DDTankPic getDDTankPic() {
+        return new DMDDtankPic10_4(getDMLibrary(), "C:/tmp/", getMouse());
     }
 }

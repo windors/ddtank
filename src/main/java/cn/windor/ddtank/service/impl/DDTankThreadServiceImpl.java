@@ -1,7 +1,15 @@
 package cn.windor.ddtank.service.impl;
 
-import cn.windor.ddtank.base.Library;
+import cn.windor.ddtank.base.*;
+import cn.windor.ddtank.base.impl.DDtankOperate10_4;
+import cn.windor.ddtank.base.impl.DMDDtankPic10_4;
+import cn.windor.ddtank.base.impl.DMLibrary;
+import cn.windor.ddtank.config.DDtankConfigProperties;
+import cn.windor.ddtank.core.DDTankAngleAdjust;
+import cn.windor.ddtank.core.DDtankCoreThread;
+import cn.windor.ddtank.core.impl.SimpleDDTankAngleAdjust;
 import cn.windor.ddtank.service.DDtankThreadService;
+import com.jacob.activeX.ActiveXComponent;
 import com.melloware.jintellitype.HotkeyListener;
 import com.melloware.jintellitype.JIntellitype;
 import lombok.extern.slf4j.Slf4j;
@@ -18,11 +26,23 @@ public class DDTankThreadServiceImpl implements DDtankThreadService {
     @Autowired
     private Library dm;
 
+    @Autowired
+    private DDtankConfigProperties properties;
+
+    @Autowired
+    private Keyboard keyboard;
+
+    @Autowired
+    private Mouse mouse;
+
+    @Autowired
+    private DDTankPic ddTankPic;
+
     public static final int SHORTCUT_START = 1; // 模拟任务开始快捷键
     public static final int SHORTCUT_SUSPEND = 2; // 模拟手动结束任务快捷键
     public static final int SHORTCUT_STOP = 3;
 
-    private final Map<Long, Thread> threadMap = new ConcurrentHashMap<>();
+    private final Map<Long, DDtankCoreThread> threadMap = new ConcurrentHashMap<>();
 
     public DDTankThreadServiceImpl(Library dm) {
         this.dm = dm;
@@ -44,41 +64,49 @@ public class DDTankThreadServiceImpl implements DDtankThreadService {
     }
 
     @Override
-    public Map<Long, Thread> getAllStartedThreadMap() {
+    public Map<Long, DDtankCoreThread> getAllStartedThreadMap() {
         return this.threadMap;
     }
 
     class DDtankHotkeyListener implements HotkeyListener {
-
         @Override
         public void onHotKey(int identifier) {
             switch (identifier) {
                 case SHORTCUT_START: {
-                    log.info("快捷键 alt + 1 被触发，任务开始");
+                    log.info("启动快捷键被触发，开始启动脚本");
                     synchronized (DDTankThreadServiceImpl.class) {
                         long hwnd = dm.getMousePointWindow();
-                        if (threadMap.get(hwnd) == null) {
-                            Thread thread = new Thread(() -> {
-                                while(true) {
-                                    try {
-                                        Thread.sleep(10000);
-                                        log.info("运行中");
-                                    } catch (InterruptedException e) {
-                                        throw new RuntimeException(e);
-                                    }
+                        if ("MacromediaFlashPlayerActiveX".equals(dm.getWindowClass(hwnd))) {
+                            synchronized (this.getClass()) {
+                                DDtankCoreThread ddtankCoreThread = threadMap.get(hwnd);
+                                if (ddtankCoreThread != null && ddtankCoreThread.isAlive()) {
+                                    log.warn("请勿重复启动，当前窗口已被添加到运行库中");
+                                } else {
+                                    // 启动脚本线程
+                                    DDTankOperate ddTankOperate = new DDtankOperate10_4(dm, mouse, keyboard, ddTankPic, properties);
+                                    DDTankAngleAdjust ddTankAngleAdjust = new SimpleDDTankAngleAdjust(keyboard);
+                                    DDtankCoreThread thread = new DDtankCoreThread(hwnd, dm, ddTankPic, ddTankOperate, properties, ddTankAngleAdjust);
+                                    threadMap.put(hwnd, thread);
+                                    thread.start();
                                 }
-                            });
-                            threadMap.put(hwnd, thread);
-                            thread.start();
-                        }else{
-                            log.warn("当前窗口已被添加到运行库中！");
+                            }
+                        } else {
+                            log.warn("当前窗口类名不为[MacromediaFlashPlayerActiveX]！");
                         }
                     }
                     break;
                     // 开启子线程
                 }
                 case SHORTCUT_SUSPEND: {
-                    log.info("快捷键 ctrl + ALT + 1 被触发，任务结束");
+                    log.info("终止快捷键被触发，任务结束");
+                    long hwnd = dm.getMousePointWindow();
+                    DDtankCoreThread ddtankCoreThread = threadMap.remove(hwnd);
+                    if (ddtankCoreThread == null) {
+                        log.error("当前线程已经被停止");
+                    } else {
+                        ddtankCoreThread.interrupt();
+                        log.info("已尝试停止该线程");
+                    }
                     break;
                 }
                 default:

@@ -1,0 +1,14 @@
+#my-gallery-container {
+    display: flex;
+    align-items: center;
+}
+
+#my-gallery-container > div {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: space-evenly;
+}
+
+.item {
+    width: 100%;
+}

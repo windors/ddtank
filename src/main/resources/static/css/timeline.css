@@ -1,0 +1,188 @@
+/* 时间轴样式 */
+.timeline {
+    list-style: none;
+    margin: 25px 0 22px;
+    padding: 0;
+    position: relative;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+.timeline:after {
+    border: 6px solid;
+    border-top-width: 13px;
+    border-color: #00637d transparent transparent transparent;
+    content: "";
+    display: block;
+    position: absolute;
+    bottom: -19px;
+    left: 15px;
+}
+
+.timeline-horizontal:after {
+    border-top-width: 6px;
+    border-left-width: 13px;
+    border-color: transparent transparent transparent #00637d;
+    top: 15px;
+    right: 0;
+    bottom: auto;
+    left: auto;
+}
+.timeline-horizontal .timeline-milestone {
+    border-top: 2px solid #00637d;
+    display: inline;
+    float: left;
+    margin: 20px 0 0 0;
+    padding: 40px 0 0 0;
+}
+.timeline-horizontal .timeline-milestone:before {
+    top: -17px;
+    left: auto;
+}
+.timeline-horizontal .timeline-milestone.is-completed:after {
+    top: -17px;
+    left: 0;
+}
+
+.timeline-milestone {
+    border-left: 2px solid #00637d;
+    margin: 0 0 0 20px;
+    padding: 0 0 5px 25px;
+    position: relative;
+    -moz-box-sizing: border-box;9
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+.timeline-milestone:before {
+    border: 7px solid #00637d;
+    border-radius: 50%;
+    content: "";
+    display: block;
+    position: absolute;
+    left: -17px;
+    width: 32px;
+    height: 32px;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+}
+.timeline-milestone.is-completed:before {
+    background-color: #00637d;
+}
+.timeline-milestone.is-completed:after {
+    color: #FFF;
+    content: "\e605";
+    display: block;
+    font-family: "iconfont" !important;
+    line-height: 32px;
+    position: absolute;
+    top: 0;
+    left: -17px;
+    text-align: center;
+    width: 32px;
+    height: 32px;
+    -moz-box-sizing: border-box;
+    -webkit-box-sizing: border-box;
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+.timeline-milestone.is-current:before {
+    background-color: #EEE;
+}
+.timeline-milestone.is-future:before {
+    background-color: #8DACB8;
+    border: 0;
+}
+.timeline-milestone.is-future .timeline-action .title {
+    color: #8DACB8;
+}
+
+.timeline-action {
+    background-color: #FFF;
+    padding: 12px 10px 12px 20px;
+    position: relative;
+    top: -15px;
+}
+.timeline-action.is-expandable .title {
+    cursor: pointer;
+    position: relative;
+}
+.timeline-action.is-expandable .title:focus {
+    outline: 0;
+    text-decoration: underline;
+}
+.timeline-action.is-expandable .title:after {
+    border: 6px solid #666;
+    border-color: transparent transparent transparent #666;
+    content: "";
+    display: block;
+    position: absolute;
+    top: 6px;
+    right: 0;
+}
+.timeline-action.is-expandable .content {
+    display: none;
+}
+.timeline-action.is-expandable.is-expanded .title:after {
+    border-color: #666 transparent transparent transparent;
+    top: 10px;
+    right: 5px;
+}
+.timeline-action.is-expandable.is-expanded .content {
+    display: block;
+}
+.timeline-action .title, .timeline-action .content {
+    word-wrap: break-word;
+}
+.timeline-action .title {
+    color: #00637d;
+    font-size: 18px;
+    margin: 0;
+}
+.timeline-action .date {
+    display: block;
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+.timeline-action .content {
+    font-size: 14px;
+}
+
+.file-list {
+    line-height: 1.4;
+    list-style: none;
+    padding-left: 10px;
+}
+
+body {
+    background-color: #EEE;
+    font-family: Helvetica, Arial, Verdana, sans-serif;
+}
+
+/*.page {*/
+/*    !*max-width: 1200px;*!*/
+/*    !*margin: 40px 30px;*!*/
+/*}*/
+
+a {
+    color: #00637d;
+    text-decoration: none;
+}
+a:hover, a:focus {
+    text-decoration: underline;
+}
+
+.video-link:before {
+    content: "\f03d";
+    display: inline-block;
+    font-family: "FontAwesome";
+    margin-right: 5px;
+}
+
+a[href*=".pdf"]:before {
+    content: "\f0f6";
+    display: inline-block;
+    font-family: "FontAwesome";
+    margin-right: 8px;
+}

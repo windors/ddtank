@@ -1,0 +1,29 @@
+/*凡是带有背景图片的都走这个*/
+.bg-cover {
+    position: absolute;
+    width: 100%;
+    height: 40vw;
+    background-size: cover;
+    background-repeat: no-repeat;
+    filter: blur(8px);
+    z-index: -1;
+}
+
+@media screen and (min-width: 768px) {
+    .main-body {
+        background-color: #fff;
+        padding: 0 4%;
+        border-top-left-radius: 2%;
+        border-top-right-radius: 2%;
+    }
+}
+
+@media screen and (max-width: 767px) {
+    .main-body {
+        background-color: #fff;
+    }
+
+    .bg-cover {
+        filter: none;
+    }
+}

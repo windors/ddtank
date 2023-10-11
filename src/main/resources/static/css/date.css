@@ -1,0 +1,251 @@
+.warp_box {
+    width: 50%;
+    height: 380px;
+    margin: 20px auto;
+}
+
+.list_h3 {
+    text-align: center;
+    font-size: 30px;
+    line-height: 40px;
+    color: #1890ff;
+}
+
+.date_box {
+    padding: 20px;
+    background-color: #ffffff;
+    box-shadow: 5px 8px 15px 0px rgba(222, 222, 222, 0.5);
+    border-radius: 10px;
+    min-height: 395px;
+    border: 1px solid #ccc;
+}
+
+
+
+.date_box .date_top {
+    height: 36px;
+    padding: 0 20px;
+}
+
+.date_box .date_top .tody {
+    font-family: MicrosoftYaHei;
+    font-size: 28px;
+    font-weight: normal;
+    font-stretch: normal;
+    letter-spacing: 0px;
+    color: #000000;
+    line-height: 36px;
+    margin-right: 20px;
+    width: 32px;
+}
+
+.date_box .date_top .date_action i {
+    display: inline-block;
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.date_box .date_top .date_action .icon_left {
+    transform: rotate(180deg);
+}
+
+.date_box .date_top .date_action span {
+    font-family: MicrosoftYaHei;
+    font-size: 14px;
+    font-weight: normal;
+    font-stretch: normal;
+    letter-spacing: 0px;
+    color: #a2a0a0;
+}
+
+.date_box .date_top .date_action .rigth_action {
+    line-height: 36px;
+}
+
+.date_box .date_top .date_action span {
+    background-color: #ffffff;
+    border-radius: 5px;
+    border: solid 1px #a2a0a0;
+    cursor: pointer;
+    padding: 0px 20px;
+    box-sizing: border-box;
+}
+
+.date_box .date_top .date_action .add {
+    background-color: #2c6ce1;
+    border-radius: 5px;
+    margin: 0 0 0 10px;
+    color: #fff;
+}
+
+.date_box .date_header {
+    height: 24px;
+}
+
+.date_box .date_header .week_item {
+    float: left;
+    height: 24px;
+    width: 14.28%;
+    line-height: 24px;
+    font-family: MicrosoftYaHei;
+    font-size: 13px;
+    font-weight: normal;
+    font-stretch: normal;
+    letter-spacing: 0px;
+    color: #a2a0a0;
+    text-align: center;
+}
+
+.date_box .day_item .day_list {
+    float: left;
+    width: 14.28%;
+    height: 60px;
+    text-align: center;
+    padding: 10px 0 0 0;
+}
+
+.date_box .day_item .day_list .day_center {
+    box-sizing: border-box;
+    padding: 4px 0 0 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin: 0 auto;
+    cursor: pointer;
+    position: relative;
+}
+
+.date_box .day_item .day_list .day_center .dayone {
+    font-family: MicrosoftYaHei;
+    font-size: 16px;
+    font-weight: normal;
+    font-stretch: normal;
+    letter-spacing: 0px;
+    color: #fff;
+    text-align: center;
+    line-height: 15px;
+}
+
+.date_box .day_item .day_list .day_center .daytwo {
+    font-family: MicrosoftYaHei;
+    font-size: 10px;
+    font-weight: normal;
+    font-stretch: normal;
+    letter-spacing: 0px;
+    color: #fff;
+    text-align: center;
+    display: block;
+}
+
+.date_box .day_item .day_list .day_center .dayshark {
+    width: 4px;
+    height: 4px;
+    background: #4285f4;
+    margin: 0 auto;
+    display: inline-block;
+    border-radius: 50%;
+    position: absolute;
+    bottom: 2px;
+    left: 50%;
+    color: #fff;
+}
+
+.date_box .day_item .day_list .day_center:hover {
+    background: #2c6ce1;
+    color: #fff;
+}
+
+.date_box .day_item .day_list .day_center:hover .dayone, .date_box .day_item .day_list .day_center:hover .daytwo {
+    color: #fff;
+}
+
+.date_box .day_item .day_list .day_center:hover .term {
+    color: #fff;
+}
+
+.date_box .day_item .day_list .day_center .dayone, .date_box .day_item .day_list .day_center .daytwo, .date_box .day_item .day_list .day_center .dayshark {
+    color: #000;
+}
+
+.date_box .day_item .day_list .day_center .dayshark {
+    background: #fff;
+}
+
+.date_box .day_item .day_list .day_center .term {
+    color: #2c6ce1;
+    font-size: 8px;
+}
+
+.date_box .day_item .day_list .nullDom {
+    display: none;
+}
+
+.date_box .day_item .day_list .today {
+    border: 1px solid #2c6ce1;
+}
+
+.date_box .day_item .day_list .showdate {
+    background: #2c6ce1;
+    color: #fff;
+}
+
+.date_box .day_item .day_list .showdate .dayone, .date_box .day_item .day_list .showdate .daytwo, .date_box .day_item .day_list .showdate .dayshark {
+    color: #fff;
+}
+
+.date_box .day_item .day_list .showdate .dayshark {
+    background: #fff;
+}
+
+.date_box .day_item .day_list .tips {
+    background: #2c6ce1;
+    color: #ffffff;
+    padding: 5px;
+}
+
+.date_box .day_item .nowNonth .day_center .dayone {
+    color: #ccc;
+}
+
+.date_box .day_item .nowNonth .day_center .daytwo {
+    color: #ccc;
+}
+
+.date_box .day_item .nowNonth .day_center .term {
+    color: #ccc !important;
+    font-size: 8px !important;
+}
+
+.tips {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.tips a {
+    display: block;
+    color: #1890ff;
+}
+
+@media screen and (max-width: 1300px) {
+    .h4_tips {
+        display: none;
+    }
+
+    .items_titele {
+        width: 100%;
+        text-align: center;
+        font: 17px/30px MicrosoftYaHei;
+        height: 40px !important;
+        color: #fff;
+        padding: 6px !important;
+        box-sizing: border-box;
+        background-size: 100%;
+    }
+}
+
+.fl{
+    float: left;
+}
+.fr{
+    float: right;
+}

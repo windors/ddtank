@@ -1,0 +1,44 @@
+/*卡片整体样式*/
+.malody-songs{
+    margin-top: 5%;
+}
+
+/*标题等字段只占一行，防止样式错乱*/
+.card-song-title, .card-song-artist {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/*图片样式*/
+.thumbnail-img{
+    height: 0;
+    margin: 0;
+    padding: 0 0 68% 0;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center center;
+}
+
+/*文字部分*/
+.card-song-caption {
+    padding: 0 3% 3%;
+    color: #333;
+}
+
+/*歌曲查看量等信息*/
+.card-song-operation {
+    padding-top: 3%;
+    display: flex;
+    justify-content: space-between;
+}
+
+/*点赞等文字居中*/
+.card-song-operation span {
+    text-align: center;
+}
+
+/*动态扩容*/
+.card-song-operation > * {
+    flex-grow: 1;
+}
