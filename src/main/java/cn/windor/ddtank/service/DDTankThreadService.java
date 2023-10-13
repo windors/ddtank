@@ -4,7 +4,7 @@ import cn.windor.ddtank.core.DDtankCoreThread;
 
 import java.util.Map;
 
-public interface DDtankThreadService {
+public interface DDTankThreadService {
 
     /**
      * 改变启动快捷键

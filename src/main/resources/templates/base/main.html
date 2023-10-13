@@ -65,35 +65,36 @@
                 <!-- Collect the nav links, forms, and other content for toggling -->
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                     <ul class="nav navbar-nav">
-                        <li><a th:href="@{/}">课程管理</a></li>
+                        <li><a>脚本管理</a></li>
                         <li role="presentation" class="dropdown">
                             <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button"
                                aria-haspopup="true" aria-expanded="false">
-                                课程管理 <span class="caret"></span>
+                                配置管理 <span class="caret"></span>
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a th:href="@{/course/add}">课程添加</a></li>
+                                <li><a th:href="@{/config/list}">配置列表</a></li>
+                                <li><a th:href="@{/config/add}">添加配置</a></li>
+                                <li><a th:href="@{/config/default}">默认配置</a></li>
                                 <li role="separator" class="divider"></li>
-                                <li><a th:href="@{/course/list}">课程修改</a></li>
+                                <li><a>配置分享</a></li>
                             </ul>
                         </li>
                         <li role="presentation" class="dropdown">
                             <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button"
                                aria-haspopup="true" aria-expanded="false">
-                                笔记管理 <span class="caret"></span>
+                                自定义逻辑 <span class="caret"></span>
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a th:href="@{/summary/add/ep}">新增笔记</a></li>
-                                <li role="separator" class="divider"></li>
+                                <li><a th:href="@{/config/add}">图片检测</a></li>
                             </ul>
                         </li>
                         <li role="presentation" class="dropdown">
                             <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button"
                                aria-haspopup="true" aria-expanded="false">
-                                公告管理 <span class="caret"></span>
+                                自助工具 <span class="caret"></span>
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a th:href="@{/notice/add}">新增公告</a></li>
+                                <li><a th:href="@{/util/test}">识别测试</a></li>
                                 <li role="separator" class="divider"></li>
                             </ul>
                         </li>
@@ -128,7 +129,7 @@
     </header>
     <div th:replace="*{contentBefore}"></div>
     <div class="main-body container" style="flex: 1 1 auto;display: flex;flex-direction: column">
-        <div class="page-header" th:if="*{h1 != null}">
+        <div class="row page-header" th:if="*{h1 != null}">
             <h1 th:text="*{h1}"></h1>
         </div>
         <div th:replace="*{content}"></div>

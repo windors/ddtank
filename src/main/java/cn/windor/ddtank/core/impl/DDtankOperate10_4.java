@@ -1,8 +1,10 @@
-package cn.windor.ddtank.base.impl;
+package cn.windor.ddtank.core.impl;
 
 import cn.windor.ddtank.base.*;
-import cn.windor.ddtank.config.DDtankConfigProperties;
+import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.core.DDTankAngleAdjust;
+import cn.windor.ddtank.core.DDTankOperate;
+import cn.windor.ddtank.core.DDTankPic;
 import cn.windor.ddtank.type.TowardEnum;
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,11 +29,11 @@ public class DDtankOperate10_4 implements DDTankOperate {
 
     private DDTankPic ddTankPic;
 
-    private DDtankConfigProperties properties;
+    private DDTankConfigProperties properties;
 
     private Library dm;
 
-    public DDtankOperate10_4(Library dm, Mouse mouse, Keyboard keyboard, DDTankPic ddTankPic, DDtankConfigProperties properties) {
+    public DDtankOperate10_4(Library dm, Mouse mouse, Keyboard keyboard, DDTankPic ddTankPic, DDTankConfigProperties properties) {
         this.dm = dm;
         this.mouse = mouse;
         this.keyboard = keyboard;
@@ -213,19 +215,28 @@ public class DDtankOperate10_4 implements DDTankOperate {
         } else if (strength > 96) {
             strength = 96;
         }
+        String[] checkColors = properties.getStrengthCheckColor().trim().split("\\|");
+        for (int i = 0; i < checkColors.length; i++) {
+            checkColors[i] = checkColors[i].trim().toUpperCase();
+        }
         // 出手前检测是否能够出手，防止卡死
         if (ddTankPic.isMyRound()) {
             String color;
             keyboard.keyDown(' ');
             while (true) {
                 color = dm.getColor((int) (properties.getStrengthStartX() + strengthUnit * strength - 1), properties.getStrengthCheckY()).toLowerCase();
-                if ("a76433".equals(color) || "d63a1a".equals(color)) {
-                    keyboard.keyUp(' ');
-                    while (ddTankPic.isMyRound()) {
-                        delay(1000);
+                for (String checkColor : checkColors) {
+                    if (checkColor.equals(color)) {
+                        keyboard.keyUp(' ');
+                        // 当颜色不变时，说明当前回合还未结束
+                        while (checkColor.equals(color)) {
+                            color = dm.getColor((int) (properties.getStrengthStartX() + strengthUnit * strength - 1), properties.getStrengthCheckY()).toLowerCase();
+                            delay(1000);
+                        }
+                        return;
                     }
-                    return;
                 }
+
                 tired = tired + 1;
                 if (tired % 1000 == 0) {
                     if (!ddTankPic.isMyRound()) {
@@ -233,15 +244,17 @@ public class DDtankOperate10_4 implements DDTankOperate {
                         return;
                     }
                 }
+                delay(properties.getStrengthCheckDelay());
             }
         }
     }
-
     @Override
     public int getBestAngle(Point myPosition, Point enemyPosition) {
-        if (properties.getIsHandleAttack() || properties.getIsAngleFix()) {
+        if (properties.getIsHandleAttack()) {
             // 手动及固定角度优先
             return properties.getHandleAngle();
+        } else if (properties.getIsFixedAngle()) {
+            return properties.getFixedAngle();
         }
 
         double vertical = myPosition.getY() - enemyPosition.getY();
@@ -298,14 +311,22 @@ public class DDtankOperate10_4 implements DDTankOperate {
         }
         horizontal = Math.abs(horizontal);
         double strength;
-        if (angle <= 20)        {strength = strengthTable20[(int) horizontal] + (strengthTable20[(int) horizontal] - strengthTable20[(int) horizontal + 1]) * (horizontal - (int) horizontal);
-        } else if (angle <= 30) {strength = strengthTable30[(int) horizontal] + (strengthTable30[(int) horizontal] - strengthTable30[(int) horizontal + 1]) * (horizontal - (int) horizontal);
-        } else if (angle <= 35) {strength = strengthTable35[(int) horizontal] + (strengthTable35[(int) horizontal] - strengthTable35[(int) horizontal + 1]) * (horizontal - (int) horizontal);
-        } else if (angle <= 40) {strength = strengthTable40[(int) horizontal] + (strengthTable40[(int) horizontal] - strengthTable40[(int) horizontal + 1]) * (horizontal - (int) horizontal);
-        } else if (angle <= 45) {strength = strengthTable45[(int) horizontal] + (strengthTable45[(int) horizontal] - strengthTable45[(int) horizontal + 1]) * (horizontal - (int) horizontal);
-        } else if (angle <= 50) {strength = strengthTable50[(int) horizontal] + (strengthTable50[(int) horizontal] - strengthTable50[(int) horizontal + 1]) * (horizontal - (int) horizontal);
-        } else if (angle <= 65) {strength = strengthTable65[(int) horizontal] + (strengthTable65[(int) horizontal] - strengthTable65[(int) horizontal + 1]) * (horizontal - (int) horizontal);
-        } else                  {strength = strengthTable70[(int) horizontal] + (strengthTable70[(int) horizontal] - strengthTable70[(int) horizontal + 1]) * (horizontal - (int) horizontal);
+        if (angle <= 20) {
+            strength = strengthTable20[(int) horizontal] + (strengthTable20[(int) horizontal] - strengthTable20[(int) horizontal + 1]) * (horizontal - (int) horizontal);
+        } else if (angle <= 30) {
+            strength = strengthTable30[(int) horizontal] + (strengthTable30[(int) horizontal] - strengthTable30[(int) horizontal + 1]) * (horizontal - (int) horizontal);
+        } else if (angle <= 35) {
+            strength = strengthTable35[(int) horizontal] + (strengthTable35[(int) horizontal] - strengthTable35[(int) horizontal + 1]) * (horizontal - (int) horizontal);
+        } else if (angle <= 40) {
+            strength = strengthTable40[(int) horizontal] + (strengthTable40[(int) horizontal] - strengthTable40[(int) horizontal + 1]) * (horizontal - (int) horizontal);
+        } else if (angle <= 45) {
+            strength = strengthTable45[(int) horizontal] + (strengthTable45[(int) horizontal] - strengthTable45[(int) horizontal + 1]) * (horizontal - (int) horizontal);
+        } else if (angle <= 50) {
+            strength = strengthTable50[(int) horizontal] + (strengthTable50[(int) horizontal] - strengthTable50[(int) horizontal + 1]) * (horizontal - (int) horizontal);
+        } else if (angle <= 65) {
+            strength = strengthTable65[(int) horizontal] + (strengthTable65[(int) horizontal] - strengthTable65[(int) horizontal + 1]) * (horizontal - (int) horizontal);
+        } else {
+            strength = strengthTable70[(int) horizontal] + (strengthTable70[(int) horizontal] - strengthTable70[(int) horizontal + 1]) * (horizontal - (int) horizontal);
         }
 
         if (vertical > 0.8) {

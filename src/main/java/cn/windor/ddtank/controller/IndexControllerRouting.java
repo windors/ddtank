@@ -1,7 +1,7 @@
 package cn.windor.ddtank.controller;
 
 import cn.windor.ddtank.core.DDtankCoreThread;
-import cn.windor.ddtank.service.DDtankThreadService;
+import cn.windor.ddtank.service.DDTankThreadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,7 +12,7 @@ import java.util.Map;
 public class IndexControllerRouting {
 
     @Autowired
-    private DDtankThreadService dDtankThreadService;
+    private DDTankThreadService dDtankThreadService;
 
     @GetMapping({"", "/", "/index"})
     public String index(Map<String, Object> map) {

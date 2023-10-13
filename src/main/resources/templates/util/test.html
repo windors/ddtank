@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" th:replace="~{base/main :: main (title=~{::title}?:_, content=~{::body}, link=~{::link}?:~{}, script=~{::script}?:~{}, style=~{::style}?:~{}, contentBefore=~{}, contentAfter=~{},
+      h1='接口测试')}">
+<head>
+    <meta charset="UTF-8">
+    <title>DDTank脚本工具——接口测试</title>
+    <style>
+        .table > tbody > tr > td {
+            line-height: 34px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<div class="row">
+    <div class="alert alert-warning alert-dismissible fade in" role="alert" th:if="${startedThreadMap.size() == 0}">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+        当前无已启动的脚本，启动脚本后请 <a href="">刷新</a>
+    </div>
+    <div th:if="${startedThreadMap.size() > 0}" style="margin-bottom: 20px">
+        <select id="select-debug" class="form-control">
+            <option value="-1">请选择测试环境</option>
+            <option th:value="${hwnd}" th:each="hwnd:${startedThreadMap.keySet()}" th:selected="${startedThreadMap.get(hwnd).debug}">[[${startedThreadMap.get(hwnd).name}]]</option>
+        </select>
+    </div>
+</div>
+<div class="row">
+    <table id="util-tests-table" class="table table-striped table-hover">
+        <tr>
+            <th class="text-center">序号</th>
+            <th class="text-center">说明</th>
+            <th class="text-center">操作</th>
+            <th class="text-center">结果</th>
+        </tr>
+        <tr th:each="test, i:${tests}">
+            <td th:text="${i.count}"></td>
+            <td th:text="${test.key}"></td>
+            <td>
+                <button class="btn btn-default" th:attr="method=${test.value}">调用</button>
+            </td>
+            <td>???</td>
+        </tr>
+    </table>
+</div>
+
+
+</body>
+<script>
+    $("#util-tests-table button").click(function () {
+        let btn = $(this)
+        let result = $(this).parent().next();
+        postAjax("/util/test", {methodName: $(this).attr("method"), hwnd: $("#select-debug").val()}, function (data) {
+            btn.parent().next().html("" + data.data);
+            let tr = btn.parent().parent();
+            tr.removeClass();
+            if (data.data === true) {
+                tr.addClass("success")
+            } else if(data.data === false || data.data === null) {
+                tr.addClass("danger")
+            } else{
+                tr.addClass("warning")
+            }
+        });
+    })
+
+    var oldHwnd;
+    $("#select-debug").mousedown(function () {
+        oldHwnd = $(this).val()
+    });
+
+    $("#select-debug").change(function () {
+        let newHwnd = $(this).val();
+        if(oldHwnd !== newHwnd) {
+            if(oldHwnd != -1) {
+                // 将旧的脚本恢复运行
+                postAjax('/util/debug', {hwnd: oldHwnd, debug: false})
+            }
+            if(newHwnd != -1) {
+                // 将新的脚本暂停
+                postAjax('/util/debug', {hwnd: newHwnd, debug: true})
+            }
+        }
+    })
+</script>
+</html>

@@ -1,7 +1,8 @@
-package cn.windor.ddtank.base.impl;
+package cn.windor.ddtank.core.impl;
 
 import cn.windor.ddtank.base.*;
-import com.sun.org.apache.xpath.internal.operations.And;
+import cn.windor.ddtank.config.DDTankConfigProperties;
+import cn.windor.ddtank.core.DDTankPic;
 
 import java.util.List;
 
@@ -10,6 +11,8 @@ import static cn.windor.ddtank.util.ThreadUtils.delay;
 public class DMDDtankPic10_4 implements DDTankPic {
     private Library dm;
 
+    private DDTankConfigProperties properties;
+
     /**
      * 存放资源的路径
      */
@@ -17,9 +20,10 @@ public class DMDDtankPic10_4 implements DDTankPic {
 
     private Mouse mouse;
 
-    public DMDDtankPic10_4(Library dm, String path, Mouse mouse) {
+    public DMDDtankPic10_4(Library dm, String path, DDTankConfigProperties properties, Mouse mouse) {
         this.dm = dm;
         this.mouse = mouse;
+        this.properties = properties;
         if(path.endsWith("/")) {
             this.path = path;
         }else{
@@ -138,7 +142,7 @@ public class DMDDtankPic10_4 implements DDTankPic {
 
     // TODO 完善架构
     @Override
-    public boolean needDraw(boolean isThirdDraw) {
+    public boolean needDraw() {
         List<Point> cardList;
         boolean over = false;
         while((cardList = dm.findPicEx(88, 59, 904, 571,
@@ -147,12 +151,15 @@ public class DMDDtankPic10_4 implements DDTankPic {
                 for (int i = 0; i < 10; i++) {
                     Point point = cardList.get((int) (System.currentTimeMillis() % cardList.size()));
                     mouse.moveAndClick(point);
+                    delay(100);
                 }
 
-                if(isThirdDraw && dm.findPic(650, 200, 750, 280, "蛋10.4-翻第三张牌.bmp", "101010", 0.8, 0, null)) {
-                    mouse.moveAndClick(400, 340);
-                    mouse.moveAndClick(400, 340);
+                if(dm.findPic(650, 200, 750, 280, "蛋10.4-翻第三张牌.bmp", "101010", 0.8, 0, null)) {
                     over = true;
+                    if(properties.getIsThirdDraw()) {
+                        mouse.moveAndClick(400, 340);
+                        mouse.moveAndClick(400, 340);
+                    }
                 }
             }
             delay(1000);
@@ -173,9 +180,12 @@ public class DMDDtankPic10_4 implements DDTankPic {
     }
 
     @Override
-    public int getAngle() {
+    public Integer getAngle() {
         String reuslt = dm.ocr(23, 552, 77, 590, "000000-000000", 0.95);
         reuslt = reuslt.replaceAll("\\D", "");
+        if("".equals(reuslt)) {
+            return null;
+        }
         return Integer.parseInt(reuslt);
     }
 }

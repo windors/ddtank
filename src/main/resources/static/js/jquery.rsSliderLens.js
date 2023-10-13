@@ -1013,6 +1013,7 @@
                     if (info.doubleHandles) {
                         this.doSetHandles([info.getCurrValue(opts.value[0]), info.getCurrValue(opts.value[1])]);
                     } else {
+                        console.log(opts)
                         this.doSetHandles([info.getCurrValue(opts.value)]);
                     }
                 },
@@ -1951,7 +1952,7 @@
                                // e.g. if the handle.zoom is 1.25, then the otherSize is also 1.25 (125% of the slider size).
                                // If set to a floating point number, it represents a relative size, e.g. if set to 1, then handle size will have
                                // the same size (100%) of the slider element.
-            animation: 100,    // Duration (ms or jQuery string alias) of animation that happens when handle needs to move to a different location (triggered by a mouse click on the slider).
+            animation: 300,    // Duration (ms or jQuery string alias) of animation that happens when handle needs to move to a different location (triggered by a mouse click on the slider).
                                // Use 0 to disable animation. Type: positive integer or string.
             easing: 'swing',   // Easing function used for the handle animation (@see http://api.jquery.com/animate/#easing). Type: string.
             mousewheel: 1  // Threshold factor applied to the handle when using the mouse wheel. Type: floating point number.

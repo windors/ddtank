@@ -1,7 +1,6 @@
-package cn.windor.ddtank.base;
+package cn.windor.ddtank.core;
 
-import cn.windor.ddtank.config.DDtankConfigProperties;
-import cn.windor.ddtank.core.DDTankAngleAdjust;
+import cn.windor.ddtank.base.Point;
 import cn.windor.ddtank.type.TowardEnum;
 
 public interface DDTankOperate {

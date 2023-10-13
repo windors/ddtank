@@ -102,7 +102,7 @@
 }
 .sliderlens svg > g > text {
   fill: rgba(186, 186, 186, 0.6);
-  font-size: 0.5em;
+  font-size: 0.8em;
 }
 .sliderlens.vert > .handle,
 .sliderlens.vert > .handle1,

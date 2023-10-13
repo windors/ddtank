@@ -1,7 +1,5 @@
 package cn.windor.ddtank.core.impl;
 
-import cn.windor.ddtank.base.DDTankOperate;
-import cn.windor.ddtank.base.DDTankPic;
 import cn.windor.ddtank.base.Keyboard;
 import cn.windor.ddtank.core.DDTankAngleAdjust;
 import cn.windor.ddtank.type.TowardEnum;

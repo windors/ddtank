@@ -1,15 +1,15 @@
 package cn.windor.ddtank.service.impl;
 
 import cn.windor.ddtank.base.*;
-import cn.windor.ddtank.base.impl.DDtankOperate10_4;
-import cn.windor.ddtank.base.impl.DMDDtankPic10_4;
-import cn.windor.ddtank.base.impl.DMLibrary;
-import cn.windor.ddtank.config.DDtankConfigProperties;
+import cn.windor.ddtank.core.impl.DDtankOperate10_4;
+import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.core.DDTankAngleAdjust;
+import cn.windor.ddtank.core.DDTankOperate;
+import cn.windor.ddtank.core.DDTankPic;
 import cn.windor.ddtank.core.DDtankCoreThread;
+import cn.windor.ddtank.core.impl.DMDDtankPic10_4;
 import cn.windor.ddtank.core.impl.SimpleDDTankAngleAdjust;
-import cn.windor.ddtank.service.DDtankThreadService;
-import com.jacob.activeX.ActiveXComponent;
+import cn.windor.ddtank.service.DDTankThreadService;
 import com.melloware.jintellitype.HotkeyListener;
 import com.melloware.jintellitype.JIntellitype;
 import lombok.extern.slf4j.Slf4j;
@@ -21,22 +21,19 @@ import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Slf4j
-public class DDTankThreadServiceImpl implements DDtankThreadService {
+public class DDTankThreadServiceImpl implements DDTankThreadService {
 
     @Autowired
     private Library dm;
 
     @Autowired
-    private DDtankConfigProperties properties;
+    private DDTankConfigProperties properties;
 
     @Autowired
     private Keyboard keyboard;
 
     @Autowired
     private Mouse mouse;
-
-    @Autowired
-    private DDTankPic ddTankPic;
 
     public static final int SHORTCUT_START = 1; // 模拟任务开始快捷键
     public static final int SHORTCUT_SUSPEND = 2; // 模拟手动结束任务快捷键
@@ -83,6 +80,7 @@ public class DDTankThreadServiceImpl implements DDtankThreadService {
                                     log.warn("请勿重复启动，当前窗口已被添加到运行库中");
                                 } else {
                                     // 启动脚本线程
+                                    DDTankPic ddTankPic = new DMDDtankPic10_4(dm, "C:/tmp/", properties, mouse);
                                     DDTankOperate ddTankOperate = new DDtankOperate10_4(dm, mouse, keyboard, ddTankPic, properties);
                                     DDTankAngleAdjust ddTankAngleAdjust = new SimpleDDTankAngleAdjust(keyboard);
                                     DDtankCoreThread thread = new DDtankCoreThread(hwnd, dm, ddTankPic, ddTankOperate, properties, ddTankAngleAdjust);

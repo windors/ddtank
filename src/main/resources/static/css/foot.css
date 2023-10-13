@@ -71,4 +71,4 @@ img{border:0}
 .wave-list-box{float:left}
 .wave-list-box ul{float:left;height:60px;overflow:hidden;zoom:1}
 .wave-list-box ul li{height:60px;width:100%;float:left;line-height:30px;list-style:none}
-.wave-box{position:relative;height:60px;background:#fff}
+.wave-box{margin-top: 120px;position:relative;height:60px;background:#fff}

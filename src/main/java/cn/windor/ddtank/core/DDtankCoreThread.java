@@ -1,7 +1,7 @@
 package cn.windor.ddtank.core;
 
 import cn.windor.ddtank.base.*;
-import cn.windor.ddtank.config.DDtankConfigProperties;
+import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.type.TowardEnum;
 import lombok.Getter;
 import lombok.Setter;
@@ -36,22 +36,27 @@ public class DDtankCoreThread extends Thread {
 
     private boolean isCalcedDistance;
 
+    @Getter
+    private boolean debug;
+
     // 当前状态消息，给外部提供查看接口
     // TODO 将msg设置为一个定长集合，便于查看历史消息
     protected String msg;
 
 
     protected Library dm;
+
+    @Getter
     protected DDTankPic dmPic;
+
     protected DDTankOperate ddtank;
     protected Keyboard keyboard;
     @Getter
     @Setter
-    protected volatile DDtankConfigProperties properties;
+    protected DDTankConfigProperties properties;
     protected DDTankAngleAdjust angleAdjust;
 
-
-    public DDtankCoreThread(long hwnd, Library dm, DDTankPic dmPic, DDTankOperate ddtank, DDtankConfigProperties properties, DDTankAngleAdjust angleAdjust) {
+    public DDtankCoreThread(long hwnd, Library dm, DDTankPic dmPic, DDTankOperate ddtank, DDTankConfigProperties properties, DDTankAngleAdjust angleAdjust) {
         this.hwnd = hwnd;
         this.dm = dm;
         this.dmPic = dmPic;
@@ -81,15 +86,14 @@ public class DDtankCoreThread extends Thread {
         if (dm.bindWindowEx(hwnd, properties.getBindDisplay(), properties.getBindMouse(), properties.getBindKeypad(), properties.getBindPublic(), properties.getBindMode())) {
             init();
             try {
-                if (false) {
-                    // 测试内容
-                } else {
-                    while (true) {
+                while (true) {
+                    if (Thread.currentThread().isInterrupted()) {
+                        break;
+                    }
+                    if (debug) {
+                        delay(1000);
+                    } else {
                         try {
-                            if (Thread.currentThread().isInterrupted()) {
-                                break;
-                            }
-
                             if (dmPic.needActiveWindow()) {
                                 updateMsg("窗口未被激活，已重新激活窗口");
                             }
@@ -132,8 +136,8 @@ public class DDtankCoreThread extends Thread {
                                 }
                             }
 
-                            if(dmPic.needDraw(properties.getIsThirdDraw())) {
-
+                            if (dmPic.needDraw()) {
+                                times++;
                             }
 
                             sleep(1000);
@@ -144,6 +148,7 @@ public class DDtankCoreThread extends Thread {
                     }
                 }
             } finally {
+                delay(1000);
                 dm.unbindWindow();
             }
 
@@ -211,7 +216,7 @@ public class DDtankCoreThread extends Thread {
                 if (ddtank.angleAdjust(angle, angleAdjust, TowardEnum.RIGHT)) {
                     double horizontal = (enemyPosition.getX() - myPosition.getX()) / distance;
                     double vertical = (myPosition.getY() - enemyPosition.getY()) / distance;
-                    updateMsg("我的坐标：" + myPosition + ", 敌人的坐标：" + enemyPosition +  ", 水平屏距：" + horizontal + ", 垂直屏距：" + vertical);
+                    updateMsg("我的坐标：" + myPosition + ", 敌人的坐标：" + enemyPosition + ", 水平屏距：" + horizontal + ", 垂直屏距：" + vertical);
                     strength = ddtank.getStrength(angle, horizontal, vertical);
                     updateMsg("自动攻击：" + angle + "度, " + strength + "力");
                     ddtank.attack(strength);
@@ -220,5 +225,14 @@ public class DDtankCoreThread extends Thread {
                 }
             }
         }
+    }
+
+    public void setDebug(boolean debug) {
+        if (debug) {
+            updateMsg("暂停运行");
+        } else {
+            updateMsg("恢复运行");
+        }
+        this.debug = debug;
     }
 }
