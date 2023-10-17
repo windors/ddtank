@@ -22,7 +22,7 @@
     <div th:if="${startedThreadMap.size() > 0}" style="margin-bottom: 20px">
         <select id="select-debug" class="form-control">
             <option value="-1">请选择测试环境</option>
-            <option th:value="${hwnd}" th:each="hwnd:${startedThreadMap.keySet()}" th:selected="${startedThreadMap.get(hwnd).debug}">[[${startedThreadMap.get(hwnd).name}]]</option>
+            <option th:value="${hwnd}" th:each="hwnd:${startedThreadMap.keySet()}" th:selected="${startedThreadMap.get(hwnd).suspend}">[[${startedThreadMap.get(hwnd).name}]]</option>
         </select>
     </div>
 </div>
@@ -52,12 +52,12 @@
         let btn = $(this)
         let result = $(this).parent().next();
         postAjax("/util/test", {methodName: $(this).attr("method"), hwnd: $("#select-debug").val()}, function (data) {
-            btn.parent().next().html("" + data.data);
+            btn.parent().next().html(data.data);
             let tr = btn.parent().parent();
             tr.removeClass();
-            if (data.data === true) {
+            if (data.data === "true") {
                 tr.addClass("success")
-            } else if(data.data === false || data.data === null) {
+            } else if(data.data === "false" || data.data === "null") {
                 tr.addClass("danger")
             } else{
                 tr.addClass("warning")
@@ -75,11 +75,11 @@
         if(oldHwnd !== newHwnd) {
             if(oldHwnd != -1) {
                 // 将旧的脚本恢复运行
-                postAjax('/util/debug', {hwnd: oldHwnd, debug: false})
+                postAjax('/util/continue', {hwnd: oldHwnd, debug: false})
             }
             if(newHwnd != -1) {
                 // 将新的脚本暂停
-                postAjax('/util/debug', {hwnd: newHwnd, debug: true})
+                postAjax('/util/suspend', {hwnd: newHwnd, debug: true})
             }
         }
     })

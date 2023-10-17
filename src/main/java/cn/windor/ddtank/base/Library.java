@@ -9,13 +9,20 @@ public interface Library {
     long getLastError();
 
     ActiveXComponent getSource();
+
+    boolean capture(int x1, int y1, int x2, int y2, String filepath);
+
+    int[] getClientSize(long hwnd);
+
+    boolean getWindowState(long hwnd, int flag);
+
     long getMousePointWindow();
     String getWindowClass(long hwnd);
     String getColor(int x, int y);
     String getColorBGR(int x, int y);
     boolean findColor(int x1, int y1, int x2, int y2, String color, double sim, int dir, Point result);
 
-    String findColorEx(int x1, int y1, int x2, int y2, String color, double sim, int dir);
+    Point[] findColorEx(int x1, int y1, int x2, int y2, String color, double sim, int dir);
 
     boolean findPic(int x1, int y1, int x2, int y2, String picName, String deltaColor, double sim, int dir, Point result);
 

@@ -1,8 +1,8 @@
 package cn.windor.ddtank.config;
 
-import cn.windor.ddtank.util.DDTankFileUtils;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -12,11 +12,20 @@ import java.lang.reflect.Field;
 @Slf4j
 @Getter
 @Setter
-public class DDTankConfigProperties implements Serializable {
+@ToString
+public class DDTankConfigProperties implements Serializable, Cloneable {
 
     private static final long serialVersionUID = 1L;
 
-    private static final DDTankConfigProperties defaultConfig = DDTankFileUtils.readDefaultConfig();
+    @Override
+    public DDTankConfigProperties clone() {
+        try {
+            Object clone = super.clone();
+            return (DDTankConfigProperties) clone;
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public synchronized void update(DDTankConfigProperties properties) {
         this.bindDisplay = properties.bindDisplay;
@@ -40,6 +49,7 @@ public class DDTankConfigProperties implements Serializable {
         this.handleAngle = properties.handleAngle;
         this.handleStrength = properties.handleStrength;
         this.attackSkill = properties.attackSkill;
+        this.attackTurn = properties.attackTurn;
         this.strengthStartX = properties.strengthStartX;
         this.strengthEndX = properties.strengthEndX;
         this.strengthCheckY = properties.strengthCheckY;
@@ -54,15 +64,18 @@ public class DDTankConfigProperties implements Serializable {
         this.colorRole = properties.colorRole;
         this.colorEnemy = properties.colorEnemy;
         this.enemyFindMode = properties.enemyFindMode;
+        this.aftertreatment = properties.aftertreatment;
+        this.aftertreatmentStr = properties.aftertreatmentStr;
+        this.aftertreatmentSec = properties.aftertreatmentSec;
     }
 
-    public DDTankConfigProperties() {
+    public DDTankConfigProperties(DDTankConfigProperties defaultConfig) {
         if(defaultConfig != null) {
             update(defaultConfig);
         }
     }
 
-    private Integer id;
+    private volatile String name = "默认";
 
     private volatile String bindDisplay = "dx2";
 
@@ -117,6 +130,8 @@ public class DDTankConfigProperties implements Serializable {
 
     private volatile String attackSkill = "23444445678";
 
+    private volatile Boolean attackTurn = false;
+
     private volatile Integer strengthStartX = 151;
 
     private volatile Integer strengthEndX = 646;
@@ -144,4 +159,11 @@ public class DDTankConfigProperties implements Serializable {
     private volatile String colorEnemy = "ff0000-000000|99cc00-000000";
 
     private volatile Integer enemyFindMode = 0;
+
+    // 后处理
+    private volatile Boolean aftertreatment = false;
+
+    private volatile String aftertreatmentStr = "w";
+
+    private volatile Integer aftertreatmentSec = 5;
 }

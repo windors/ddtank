@@ -1,5 +1,7 @@
 package cn.windor.ddtank.core;
 
+import cn.windor.ddtank.base.Point;
+import cn.windor.ddtank.type.TowardEnum;
 import org.springframework.context.annotation.Description;
 
 public interface DDTankPic {
@@ -39,4 +41,13 @@ public interface DDTankPic {
 
     @Description("获取角度")
     Integer getAngle();
+
+    @Description("获取我的位置，null表示未找到")
+    Point getMyPosition();
+
+    @Description("获取敌人的位置，null表示未找到")
+    Point getEnemyPosition();
+
+    @Description("获取当前方向")
+    TowardEnum getToward();
 }

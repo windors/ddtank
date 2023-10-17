@@ -1,90 +1,179 @@
 <!DOCTYPE html>
-<html lang="zh" xmlns:th="http://www.thymeleaf.org" th:replace="~{base/main :: main (title=~{::title}?:_, content=~{::body}, link=~{::link}?:~{}, script=~{::script}?:~{}, style=~{::style}?:~{}, contentBefore=~{}, contentAfter=~{},
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" th:replace="~{base/main :: main (title=~{::title}?:_, content=~{::.index-main}, link=~{::link}?:~{}, script=~{::script}?:~{}, style=~{::style}?:~{}, contentBefore=~{}, contentAfter=~{::.index-tool},
       h1='DDTank —— 终章')}">
 <head>
     <meta charset="UTF-8">
     <title>DDTank —— 终章</title>
-    <link rel="stylesheet" href="/static/css/iconfont.css" th:href="@{/static/css/iconfont.css}">
-    <link rel="stylesheet" href="/static/css/index.css" th:href="@{/static/css/index.css}">
-    <link rel="stylesheet" href="/static/css/rsSliderLens.css" th:href="@{/static/css/rsSliderLens.css}">
-    <!--    <link rel="stylesheet" href="/static/css/verlyRangeSlider.css" th:href="@{/static/css/verlyRangeSlider.css}">-->
-    <!--    <script src="/static/js/verlyRange.js" th:src="@{/static/js/verlyRange.js}"></script>-->
-    <!--    <script src="/static/js/verly.bundle.js" th:src="@{/static/js/verly.bundle.js}"></script>-->
-    <script src="/static/js/jquery.rsSliderLens.js" th:src="@{/static/js/jquery.rsSliderLens.js}"></script>
     <style>
-        label {
-            font-weight: normal;
+        .table > tbody > tr > td {
+            line-height: 34px;
+            text-align: center;
         }
 
-        .slider-img {
-            line-height: 48px;
+        kbd {
+            margin: 0 10px;
         }
 
-        input[type='checkbox'] {
-            zoom: 120%;
+        .index-tool {
+            width: 40px;
+            position:fixed;
+            right:50%;
+            top:212px;
         }
+
+        .index-tool button {
+            width: 40px;
+        }
+
+        @media (min-width: 992px) {
+            .index-tool {
+                margin-right: -540px;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .index-tool {
+                margin-right: -640px;
+            }
+        }
+
+
     </style>
 </head>
 <body>
-<div class="row">
+<div class="index-main row">
+    <div class="alert alert-warning alert-dismissible fade in" role="alert"
+         th:if="${waitStartMap.keySet().size() == 0 && startedMap.keySet().size() == 0}">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+        当前还未标记任何窗口哦，请使用快捷键<kbd>alt + 1</kbd>标记游戏窗口吧。已标记？请 <a href="">刷新</a>
+    </div>
+    <table id="wait-table" class="table table-hover"
+           th:if="${waitStartMap.keySet().size() > 0}">
+        <caption>待启动脚本</caption>
+        <tr>
+            <th class="text-center">句柄</th>
+            <th class="text-center">键盘</th>
+            <th class="text-center">鼠标</th>
+            <th class="text-center">找图策略</th>
+            <th class="text-center">操作策略</th>
+            <th class="text-center">走位策略</th>
+            <th class="text-center">* 整体配置</th>
+            <th class="text-center col-md-2">脚本名称</th>
+            <th class="text-center">操作</th>
+        </tr>
+        <tr th:each="hwnd:${waitStartMap.keySet()}">
+            <td th:text="${hwnd}"></td>
+            <td>
+                <select class="form-control" name="keyboardMode">
+                    <option value="0">默认键盘</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-control" name="mouseMode">
+                    <option value="0">默认鼠标</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-control" name="picMode">
+                    <option value="0">默认找图</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-control" name="operateMode">
+                    <option value="0">默认操作</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-control" name="moveMode">
+                    <option value="0">默认走位</option>
+                </select>
+            </td>
+            <td>
+                <select class="form-control" name="propertiesMode">
+                    <option value="0">* 默认配置</option>
+                    <option th:value="${n.count}" th:each="config, n:${configList}">[[${config.name}]]</option>
+                </select>
+            </td>
+            <td><input class="form-control" name="name" th:value="${waitStartMap.get(hwnd).name}"/></td>
+            <td>
+                <button class="btn btn-primary start-btn">启动</button>
+            </td>
+        </tr>
+    </table>
+    <div class="alert alert-warning alert-dismissible fade in" role="alert"
+         th:if="${startedMap.keySet().size() == 0}">
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+        当前还无任何脚本在启动中哦~。已启动？请 <a href="">刷新</a>
+    </div>
+
+    <table id="started-table" class="table table-hover"
+           th:if="${startedMap.keySet().size() > 0}">
+        <caption>已启动脚本</caption>
+        <tr>
+            <th class="text-center">脚本</th>
+            <th class="text-center">当前状态</th>
+            <th class="text-center">最后消息</th>
+            <th class="text-center">选择副本</th>
+            <th class="text-center">通关次数</th>
+            <th class="text-center">操作</th>
+        </tr>
+        <tr th:each="hwnd:${startedMap.keySet()}">
+            <td th:text="${startedMap.get(hwnd).name}"></td>
+            <td th:text="${startedMap.get(hwnd).coreState}"></td>
+            <td th:text="${startedMap.get(hwnd).getCurrentMsg()}"></td>
+            <td>[[${startedMap.get(hwnd).properties.levelLine}]]-[[${startedMap.get(hwnd).properties.levelRow}]]</td>
+            <td th:text="${startedMap.get(hwnd).times}"></td>
+            <td>
+                <a class="btn btn-default" th:href="@{/config/run/{hwnd}(hwnd=${hwnd})}">配置</a>
+                <a class="btn btn-default" th:href="@{/detail/run/{hwnd}(hwnd=${hwnd})}">详细</a>
+            </td>
+        </tr>
+    </table>
+    <audio id="danger-data">
+    </audio>
+</div>
+<div class="index-tool hidden-xs hidden-sm" th:if="${danger != null}">
+    <div class="main-tool-wrapper">
+        <div class="main-tool">
+            <button id="danger" class="btn btn-danger">秘</button>
+        </div>
+    </div>
 </div>
 </body>
 <script>
-    $(".slider-img").rsSliderLens({
-        handle: {
-            zoom: 1
-        },
-        ruler: {
-            visible: false
-        },
-        onChange: function (event, value, isFirstHandle) {
-            $(event.currentTarget).parent("div").next("input[type='hidden']").val(value);
-        }
-    });
-    $(".handle .slider-img").css("width", "1000%")
-
-
-    var labels = [];
-    for (var i = -2000; i <= 0;) {
-        labels.push(i);
-        if (i > -500) {
-            i += 50;
-        } else if (i > -1000) {
-            i += 100;
-        } else {
-            i += 200;
-        }
-    }
-    $(".slider").rsSliderLens({
-        step: 1,
-        paddingStart: 0.008,
-        paddingEnd: 0.008,
-        min: -2000,
-        max: 0,
-        height: 48,
-        handle: {
-            zoom: 1
-        },
-        ruler: {
-            labels: {
-                values: labels,
-                onCustomLabel: function (event, value) {
-                    return -value;
-                }
-            },
-            tickMarks: {
-                short: {
-                    step: 10
-                },
-                long: {
-                    step: 50
-                }
+    $(".start-btn").click(function () {
+        let form = $(this).parent().parent();
+        let select = form.find("select");
+        postAjax("/util/start", {
+            hwnd: $(form.find("td")[0]).html(),
+            keyboardMode: $(select[0]).val(),
+            mouseMode: $(select[1]).val(),
+            picMode: $(select[2]).val(),
+            operateMode: $(select[3]).val(),
+            moveMode: $(select[4]).val(),
+            propertiesMode: $(select[5]).val(),
+            name: $(form.find("input")[0]).val()
+        }, function (data) {
+            if (data.data) {
+                windorAlert('提示', '已尝试启动脚本');
+            } else {
+                windorAlert('提示', "脚本已在运行，请勿重复启动");
             }
-        },
-        range: {
-            type: [-2000, -20],
-            draggable: true
-        }
+        })
     })
+</script>
+<script>
+    $(function () {
+        $("#danger").click(function () {
+            windorAlert("surprise", "啊 :)")
+            $("#danger-data").html("<source src='/static/music/surprise.mp3'/>");
+            $("#danger-data")[0].play();
+        })
+    })
+
 </script>
 </html>

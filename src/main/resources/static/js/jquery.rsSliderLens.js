@@ -125,7 +125,6 @@
                     this.initSize(this.$wrapper);
                     if (info.hasRuler && info.isFixedHandle) {
                         this[info.isHoriz ? 'width' : 'height'] *= opts.ruler.size;
-                        console.log(info)
                     }
 
                     if (elemPosition === 'static') {
@@ -1013,7 +1012,6 @@
                     if (info.doubleHandles) {
                         this.doSetHandles([info.getCurrValue(opts.value[0]), info.getCurrValue(opts.value[1])]);
                     } else {
-                        console.log(opts)
                         this.doSetHandles([info.getCurrValue(opts.value)]);
                     }
                 },

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" th:replace="~{base/main :: main (title=~{::title}?:_, content=~{::body}, link=~{::link}?:~{}, script=~{::script}?:~{}, style=~{::style}?:~{}, contentBefore=~{}, contentAfter=~{},
+      h1='修改配置 <small>修改运行中脚本的配置，按保存后即可生效</small>')}">
+<head>
+    <meta charset="UTF-8">
+    <title>DDTank —— 终章</title>
+    <link rel="stylesheet" href="/static/css/index.css" th:href="@{/static/css/index.css}">
+    <link rel="stylesheet" href="/static/css/rsSliderLens.css" th:href="@{/static/css/rsSliderLens.css}">
+    <link rel="stylesheet" href="/static/css/common/form.css" th:href="@{/static/css/common/form.css}">
+    <script src="/static/js/jquery.rsSliderLens.js" th:src="@{/static/js/jquery.rsSliderLens.js}"></script>
+</head>
+<body>
+<div id="modal-tag" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="modal-tag-label">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                        aria-hidden="true">×</span></button>
+                <h4 class="modal-title" id="modal-tag-label">就差一步了</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-xs-12">
+                        <form id="configAddForm" class="form-horizontal">
+                            <div class="form-group form-group-lg">
+                                <label class="col-sm-2 control-label" for="config-name">配置名称</label>
+                                <div class="col-sm-9">
+                                    <input id="config-name" class="form-control" name="name" type="text"/>
+                                </div>
+                            </div>
+                            <div class="form-group form-group-lg">
+                                <div class="col-sm-offset-9 col-sm-2">
+                                    <button class="btn btn-primary col-sm-12">新增配置</button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <form id="configUpdateForm" class="form-horizontal">
+        <div th:replace="common/form :: form-default(${config}, ~{::before}, ~{::end})">
+            <div th:fragment="before">
+                <label class="col-md-2 control-label">当前脚本</label>
+                <div class="col-md-10">
+                    <input class="form-control" th:value="${threadName}" disabled/>
+                </div>
+            </div>
+            <div th:fragment="end">
+                <div class="col-md-offset-8 col-md-2">
+                    <button class=" btn btn-default" type="button" onclick="showModal()">保存为新配置</button>
+                </div>
+                <div class="col-md-2">
+                    <button class=" btn btn-primary" style="width: 100%" type="submit">更新</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+</body>
+<script>
+    function showModal() {
+        $("#modal-tag").modal('show')
+    }
+
+    $("#configUpdateForm").submit(function () {
+        putAjax("/config/run/[[${hwnd}]]", $(this).serialize(), function (data) {
+            windorAlert("提示", "已成功更新配置！")
+        })
+        return false;
+    });
+
+    $("#configAddForm").submit(function () {
+        postAjax("/config", $("#configUpdateForm").serialize() + "&name=" + $("#config-name").val(), function (data) {
+            // 成功添加则关闭modal-tag
+            $("#modal-tag").modal('hide');
+            windorAlert("提示", "已成功添加配置！")
+        })
+        return false;
+    });
+</script>
+</html>

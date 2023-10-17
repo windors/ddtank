@@ -46,6 +46,31 @@ public class DMLibrary implements Library {
         return dm;
     }
 
+    @Override
+    public boolean capture(int x1, int y1, int x2, int y2, String filepath) {
+        return dm.invoke("capture", new Variant(x1), new Variant(y1), new Variant(x2), new Variant(y2),
+                new Variant(filepath)).getInt() == 1;
+    }
+
+    @Override
+    public int[] getClientSize(long hwnd) {
+        int[] result = new int[2];
+        Variant width = new Variant(-1, true);
+        Variant height = new Variant(-1, true);
+        if (dm.invoke("getClientSize", new Variant(hwnd), width, height).getInt() == 1) {
+            result[0] = width.getInt();
+            result[1] = height.getInt();
+        } else {
+            return null;
+        }
+        return result;
+    }
+
+    @Override
+    public boolean getWindowState(long hwnd, int flag) {
+        return dm.invoke("getWindowState", new Variant(hwnd), new Variant(flag)).getInt() == 1;
+    }
+
     /**
      * 获取鼠标指向窗口的句柄
      *
@@ -130,9 +155,26 @@ public class DMLibrary implements Library {
      *              8: 从下到上,从右到左
      * @return 返回所有颜色信息的坐标值, 然后通过GetResultCount等接口来解析 (由于内存限制,返回的颜色数量最多为1800个左右)
      */
-    public String findColorEx(int x1, int y1, int x2, int y2, String color, double sim, int dir) {
-        return dm.invoke("findColorEx", new Variant(x1), new Variant(y1), new Variant(x2), new Variant(y2),
+    public Point[] findColorEx(int x1, int y1, int x2, int y2, String color, double sim, int dir) {
+        long start = System.currentTimeMillis();
+        String findColorEx = dm.invoke("findColorEx", new Variant(x1), new Variant(y1), new Variant(x2), new Variant(y2),
                 new Variant(color), new Variant(sim), new Variant(dir)).getString();
+        if ("".equals(findColorEx)) {
+            return new Point[0];
+        }
+        int count = dm.invoke("getResultCount", new Variant(findColorEx)).getInt();
+        Point[] result = new Point[count];
+        for (int i = 0; i < count; i++) {
+            Variant x = new Variant(-1, true);
+            Variant y = new Variant(-1, true);
+            if (dm.invoke("getResultPos", new Variant(findColorEx), new Variant(i), x, y).getInt() == 1) {
+                result[i] = new Point(x.getInt(), y.getInt());
+            }else {
+                log.error("调用解析函数失败！");
+            }
+        }
+        log.info("耗时：{}ms", System.currentTimeMillis() - start);
+        return result;
     }
 
 

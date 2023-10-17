@@ -1,7 +1,10 @@
 server:
-  port: 8080
+  port: 8082
 logging:
   config: classpath:logback.xml
 spring:
   mvc:
     static-path-pattern: /static/**
+    hiddenmethod:
+      filter:
+        enabled: true

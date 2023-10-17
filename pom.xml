@@ -53,11 +53,28 @@
             <optional>true</optional>
         </dependency>
 
+        <!--开源库-->
         <dependency>
             <groupId>com.melloware</groupId>
             <artifactId>jintellitype</artifactId>
             <version>1.4.1</version>
         </dependency>
+        <dependency>
+            <groupId>com.jacob</groupId>
+            <artifactId>jacob</artifactId>
+            <version>1.20</version>
+        </dependency>
     </dependencies>
+
+
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

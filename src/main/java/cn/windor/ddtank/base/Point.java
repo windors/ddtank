@@ -11,4 +11,9 @@ import lombok.NoArgsConstructor;
 public class Point {
     private int x;
     private int y;
+
+    public void setOffset(int x, int y) {
+        this.x += x;
+        this.y += y;
+    }
 }

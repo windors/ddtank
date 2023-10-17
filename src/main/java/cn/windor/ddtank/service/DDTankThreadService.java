@@ -1,6 +1,8 @@
 package cn.windor.ddtank.service;
 
-import cn.windor.ddtank.core.DDtankCoreThread;
+import cn.windor.ddtank.config.DDTankConfigProperties;
+import cn.windor.ddtank.config.DDTankStartParam;
+import cn.windor.ddtank.core.DDTankCoreThread;
 
 import java.util.Map;
 
@@ -18,5 +20,40 @@ public interface DDTankThreadService {
      */
     void removeStartShortcut();
 
-    Map<Long, DDtankCoreThread> getAllStartedThreadMap();
+    /**
+     * 获取所有已经启动的脚本
+     */
+    Map<Long, DDTankCoreThread> getAllStartedThreadMap();
+
+    /**
+     * 获取所有等待调用start的脚本
+     */
+    Map<Long, DDTankStartParam> getWaitStartMap();
+
+    /**
+     * 指定配置并运行脚本
+     */
+    boolean start(long hwnd, int keyboardMode, int mouseMode, int picMode, int operateMode, int propertiesMode, String name);
+
+    /**
+     * 将当前鼠标所指向的窗口计入待启动列表
+     * @return 脚本句柄，返回null表示当前窗口不符合脚本要求
+     */
+    Long mark();
+
+    /**
+     * 停止指定脚本
+     */
+    void stop(long hwnd);
+
+    /**
+     * 立刻停止指定脚本
+     * @param hwnd
+     */
+    void stopDirectly(long hwnd);
+
+    /**
+     * 更新指定脚本的配置
+     */
+    boolean updateProperties(long hwnd, DDTankConfigProperties config);
 }

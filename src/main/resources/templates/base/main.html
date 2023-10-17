@@ -65,7 +65,7 @@
                 <!-- Collect the nav links, forms, and other content for toggling -->
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
                     <ul class="nav navbar-nav">
-                        <li><a>脚本管理</a></li>
+                        <li><a th:href="@{/}">脚本管理</a></li>
                         <li role="presentation" class="dropdown">
                             <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button"
                                aria-haspopup="true" aria-expanded="false">
@@ -73,10 +73,10 @@
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a th:href="@{/config/list}">配置列表</a></li>
-                                <li><a th:href="@{/config/add}">添加配置</a></li>
+                                <li><a th:href="@{/config/add}">新增配置</a></li>
                                 <li><a th:href="@{/config/default}">默认配置</a></li>
                                 <li role="separator" class="divider"></li>
-                                <li><a>配置分享</a></li>
+                                <li><a>配置分享（未开发）</a></li>
                             </ul>
                         </li>
                         <li role="presentation" class="dropdown">
@@ -98,6 +98,7 @@
                                 <li role="separator" class="divider"></li>
                             </ul>
                         </li>
+                        <li><a th:href="@{/about}">关于</a></li>
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
                         <li th:if="${null != session.get(@sessionConstant.getLoginUser())}">
@@ -114,23 +115,12 @@
                 </div><!-- /.navbar-collapse -->
             </div><!-- /.container-fluid -->
         </nav>
-
-        <!--<div class="container">
-            <div class="container col-xs-12 col-lg-offset-1 col-lg-10">
-                <ul class="col-xs-5 nav nav-pills nav-justified">
-                    <li role="presentation" id="location-search"><a th:href="@{/}">铺面搜索</a></li>
-                    &lt;!&ndash;<li role="presentation" id="location-admin"><a th:href="@{/admin}">审核</a></li>&ndash;&gt;
-                    <li role="presentation" id="location-personal"><a th:href="@{/personal}">个人中心</a></li>
-                </ul>
-            </div>
-        </div>-->
-        <!--    <div class="clearfix"></div>-->
         <div th:replace="common/alert :: common-alert('alert')"></div>
     </header>
     <div th:replace="*{contentBefore}"></div>
     <div class="main-body container" style="flex: 1 1 auto;display: flex;flex-direction: column">
         <div class="row page-header" th:if="*{h1 != null}">
-            <h1 th:text="*{h1}"></h1>
+            <h1 th:utext="*{h1}"></h1>
         </div>
         <div th:replace="*{content}"></div>
         <!--        <div class="main-tool-wrapper col-xs-offset-12 hidden-xs">-->

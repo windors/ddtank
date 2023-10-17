@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" th:replace="~{base/main :: main (title=~{::title}?:_, content=~{::body}, link=~{::link}?:~{}, script=~{::script}?:~{}, style=~{::style}?:~{}, contentBefore=~{}, contentAfter=~{},
+      h1='标题')}">
+<head>
+    <meta charset="UTF-8">
+    <title>life track</title>
+</head>
+<body>
+<div class="row">
+    <div class="col-sm-8">
+        <video class="video-js vjs-default-skin" controls preload="none"
+               style="width: 100%;height: 100%;">
+            <source src="/static/video/about.mp4" type="video/mp4">
+        </video>
+    </div>
+</div>
+
+</body>
+</html>

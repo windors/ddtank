@@ -1,0 +1,48 @@
+label {
+    font-weight: normal;
+}
+
+.slider-img {
+    line-height: 34px;
+}
+
+.input-group-fix {
+    padding-left: 0;
+}
+
+.form-horizontal .checkbox {
+    padding-top: 0;
+}
+
+#mini-direct {
+    width: 263px;
+    padding-left: 20px;
+}
+
+#mini-direct.affix {
+    top: 20px;
+}
+
+#mini-direct ul.nav li.active > a, #mini-direct ul.nav li.active > a:hover {
+    color: #0088cc;
+    border-left: 2px solid #0088cc;
+}
+
+#mini-direct > ul.nav > li.active > a, #mini-direct >ul.nav > li.active > a:hover {
+    padding-left: 18px;
+}
+
+#mini-direct > ul.nav > li.active > ul.nav > li.active > a, #mini-direct >ul.nav > li.active > ul.nav > li.active > a:hover {
+    padding-left: 27px;
+}
+
+#mini-direct .nav > li > a {
+    display: block;
+    padding: 8px 19px 8px 20px;
+    color: #767676;
+}
+
+#mini-direct .nav .nav > li > a {
+    display: block;
+    padding: 2px 20px 2px 29px;
+}

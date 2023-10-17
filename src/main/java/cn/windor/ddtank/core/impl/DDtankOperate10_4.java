@@ -2,7 +2,7 @@ package cn.windor.ddtank.core.impl;
 
 import cn.windor.ddtank.base.*;
 import cn.windor.ddtank.config.DDTankConfigProperties;
-import cn.windor.ddtank.core.DDTankAngleAdjust;
+import cn.windor.ddtank.core.DDTankAngleAdjustMove;
 import cn.windor.ddtank.core.DDTankOperate;
 import cn.windor.ddtank.core.DDTankPic;
 import cn.windor.ddtank.type.TowardEnum;
@@ -196,7 +196,7 @@ public class DDtankOperate10_4 implements DDTankOperate {
     }
 
     @Override
-    public boolean angleAdjust(int targetAngle, DDTankAngleAdjust angleAdjust, TowardEnum toward) {
+    public boolean angleAdjust(int targetAngle, DDTankAngleAdjustMove angleAdjust, TowardEnum toward) {
         int tried = 1;
         while (!angleAdjust(targetAngle) && angleAdjust.move(toward, targetAngle, tried++)) {
             if (tried++ % 3 == 0 && !ddTankPic.isMyRound()) {
@@ -231,7 +231,15 @@ public class DDtankOperate10_4 implements DDTankOperate {
                         // 当颜色不变时，说明当前回合还未结束
                         while (checkColor.equals(color)) {
                             color = dm.getColor((int) (properties.getStrengthStartX() + strengthUnit * strength - 1), properties.getStrengthCheckY()).toLowerCase();
-                            delay(1000);
+                            if (properties.getAftertreatment()) {
+                                // 后处理
+                                for (int i = 0; i < properties.getAftertreatmentSec(); i++) {
+                                    keyboard.keyPress(properties.getAftertreatmentStr().charAt(0));
+                                    delay(1000 / properties.getAftertreatmentSec());
+                                }
+                            } else {
+                                delay(100);
+                            }
                         }
                         return;
                     }
@@ -248,6 +256,7 @@ public class DDtankOperate10_4 implements DDTankOperate {
             }
         }
     }
+
     @Override
     public int getBestAngle(Point myPosition, Point enemyPosition) {
         if (properties.getIsHandleAttack()) {
@@ -280,27 +289,6 @@ public class DDtankOperate10_4 implements DDTankOperate {
         }
         log.debug("敌我夹角：{}, 最佳角度: {}", theta, angle);
         return angle + properties.getOffsetAngle();
-    }
-
-    @Override
-    public Point getMyPosition() {
-        Point result = new Point();
-        if (dm.findStr(properties.getStaticX1(), properties.getStaticY1(), properties.getStaticX2(), properties.getStaticY2(),
-                "我", properties.getColorRole(), 0.9, result)) {
-            // 由于大漠找字找的是左上角，所以需要修正
-            result.setY(result.getY() + 10);
-        }
-        return result;
-    }
-
-    @Override
-    public Point getEnemyPosition() {
-        Point result = new Point();
-        if (dm.findColor(properties.getStaticX1(), properties.getStaticY1(), properties.getStaticX2(), properties.getStaticY2(),
-                properties.getColorEnemy(), 1, properties.getEnemyFindMode(), result)) {
-            // TODO 不同模式下的修正
-        }
-        return result;
     }
 
     @Override

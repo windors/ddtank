@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" th:replace="~{base/main :: main (title=~{::title}?:_, content=~{::body}, link=~{::link}?:~{}, script=~{::script}?:~{}, style=~{::style}?:~{}, contentBefore=~{}, contentAfter=~{},
+      h1='配置编辑 <small>编辑已保存的配置，便于下次直接选择</small>')}">
+<head>
+    <meta charset="UTF-8">
+    <title>配置编辑</title>
+    <link rel="stylesheet" href="/static/css/rsSliderLens.css" th:href="@{/static/css/rsSliderLens.css}">
+    <link rel="stylesheet" href="/static/css/common/form.css" th:href="@{/static/css/common/form.css}">
+    <script src="/static/js/jquery.rsSliderLens.js" th:src="@{/static/js/jquery.rsSliderLens.js}"></script>
+</head>
+<body>
+<div class="row">
+    <form id="configEditForm" class="form-horizontal">
+        <div th:replace="common/form :: form-default(${config}, ~{::begin}, ~{::end})">
+            <div th:fragment="begin">
+                <label class="col-md-2 control-label">配置名称</label>
+                <div class="col-md-10">
+                    <input class="form-control" name="name" th:value="${config.name}"/>
+                </div>
+            </div>
+            <div th:fragment="end">
+                <div class="col-md-offset-10 col-md-2">
+                    <button class="btn btn-default" style="width: 100%" type="submit">保存</button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+</body>
+<script>
+    $("#configEditForm").submit(function () {
+        postAjax("/config/default", $(this).serialize(), function (data) {
+            windorAlert("提示", "已保存配置！")
+        })
+        return false;
+    })
+</script>
+</html>
