@@ -5,6 +5,7 @@ import com.jacob.activeX.ActiveXComponent;
 import com.jacob.com.Variant;
 
 import static cn.windor.ddtank.util.ThreadUtils.delay;
+import static cn.windor.ddtank.util.ThreadUtils.delayPersisted;
 
 public class DMKeyboard implements Keyboard {
 
@@ -37,7 +38,7 @@ public class DMKeyboard implements Keyboard {
         for (char k : str.toCharArray()) {
             k = Character.toUpperCase(k);
             dm.invoke("keyPress", new Variant(k));
-            delay(millis);
+            delayPersisted(millis, true);
         }
     }
 

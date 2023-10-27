@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh" xmlns:th="http://www.thymeleaf.org" th:replace="~{base/main :: main (title=~{::title}?:_, content=~{::body}, link=~{::link}?:~{}, script=~{::script}?:~{}, style=~{::style}?:~{}, contentBefore=~{}, contentAfter=~{},
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" th:replace="~{base/main :: main (title=~{::title}?:_, content=~{::.config-list-main}, link=~{::link}?:~{}, script=~{::script}?:~{}, style=~{::style}?:~{}, contentBefore=~{::.bg}, contentAfter=~{},
       h1='配置列表')}">
 <head>
     <meta charset="UTF-8">
     <title>DDTank —— 终章</title>
+    <link rel="stylesheet" th:href="@{/static/css/bg.css}"/>
     <style>
         .table > tbody > tr > td {
             line-height: 34px;
@@ -12,7 +13,14 @@
     </style>
 </head>
 <body>
-<div class="row">
+<div class="bg">
+    <div class="bg-cover"
+         th:style="'background-image:url(\'/static/img/bg/MC Mental - MC MENTAL @ HIS BEST.jpg\');'"
+          th:if="${configList.size() == 0}"></div>
+    <div class="bg-cover"
+          th:style="'background-image:url(/static/img/bg/bg8.jpg);'" th:if="${configList.size() != 0}"></div>
+</div>
+<div class="row config-list-main">
     <table class="table table-hover table-striped">
         <tr>
             <th class="text-center">配置名称</th>
@@ -21,11 +29,20 @@
         <tr th:each="config, n:${configList}">
             <td th:text="${config.name}"></td>
             <td>
-                <a class="btn btn-default" th:href="@{/config/edit/{index}(index=${n.index})}">修改</a>
-                <button class="btn btn-default">删除</button>
+                <a class="btn btn-success" th:href="@{/config/edit/{index}(index=${n.index})}">修改</a>
+                <button class="btn btn-danger" th:onclick="removeConfig([[${n.index}]])">删除</button>
             </td>
         </tr>
     </table>
 </div>
 </body>
+<script>
+    function removeConfig(index) {
+        alert("由于未添加数据库，所以配置只是简单的保存在本地，删除操作是根据索引而非是id，因此千万不要连续点击删除按钮!")
+        deleteAjax("/config/" + index, {}, function (data) {
+            alert("删除成功！");
+            location.reload();
+        })
+    }
+</script>
 </html>

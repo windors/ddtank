@@ -1,8 +1,11 @@
-package cn.windor.ddtank.core;
+package cn.windor.ddtank.handler;
 
 import cn.windor.ddtank.type.TowardEnum;
 
-public interface DDTankAngleAdjustMove {
+/**
+ * 接口解决的问题：在调整角度时如果不能直接调整到指定角度时该如何操作
+ */
+public interface DDTankAngleAdjustMoveHandler {
 
     /**
      * 如何走位

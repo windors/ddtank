@@ -1,32 +1,20 @@
 <!DOCTYPE html>
-<html lang="zh" xmlns:th="http://www.thymeleaf.org" th:replace="~{base/main :: main (title=~{::title}?:_, content=~{::body}, link=~{::link}?:~{}, script=~{::script}?:~{}, style=~{::style}?:~{}, contentBefore=~{}, contentAfter=~{},
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" th:replace="~{base/main :: main (title=~{::title}?:_, content=~{::.config-default-main}, link=~{::link}?:~{}, script=~{::script}?:~{}, style=~{::style}?:~{}, contentBefore=~{::.bg}, contentAfter=~{},
       h1='默认配置 <small>新建配置/启动脚本时的默认选项</small>')}">
 <head>
     <meta charset="UTF-8">
     <title>DDTank —— 默认配置</title>
     <link rel="stylesheet" href="/static/css/rsSliderLens.css" th:href="@{/static/css/rsSliderLens.css}">
     <link rel="stylesheet" href="/static/css/common/form.css" th:href="@{/static/css/common/form.css}">
+    <link rel="stylesheet" th:href="@{/static/css/bg.css}"/>
     <script src="/static/js/jquery.rsSliderLens.js" th:src="@{/static/js/jquery.rsSliderLens.js}"></script>
-    <style>
-        label {
-            font-weight: normal;
-        }
-
-        .slider-img {
-            line-height: 48px;
-        }
-
-        .input-group-fix {
-            padding-left: 0;
-        }
-
-        .form-horizontal .checkbox {
-            padding-top: 0;
-        }
-    </style>
 </head>
 <body>
-<div class="row">
+<div class="bg">
+    <div class="bg-cover"
+         th:style="'background-image:url(/static/img/bg/lamd.png);'"></div>
+</div>
+<div class="row config-default-main">
     <form id="configDefaultForm" class="form-horizontal">
         <div th:replace="common/form :: form-default(${config}, null, ~{::row})">
             <div th:fragment="row">

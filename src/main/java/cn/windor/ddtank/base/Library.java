@@ -1,6 +1,5 @@
 package cn.windor.ddtank.base;
 
-import cn.windor.ddtank.base.impl.DMLibrary;
 import com.jacob.activeX.ActiveXComponent;
 
 import java.util.List;
@@ -20,9 +19,11 @@ public interface Library {
     String getWindowClass(long hwnd);
     String getColor(int x, int y);
     String getColorBGR(int x, int y);
+
+    String getAveRGB(int x1, int y1, int x2, int y2);
     boolean findColor(int x1, int y1, int x2, int y2, String color, double sim, int dir, Point result);
 
-    Point[] findColorEx(int x1, int y1, int x2, int y2, String color, double sim, int dir);
+    String[] findColorEx(int x1, int y1, int x2, int y2, String color, double sim, int dir);
 
     boolean findPic(int x1, int y1, int x2, int y2, String picName, String deltaColor, double sim, int dir, Point result);
 
@@ -34,4 +35,6 @@ public interface Library {
     long getResultCount(String ret);
     boolean bindWindowEx(long hwnd, String display, String mouse, String keypad, String publicAttr, int mode);
     boolean unbindWindow();
+
+    boolean setWindowState(long hwnd, int state);
 }

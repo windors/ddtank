@@ -2,13 +2,11 @@ package cn.windor.ddtank.core.impl;
 
 import cn.windor.ddtank.base.*;
 import cn.windor.ddtank.config.DDTankConfigProperties;
-import cn.windor.ddtank.core.DDTankAngleAdjustMove;
+import cn.windor.ddtank.handler.DDTankAngleAdjustMoveHandler;
 import cn.windor.ddtank.core.DDTankOperate;
 import cn.windor.ddtank.core.DDTankPic;
 import cn.windor.ddtank.type.TowardEnum;
 import lombok.extern.slf4j.Slf4j;
-
-import java.util.Arrays;
 
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 
@@ -22,16 +20,16 @@ public class DDtankOperate10_4 implements DDTankOperate {
     private static final double[] strengthTable50 = {14, 20, 24, 28, 32, 35, 38, 42, 44, 48, 50, 53, 55, 58, 60, 63, 65, 68, 70, 72};
     private static final double[] strengthTable65 = {13, 20, 26, 31, 37, 41, 44, 48, 53, 56, 58, 61, 64, 67, 70, 73, 76, 79, 82, 85};
     private static final double[] strengthTable70 = {18.5, 26.4, 32.6, 37.9, 42.7, 47.2, 51.3, 55.3, 59.1, 62.8, 66.3, 69.8, 73.1, 76.5, 79.7, 82.9, 86.1, 89.2, 92.3, 95.3};
-    private static final double[] upOffset = {3, 2.425, 2, 1.55, 1.9, 1.15, 0.58, 0.24};
-    private Mouse mouse;
+    private static final double[] upOffset = {3, 2.5, 2, 1.55, 1.9, 1.15, 0.58, 0.24};
+    protected Mouse mouse;
 
-    private Keyboard keyboard;
+    protected Keyboard keyboard;
 
-    private DDTankPic ddTankPic;
+    protected DDTankPic ddTankPic;
 
-    private DDTankConfigProperties properties;
+    protected DDTankConfigProperties properties;
 
-    private Library dm;
+    protected Library dm;
 
     public DDtankOperate10_4(Library dm, Mouse mouse, Keyboard keyboard, DDTankPic ddTankPic, DDTankConfigProperties properties) {
         this.dm = dm;
@@ -52,7 +50,7 @@ public class DDtankOperate10_4 implements DDTankOperate {
         // 副本模式：普通副本、门票副本、元素副本、活动副本、平衡副本等
         mouse.moveAndClick(221 + 525 * (properties.getLevelMode() / 100), 190);
 
-        delay(800);
+        delay(800, true);
         switch (line % 2) {
             case 1:
                 y = 230;
@@ -69,14 +67,14 @@ public class DDtankOperate10_4 implements DDTankOperate {
                     mouse.moveTo(775, 300);
                     mouse.leftDown();
                     mouse.leftUp();
-                    delay(100);
+                    delay(100, true);
                     mouse.leftDown();
                     mouse.leftUp();
-                    delay(100);
+                    delay(100, true);
                     mouse.moveTo(775, 310);
                     mouse.leftDown();
                     mouse.leftUp();
-                    delay(100);
+                    delay(100, true);
                 }
             }
         }
@@ -98,65 +96,14 @@ public class DDtankOperate10_4 implements DDTankOperate {
 
         log.debug("选择地图最终坐标: {}, {}", x, y);
         mouse.moveAndClick(x, y);
-        delay(100);
+        delay(100, true);
 
         // 选择难度
         mouse.moveAndClick(224 + 554 * (properties.getLevelDifficulty() / 100), 500);
 
         // 点击确定
         mouse.moveAndClick(480, 560);
-        delay(300);
-    }
-
-
-    @Override
-    public double calcUnitDistance() {
-        int count = 0;
-        Point result = new Point();
-        int[] arr = new int[5];
-        // 计算多次，将结果存入arr中，最终取平均值
-        for (int i = 0; i < arr.length; i++) {
-            arr[i] = -1;
-            // 多次检测防止未检测到屏字
-            for (int j = 0; j < 5; j++) {
-                if (dm.findStr(properties.getStaticX1(), properties.getStaticY1(), properties.getStaticX2(), properties.getStaticY2(),
-                        "屏", "999999-000000", 1, result)) {
-                    int x = result.getX(), y = result.getY();
-                    count = 1;
-                    while (x < properties.getStaticX2() && dm.findColor(x, y, properties.getStaticX2(), y + 1, "999999-000000", 1, 0, null)) {
-                        count++;
-                        x++;
-                    }
-                    arr[i] = count;
-                    break;
-                }
-            }
-        }
-        Arrays.sort(arr);
-
-        // 选择出出现元素最多的计算结果
-        int times = 0, nowDistance = -1, maxTimes = -1, maxDistance = -1;
-        for (int i = 0; i < arr.length; i++) {
-            if (arr[i] == -1) {
-                continue;
-            }
-            if (arr[i] == nowDistance) {
-                times++;
-            } else {
-                times = 1;
-                nowDistance = arr[i];
-            }
-            if (times > maxTimes) {
-                maxTimes = times;
-                maxDistance = nowDistance;
-            }
-        }
-        if (maxDistance == -1) {
-            log.error("屏距自动检测失败！本轮副本使用使用手动屏距！");
-            return properties.getHandleDistance();
-        }
-
-        return (double) maxDistance / 10;
+        delay(300, true);
     }
 
     // TODO 未识别到数字的情况
@@ -175,28 +122,33 @@ public class DDtankOperate10_4 implements DDTankOperate {
                 // TODO 超过3次尝试变更角度不动，说明需要移动
                 return false;
             }
-            if (nowAngle < (targetAngle + angleMis)) {
-                for (int i = 0; i < targetAngle - nowAngle; i++) {
-                    keyboard.keyDown('w');
-                    keyboard.keyUp('w');
-                }
-                delay(100);
-            }
-            if (nowAngle > targetAngle + angleMis) {
-                for (int i = 0; i < nowAngle - targetAngle; i++) {
-                    keyboard.keyDown('s');
-                    keyboard.keyUp('s');
-                }
-                delay(100);
-            }
+            angleAdjust(nowAngle, targetAngle, angleMis);
+
             lastAngle = nowAngle;
             nowAngle = ddTankPic.getAngle();
         }
         return true;
     }
 
+    protected void angleAdjust(int nowAngle, int targetAngle, int angleMis) {
+        if (nowAngle < (targetAngle + angleMis)) {
+            for (int i = 0; i < targetAngle - nowAngle; i++) {
+                keyboard.keyDown('w');
+                keyboard.keyUp('w');
+            }
+            delay(100, true);
+        }
+        if (nowAngle > targetAngle + angleMis) {
+            for (int i = 0; i < nowAngle - targetAngle; i++) {
+                keyboard.keyDown('s');
+                keyboard.keyUp('s');
+            }
+            delay(100, true);
+        }
+    }
+
     @Override
-    public boolean angleAdjust(int targetAngle, DDTankAngleAdjustMove angleAdjust, TowardEnum toward) {
+    public boolean angleAdjust(int targetAngle, DDTankAngleAdjustMoveHandler angleAdjust, TowardEnum toward) {
         int tried = 1;
         while (!angleAdjust(targetAngle) && angleAdjust.move(toward, targetAngle, tried++)) {
             if (tried++ % 3 == 0 && !ddTankPic.isMyRound()) {
@@ -226,19 +178,19 @@ public class DDtankOperate10_4 implements DDTankOperate {
             while (true) {
                 color = dm.getColor((int) (properties.getStrengthStartX() + strengthUnit * strength - 1), properties.getStrengthCheckY()).toLowerCase();
                 for (String checkColor : checkColors) {
-                    if (checkColor.equals(color)) {
+                    if (checkColor.equalsIgnoreCase(color)) {
                         keyboard.keyUp(' ');
                         // 当颜色不变时，说明当前回合还未结束
-                        while (checkColor.equals(color)) {
+                        while (checkColor.equalsIgnoreCase(color)) {
                             color = dm.getColor((int) (properties.getStrengthStartX() + strengthUnit * strength - 1), properties.getStrengthCheckY()).toLowerCase();
                             if (properties.getAftertreatment()) {
                                 // 后处理
                                 for (int i = 0; i < properties.getAftertreatmentSec(); i++) {
                                     keyboard.keyPress(properties.getAftertreatmentStr().charAt(0));
-                                    delay(1000 / properties.getAftertreatmentSec());
+                                    delay(1000 / properties.getAftertreatmentSec(), true);
                                 }
                             } else {
-                                delay(100);
+                                delay(10, true);
                             }
                         }
                         return;
@@ -252,7 +204,7 @@ public class DDtankOperate10_4 implements DDTankOperate {
                         return;
                     }
                 }
-                delay(properties.getStrengthCheckDelay());
+                delay(properties.getStrengthCheckDelay(), true);
             }
         }
     }
@@ -293,11 +245,11 @@ public class DDtankOperate10_4 implements DDTankOperate {
 
     @Override
     public double getStrength(int angle, double horizontal, double vertical) {
+        horizontal = Math.abs(horizontal);
         if (horizontal >= 20) {
             log.warn("当前屏距超过20，请更新力度公式。【当前屏距：{}, 垂直屏距：{}】", horizontal, vertical);
             return 100;
         }
-        horizontal = Math.abs(horizontal);
         double strength;
         if (angle <= 20) {
             strength = strengthTable20[(int) horizontal] + (strengthTable20[(int) horizontal] - strengthTable20[(int) horizontal + 1]) * (horizontal - (int) horizontal);
@@ -317,7 +269,7 @@ public class DDtankOperate10_4 implements DDTankOperate {
             strength = strengthTable70[(int) horizontal] + (strengthTable70[(int) horizontal] - strengthTable70[(int) horizontal + 1]) * (horizontal - (int) horizontal);
         }
 
-        if (vertical > 0.8) {
+        if (vertical > 0.3) {
             double close = 1 / (horizontal / 100) / 10;
             close = close * close + 1;
             if (angle <= 20) {

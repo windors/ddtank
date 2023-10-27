@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<!--示例：-->
+<!--<div th:replace="common/form :: form-default(${config}, ~{::row})">-->
+<!--    <div th:fragment="row" class="col-md-offset-9 col-md-2">-->
+<!--        <button class="btn btn-default" style="width: 100%" type="submit">保存</button>-->
+<!--    </div>-->
+<!--</div>-->
+<div class="form-base" th:fragment="form-base(config, before, end)">
+
+    <div class="col-md-11">
+        <div class="form-control" th:if="*{before != null}" th:replace="*{before}">
+        </div>
+        <div class="form-group">
+            <label class="col-md-2 control-label">选择副本</label>
+            <div class="col-md-2">
+                <select class="form-control" name="levelLine">
+                    <option value="1" th:selected="${config.levelLine == 1}">1 行</option>
+                    <option value="2" th:selected="${config.levelLine == 2}">2 行</option>
+                    <option value="3" th:selected="${config.levelLine == 3}">3 行</option>
+                    <option value="4" th:selected="${config.levelLine == 4}">4 行</option>
+                    <option value="5" th:selected="${config.levelLine == 5}">5 行</option>
+                    <option value="6" th:selected="${config.levelLine == 6}">6 行</option>
+                    <option value="7" th:selected="${config.levelLine == 7}">7 行</option>
+                    <option value="8" th:selected="${config.levelLine == 8}">8 行</option>
+                    <option value="9" th:selected="${config.levelLine == 9}">9 行</option>
+                    <option value="10" th:selected="${config.levelLine == 10}">10 行</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <select class="form-control" name="levelRow">
+                    <option value="1" th:selected="${config.levelRow == 1}">1 列</option>
+                    <option value="2" th:selected="${config.levelRow == 2}">2 列</option>
+                    <option value="3" th:selected="${config.levelRow == 3}">3 列</option>
+                    <option value="4" th:selected="${config.levelRow == 4}">4 列</option>
+                </select>
+            </div>
+            <label class="col-md-1 control-label">难度</label>
+            <div class="col-md-5">
+                <div class="slider-img" th:attr="slider-default=${config.levelDifficulty}">
+                    <img src="/static/img/副本难度.bmp" style="width: 100%"/>
+                </div>
+                <input type="hidden" name="levelDifficulty" th:value="${config.levelDifficulty}"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-md-2 control-label">技能</label>
+            <div class="col-md-10">
+                <input class="form-control" type="text" name="attackSkill"
+                       th:value="${config.attackSkill}"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-md-2 control-label">
+                敌人扫描模式
+            </label>
+            <div class="col-md-4">
+                <select class="form-control" name="enemyFindMode">
+                    <option value="0" th:selected="${config.enemyFindMode == 0}">从上到下，从左到右</option>
+                    <option value="1" th:selected="${config.enemyFindMode == 1}">从下到上，从左到右</option>
+                    <option value="2" th:selected="${config.enemyFindMode == 2}">从上到下，从右到左</option>
+                    <option value="3" th:selected="${config.enemyFindMode == 3}">从下到上，从右到左</option>
+                    <option value="4" th:selected="${config.enemyFindMode == 4}">从中心往外查找</option>
+                    <option value="5" th:selected="${config.enemyFindMode == 5}">从左到右，从上到下</option>
+                    <option value="6" th:selected="${config.enemyFindMode == 6}">从右到左，从上到下</option>
+                    <option value="7" th:selected="${config.enemyFindMode == 7}">从左到右，从下到上</option>
+                    <option value="8" th:selected="${config.enemyFindMode == 8}">从右到左，从下到上</option>
+                </select>
+            </div>
+            <label class="col-md-2 control-label radio">
+                <input type="radio" name="isHandleCalcDistance" value="false"
+                       th:checked="${!config.isHandleCalcDistance}"/>
+                自动屏距
+            </label>
+            <label class="col-md-1 control-label radio">
+                <input type="radio" name="isHandleCalcDistance" value="true"
+                       th:checked="${config.isHandleCalcDistance}"/>
+                手动
+            </label>
+            <div class="col-md-3">
+                <div class="input-group">
+                    <span class="input-group-addon">小地图1距=</span>
+                    <input type="text" class="form-control" name="handleDistance"
+                           th:value="${config.handleDistance}">
+                    <span class="input-group-addon">px</span>
+                </div>
+            </div>
+        </div>
+        <div class="form-group" th:include="*{end}" th:if="*{end != null}">
+        </div>
+    </div>
+</div>
+</body>
+</html>

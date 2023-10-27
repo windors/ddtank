@@ -48,7 +48,7 @@ public class ConfigController {
      */
     @DeleteMapping("{index}")
     public HttpResponse deleteConfig(@PathVariable int index) {
-        return HttpResponse.auto(configService.removeByIndex(index) == null);
+        return HttpResponse.auto(configService.removeByIndex(index) != null);
     }
 
     /**

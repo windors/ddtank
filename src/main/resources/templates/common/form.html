@@ -51,7 +51,7 @@
                 <label class="col-md-2 control-label">结束等待时间</label>
                 <div class="col-md-4">
                     <div class="input-group ">
-                        <input type="number" class="form-control" name="levelEndWaitTime"
+                        <input type="text" class="form-control" name="levelEndWaitTime"
                                th:value="${config.levelEndWaitTime}">
                         <span class="input-group-addon">秒</span>
                     </div>
@@ -85,14 +85,14 @@
                     角度修正
                 </label>
                 <div class="col-md-4">
-                    <input class="form-control" type="number" name="offsetAngle"
+                    <input class="form-control" type="text" name="offsetAngle"
                            th:value="${config.offsetAngle}"/>
                 </div>
                 <label class="col-md-2 control-label">
                     力度修正
                 </label>
                 <div class="col-md-4">
-                    <input class="form-control" type="number" name="offsetStrength"
+                    <input class="form-control" type="text" name="offsetStrength"
                            th:value="${config.offsetStrength}"/>
                 </div>
             </div>
@@ -191,7 +191,7 @@
                 <div class="col-md-10">
                     <div class="input-group">
                         <span class="input-group-addon">小地图1距的距离：</span>
-                        <input type="number" class="form-control" name="handleDistance"
+                        <input type="text" class="form-control" name="handleDistance"
                                th:value="${config.handleDistance}">
                         <span class="input-group-addon">px</span>
                     </div>
@@ -237,7 +237,7 @@
                     角度误差
                 </label>
                 <div class="col-md-10">
-                    <input class="form-control" type="number" name="angleMis" th:value="${config.angleMis}"/>
+                    <input class="form-control" type="text" name="angleMis" th:value="${config.angleMis}"/>
                 </div>
             </div>
         </div>
@@ -268,7 +268,7 @@
             <div class="form-group">
                 <label class="col-md-2 control-label">绑定模式</label>
                 <div class="col-md-2">
-                    <input class="form-control" type="number" name="bindMode" th:value="${config.bindMode}"/>
+                    <input class="form-control" type="text" name="bindMode" th:value="${config.bindMode}"/>
                 </div>
                 <label class="col-md-2 control-label">截屏模式</label>
                 <div class="col-md-6">
@@ -357,8 +357,32 @@
                 </div>
             </div>
         </div>
-        <div class="col-md-12" th:if="*{end != null}">
-            <div class="form-group" th:include="*{end}">
+        <h2 id="move">走位</h2>
+        <div class="col-md-12">
+            <div class="form-group">
+                <label class="col-md-2 control-label">
+                    找不到位置时
+                </label>
+                <div class="col-md-10">
+                    <select class="form-control">
+                        <option>默认走位（2/3向左走，1/3向右走）</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-md-2 control-label">
+                    需调整角度时
+                </label>
+                <div class="col-md-10">
+                    <select class="form-control">
+                        <option>默认走位（向目标方向走位并再尝试3次，若仍然失败，则跳过此回合（待修改为飞机））</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <a id="end"></a>
+        <div class="col-md-12" >
+            <div class="form-group" th:include="*{end}" th:if="*{end != null}">
             </div>
         </div>
     </div>
@@ -384,6 +408,10 @@
                         <li><a href="#other-minimap">小地图</a></li>
                     </ul>
                 </li>
+                <li>
+                    <a href="#move">走位</a>
+                </li>
+                <li><a href="#end" th:if="*{end != null}">保存</a></li>
             </ul>
         </nav>
     </div>
@@ -392,7 +420,7 @@
             $(".slider-img").each(function (index, element) {
                 $(element).rsSliderLens({
                     handle: {
-                        zoom: 1,
+                        zoom: 1.5,
                         pos: 0.5
                     },
                     ruler: {

@@ -50,4 +50,7 @@ public interface DDTankPic {
 
     @Description("获取当前方向")
     TowardEnum getToward();
+
+    @Description("获取屏距")
+    double calcUnitDistance();
 }

@@ -17,6 +17,7 @@ textarea {
 
 .main-body {
     /*border: 1px dashed springgreen;*/
+    padding-bottom: 60px;
 }
 
 /*Malody详细页标题，子元素将在一行展示*/

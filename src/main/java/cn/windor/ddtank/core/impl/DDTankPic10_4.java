@@ -5,28 +5,34 @@ import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.core.DDTankPic;
 import cn.windor.ddtank.type.TowardEnum;
 import cn.windor.ddtank.util.BinaryPicProcess;
+import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 import java.util.List;
-import java.util.function.Consumer;
 
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 
-public class DMDDtankPic10_4 implements DDTankPic {
-    private Library dm;
+@Slf4j
+public class DDTankPic10_4 implements DDTankPic {
+    protected Library dm;
 
-    private DDTankConfigProperties properties;
+    protected DDTankConfigProperties properties;
 
     /**
      * 存放资源的路径
      */
-    private String path;
+    protected String path;
 
-    private Mouse mouse;
+    protected Mouse mouse;
 
-    public DMDDtankPic10_4(Library dm, String path, DDTankConfigProperties properties, Mouse mouse) {
+
+    protected BinaryPicProcess binaryPicProcess;
+    public DDTankPic10_4(Library dm, String path, DDTankConfigProperties properties, Mouse mouse) {
         this.dm = dm;
         this.mouse = mouse;
         this.properties = properties;
+        this.binaryPicProcess = new BinaryPicProcess(dm);
+
         if (path.endsWith("/")) {
             this.path = path;
         } else {
@@ -62,7 +68,7 @@ public class DMDDtankPic10_4 implements DDTankPic {
     public boolean needActiveWindow() {
         if (dm.findPic(450, 250, 530, 330,
                 path + "蛋10.4-需要激活窗口.bmp", "303030", 0.8, 0, null)) {
-            mouse.moveAndClick(870, 130);
+            mouse.moveAndClick(84, 578);
             return true;
         }
         return false;
@@ -74,7 +80,7 @@ public class DMDDtankPic10_4 implements DDTankPic {
         if (dm.findPic(500, 400, 740, 500,
                 path + "蛋10.4-随机地图.bmp", "101010", 0.8, 0, point)) {
             mouse.moveAndClick(point.getX() + 10, point.getY() + 10);
-            delay(300);
+            delay(300, true);
         }
         return dm.findPic(200, 30, 320, 80,
                 path + "蛋10.4-大副本页标识.bmp", "101010", 0.8, 0, null);
@@ -138,7 +144,7 @@ public class DMDDtankPic10_4 implements DDTankPic {
         if (dm.findPic(560, 490, 700, 550,
                 path + "蛋10.4-大厅标识.bmp", "101010", 1, 0, point)) {
             mouse.moveAndClick(point);
-            delay(1000);
+            delay(1000, true);
             return true;
         }
         return false;
@@ -155,7 +161,7 @@ public class DMDDtankPic10_4 implements DDTankPic {
                 for (int i = 0; i < 10; i++) {
                     Point point = cardList.get((int) (System.currentTimeMillis() % cardList.size()));
                     mouse.moveAndClick(point);
-                    delay(100);
+                    delay(100, true);
                 }
 
                 if (dm.findPic(650, 200, 750, 280, "蛋10.4-翻第三张牌.bmp", "101010", 0.8, 0, null)) {
@@ -166,7 +172,7 @@ public class DMDDtankPic10_4 implements DDTankPic {
                     }
                 }
             }
-            delay(1000);
+            delay(1000, true);
         }
         return false;
     }
@@ -177,7 +183,7 @@ public class DMDDtankPic10_4 implements DDTankPic {
         if (dm.findPic(500, 90, 1000, 180,
                 path + "蛋10.4-大厅.bmp", "101010", 1, 0, point)) {
             mouse.moveAndClick(point);
-            delay(3000);
+            delay(3000, true);
             return true;
         }
         return false;
@@ -200,8 +206,8 @@ public class DMDDtankPic10_4 implements DDTankPic {
      */
     @Override
     public Point getMyPosition() {
-        return new BinaryPicProcess(dm, properties.getStaticX1(), properties.getStaticY1(), properties.getStaticX2(), properties.getStaticY2(),
-                properties.getColorRole(), 1.0).findRoundRole();
+        return binaryPicProcess.findRoundRole(properties.getStaticX1(), properties.getStaticY1(), properties.getStaticX2(), properties.getStaticY2(),
+                properties.getColorRole(), 1.0);
     }
 
     @Override
@@ -233,7 +239,7 @@ public class DMDDtankPic10_4 implements DDTankPic {
 
     @Override
     public TowardEnum getToward() {
-        List<Point> linePoint = new BinaryPicProcess(dm, 10, 503, 90, 589, "ff0000-402020|e0b040-202010", 1).findLine();
+        List<Point> linePoint = binaryPicProcess.findLine(10, 503, 90, 589, "ff0000-402020|e0b040-202010", 1);
         if (linePoint == null) {
             return TowardEnum.UNKNOWN;
         } else {
@@ -255,5 +261,55 @@ public class DMDDtankPic10_4 implements DDTankPic {
                 return TowardEnum.BOTH;
             }
         }
+    }
+
+    @Override
+    public double calcUnitDistance() {
+        int count = 0;
+        Point result = new Point();
+        int[] arr = new int[5];
+        // 计算多次，将结果存入arr中，最终取平均值
+        for (int i = 0; i < arr.length; i++) {
+            arr[i] = -1;
+            // 多次检测防止未检测到屏字
+            for (int j = 0; j < 5; j++) {
+                if (dm.findStr(properties.getStaticX1(), properties.getStaticY1(), properties.getStaticX2(), properties.getStaticY2(),
+                        "屏", "999999-000000", 1, result)) {
+                    int x = result.getX(), y = result.getY();
+                    count = 1;
+                    while (x < properties.getStaticX2() && dm.findColor(x, y, properties.getStaticX2(), y + 1, "999999-000000", 1, 0, null)) {
+                        count++;
+                        x++;
+                    }
+                    arr[i] = count;
+                    break;
+                }
+            }
+        }
+        Arrays.sort(arr);
+
+        // 选择出出现元素最多的计算结果
+        int times = 0, nowDistance = -1, maxTimes = -1, maxDistance = -1;
+        for (int i = 0; i < arr.length; i++) {
+            if (arr[i] == -1) {
+                continue;
+            }
+            if (arr[i] == nowDistance) {
+                times++;
+            } else {
+                times = 1;
+                nowDistance = arr[i];
+            }
+            if (times > maxTimes) {
+                maxTimes = times;
+                maxDistance = nowDistance;
+            }
+        }
+        if (maxDistance == -1) {
+            log.error("屏距自动检测失败！本轮副本使用使用手动屏距！");
+            return properties.getHandleDistance();
+        }
+
+        return (double) maxDistance / 10;
     }
 }

@@ -53,6 +53,8 @@ public class DDTankConfigProperties implements Serializable, Cloneable {
         this.strengthStartX = properties.strengthStartX;
         this.strengthEndX = properties.strengthEndX;
         this.strengthCheckY = properties.strengthCheckY;
+        this.strengthCheckColor = properties.strengthCheckColor;
+        this.strengthCheckDelay = properties.strengthCheckDelay;
         this.delay = properties.delay;
         this.isClosestAngle = properties.isClosestAngle;
         this.isFixedAngle = properties.isFixedAngle;
@@ -67,6 +69,8 @@ public class DDTankConfigProperties implements Serializable, Cloneable {
         this.aftertreatment = properties.aftertreatment;
         this.aftertreatmentStr = properties.aftertreatmentStr;
         this.aftertreatmentSec = properties.aftertreatmentSec;
+        this.angleMoveMode = properties.angleMoveMode;
+        this.positionMoveMode = properties.positionMoveMode;
     }
 
     public DDTankConfigProperties(DDTankConfigProperties defaultConfig) {
@@ -166,4 +170,7 @@ public class DDTankConfigProperties implements Serializable, Cloneable {
     private volatile String aftertreatmentStr = "w";
 
     private volatile Integer aftertreatmentSec = 5;
+
+    private volatile Integer angleMoveMode = 0;
+    private volatile Integer positionMoveMode = 0;
 }

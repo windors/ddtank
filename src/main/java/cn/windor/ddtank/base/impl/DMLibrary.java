@@ -1,18 +1,27 @@
 package cn.windor.ddtank.base.impl;
 
-import cn.windor.ddtank.base.Keyboard;
 import cn.windor.ddtank.base.Library;
-import cn.windor.ddtank.base.Mouse;
 import cn.windor.ddtank.base.Point;
 import com.jacob.activeX.ActiveXComponent;
+import com.jacob.com.ComThread;
 import com.jacob.com.Variant;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+
+import com.jacob.com.Dispatch;
+
+import java.awt.image.BufferedImageFilter;
+import java.awt.image.Raster;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import static cn.windor.ddtank.util.ThreadUtils.delay;
 
 /**
  * 大漠库，当前版本必须先进行注册
@@ -21,19 +30,30 @@ import java.util.List;
 public class DMLibrary implements Library {
     private ActiveXComponent dm;
 
+    private final Map<Object, Variant> paramMap = new ConcurrentHashMap<>();
+    private final Map<Object, Variant> varParamMap = new ConcurrentHashMap<>();
+
     public DMLibrary(ActiveXComponent dm) {
         this.dm = dm;
     }
 
-    public static void main(String[] args) {
-        ActiveXComponent dm = new ActiveXComponent("dm.dmsoft");
-        DMLibrary dmLibrary = new DMLibrary(dm);
-        Point point = new Point();
-        boolean pic = dmLibrary.findPic(0, 0, 1000, 1000, "C:\\Users\\17122\\Desktop\\1.bmp", "000000",
-                0.8, 0, point);
-        if (pic) {
-            System.out.println(point);
+    private Variant getParam(Object param) {
+        if(paramMap.get(param) != null) {
+            return paramMap.get(param);
         }
+        Variant result;
+        synchronized (paramMap) {
+            if((result = paramMap.get(param)) == null) {
+                result = new Variant(param);
+                paramMap.put(param, result);
+            }
+            return result;
+        }
+    }
+
+    private Variant getParam(Object param, boolean ref) {
+        if(!ref) return getParam(param);
+        return new Variant(param, true);
     }
 
     @Override
@@ -48,16 +68,15 @@ public class DMLibrary implements Library {
 
     @Override
     public boolean capture(int x1, int y1, int x2, int y2, String filepath) {
-        return dm.invoke("capture", new Variant(x1), new Variant(y1), new Variant(x2), new Variant(y2),
-                new Variant(filepath)).getInt() == 1;
+        return Dispatch.call(dm, "capture", getParam(x1), getParam(y1), getParam(x2), getParam(y2), getParam(filepath)).getInt() == 1;
     }
 
     @Override
     public int[] getClientSize(long hwnd) {
         int[] result = new int[2];
-        Variant width = new Variant(-1, true);
-        Variant height = new Variant(-1, true);
-        if (dm.invoke("getClientSize", new Variant(hwnd), width, height).getInt() == 1) {
+        Variant width = getParam(-1, true);
+        Variant height = getParam(-2, true);
+        if (Dispatch.call(dm, "getClientSize", getParam(hwnd), getParam(width), getParam(height)).getInt() == 1) {
             result[0] = width.getInt();
             result[1] = height.getInt();
         } else {
@@ -68,7 +87,7 @@ public class DMLibrary implements Library {
 
     @Override
     public boolean getWindowState(long hwnd, int flag) {
-        return dm.invoke("getWindowState", new Variant(hwnd), new Variant(flag)).getInt() == 1;
+        return Dispatch.call(dm, "getWindowState", getParam(hwnd), getParam(flag)).getInt() == 1;
     }
 
     /**
@@ -77,7 +96,7 @@ public class DMLibrary implements Library {
      * @return
      */
     public long getMousePointWindow() {
-        return dm.invoke("getMousePointWindow").getInt();
+        return Dispatch.call(dm, "getMousePointWindow").getInt();
     }
 
     /**
@@ -87,7 +106,7 @@ public class DMLibrary implements Library {
      * @return
      */
     public String getWindowClass(long hwnd) {
-        return dm.invoke("getWindowClass", new Variant(hwnd)).getString();
+        return Dispatch.call(dm, "getWindowClass", getParam(hwnd)).getString();
     }
 
     /**
@@ -96,7 +115,7 @@ public class DMLibrary implements Library {
      * @return 颜色字符串(注意这里都是小写字符 ， 和工具相匹配)
      */
     public String getColor(int x, int y) {
-        return dm.invoke("getColor", new Variant(x), new Variant(y)).getString();
+        return Dispatch.call(dm, "getColor", getParam(x), getParam(y)).getString();
     }
 
     /**
@@ -105,7 +124,12 @@ public class DMLibrary implements Library {
      * @return 颜色字符串(注意这里都是小写字符 ， 和工具相匹配)
      */
     public String getColorBGR(int x, int y) {
-        return dm.invoke("getColorBGR", new Variant(x), new Variant(y)).getString();
+        return Dispatch.call(dm, "getColorBGR", getParam(x), getParam(y)).getString();
+    }
+
+    @Override
+    public String getAveRGB(int x1, int y1, int x2, int y2) {
+        return Dispatch.call(dm, "getAveRGB", getParam(x1), getParam(y1), getParam(x2), getParam(y2)).getString();
     }
 
     /**
@@ -126,10 +150,10 @@ public class DMLibrary implements Library {
      * @return
      */
     public boolean findColor(int x1, int y1, int x2, int y2, String color, double sim, int dir, Point result) {
-        Variant resultX = new Variant(-1, true);
-        Variant resultY = new Variant(-1, true);
-        if (dm.invoke("findColor", new Variant(x1), new Variant(y1), new Variant(x2), new Variant(y2),
-                new Variant(color), new Variant(sim), new Variant(dir), resultX, resultY).getInt() == 0) {
+        Variant resultX = getParam(-1, true);
+        Variant resultY = getParam(-2, true);
+        if (Dispatch.call(dm, "findColor", getParam(x1), getParam(y1), getParam(x2), getParam(y2),
+                getParam(color), getParam(sim), getParam(dir), resultX, resultY).getInt() == 0) {
             return false;
         } else {
             if (result != null) {
@@ -155,25 +179,23 @@ public class DMLibrary implements Library {
      *              8: 从下到上,从右到左
      * @return 返回所有颜色信息的坐标值, 然后通过GetResultCount等接口来解析 (由于内存限制,返回的颜色数量最多为1800个左右)
      */
-    public Point[] findColorEx(int x1, int y1, int x2, int y2, String color, double sim, int dir) {
-        long start = System.currentTimeMillis();
-        String findColorEx = dm.invoke("findColorEx", new Variant(x1), new Variant(y1), new Variant(x2), new Variant(y2),
-                new Variant(color), new Variant(sim), new Variant(dir)).getString();
+    public String[] findColorEx(int x1, int y1, int x2, int y2, String color, double sim, int dir) {
+        String findColorEx = Dispatch.call(dm, "findColorEx", getParam(x1), getParam(y1), getParam(x2), getParam(y2),
+                getParam(color), getParam(sim), getParam(dir)).getString();
         if ("".equals(findColorEx)) {
-            return new Point[0];
+            return new String[0];
         }
-        int count = dm.invoke("getResultCount", new Variant(findColorEx)).getInt();
-        Point[] result = new Point[count];
+        int count = Dispatch.call(dm, "getResultCount", getParam(findColorEx)).getInt();
+        String[] result = new String[count];
         for (int i = 0; i < count; i++) {
-            Variant x = new Variant(-1, true);
-            Variant y = new Variant(-1, true);
-            if (dm.invoke("getResultPos", new Variant(findColorEx), new Variant(i), x, y).getInt() == 1) {
-                result[i] = new Point(x.getInt(), y.getInt());
-            }else {
+            Variant x = getParam(-1, true);
+            Variant y = getParam(-2, true);
+            if (Dispatch.call(dm, "getResultPos", getParam(findColorEx), getParam(i), getParam(x), getParam(y)).getInt() == 1) {
+                result[i] = x.getInt() + "|" + y.getInt();
+            } else {
                 log.error("调用解析函数失败！");
             }
         }
-        log.info("耗时：{}ms", System.currentTimeMillis() - start);
         return result;
     }
 
@@ -194,13 +216,12 @@ public class DMLibrary implements Library {
      * @return 是否找到了图片
      */
     public boolean findPic(int x1, int y1, int x2, int y2, String picName, String deltaColor, double sim, int dir, Point result) {
-        Variant resultX = new Variant(-1, true);
-        Variant resultY = new Variant(-1, true);
-        if (dm.invoke("findPic",
-                new Variant(x1), new Variant(y1), new Variant(x2), new Variant(y2),
-                new Variant(picName), new Variant(deltaColor),
-                new Variant(sim), new Variant(dir), resultX, resultY).getInt() == -1) {
-            log.debug("调用查找图片，未找到");
+        Variant resultX = getParam(-1, true);
+        Variant resultY = getParam(-2, true);
+        if (Dispatch.call(dm, "findPic",
+                getParam(x1), getParam(y1), getParam(x2), getParam(y2),
+                getParam(picName), getParam(deltaColor),
+                getParam(sim), getParam(dir), resultX, resultY).getInt() == -1) {
             return false;
         } else {
             if (result != null) {
@@ -213,8 +234,8 @@ public class DMLibrary implements Library {
 
     @Override
     public List<Point> findPicEx(int x1, int y1, int x2, int y2, String picName, String deltaColor, double sim, int dir) {
-        String dmResultStr = dm.invoke("findPicEx", new Variant(x1), new Variant(y1), new Variant(x2), new Variant(y2),
-                new Variant(picName), new Variant(deltaColor), new Variant(sim), new Variant(dir)).getString();
+        String dmResultStr = Dispatch.call(dm, "findPicEx", getParam(x1), getParam(y1), getParam(x2), getParam(y2),
+                getParam(picName), getParam(deltaColor), getParam(sim), getParam(dir)).getString();
         if ("".equals(dmResultStr)) {
             return null;
         }
@@ -235,10 +256,10 @@ public class DMLibrary implements Library {
      * @return 是否找到了指定字符串
      */
     public boolean findStr(int x1, int y1, int x2, int y2, String str, String colorFormat, double sim, Point result) {
-        Variant resultX = new Variant(-1, true);
-        Variant resultY = new Variant(-1, true);
-        if (dm.invoke("findStr", new Variant(x1), new Variant(y1), new Variant(x2), new Variant(y2),
-                new Variant(str), new Variant(colorFormat), new Variant(sim), resultX, resultY).getInt() == -1) {
+        Variant resultX = getParam(-1, true);
+        Variant resultY = getParam(-2, true);
+        if (Dispatch.call(dm, "findStr", getParam(x1), getParam(y1), getParam(x2), getParam(y2),
+                getParam(str), getParam(colorFormat), getParam(sim), resultX, resultY).getInt() == -1) {
             return false;
         } else {
             if (result != null) {
@@ -258,7 +279,7 @@ public class DMLibrary implements Library {
      * @return 是否成功
      */
     public boolean setDict(int index, String file) {
-        return dm.invoke("setDict", new Variant(index), new Variant(file)).getInt() == 1;
+        return Dispatch.call(dm, "setDict", getParam(index), getParam(file)).getInt() == 1;
     }
 
     /**
@@ -268,7 +289,7 @@ public class DMLibrary implements Library {
      * @return 是否成功
      */
     public boolean useDict(int index) {
-        return dm.invoke("useDict", new Variant(index)).getInt() == 1;
+        return Dispatch.call(dm, "useDict", getParam(index)).getInt() == 1;
     }
 
 
@@ -280,8 +301,8 @@ public class DMLibrary implements Library {
      * @return 识别到的字符串
      */
     public String ocr(int x1, int y1, int x2, int y2, String colorFormat, double sim) {
-        return dm.invoke("ocr", new Variant(x1), new Variant(y1), new Variant(x2), new Variant(y2),
-                new Variant(colorFormat), new Variant(sim)).getString();
+        return Dispatch.call(dm, "ocr", getParam(x1), getParam(y1), getParam(x2), getParam(y2),
+                getParam(colorFormat), getParam(sim)).getString();
     }
 
 
@@ -292,18 +313,27 @@ public class DMLibrary implements Library {
      * @return 返回ret中的坐标个数
      */
     public long getResultCount(String ret) {
-        return dm.invoke("getResultCount", new Variant(ret)).getInt();
+        return Dispatch.call(dm, "getResultCount", getParam(ret)).getInt();
     }
 
     /**
      * 详见大漠文档绑定说明
      */
     public boolean bindWindowEx(long hwnd, String display, String mouse, String keypad, String publicAttr, int mode) {
-        return dm.invoke("bindWindowEx", new Variant(hwnd), new Variant(display), new Variant(mouse), new Variant(keypad),
-                new Variant(publicAttr), new Variant(mode)).getInt() == 1;
+        return Dispatch.call(dm, "bindWindowEx", getParam(hwnd), getParam(display), getParam(mouse), getParam(keypad),
+                getParam(publicAttr), getParam(mode)).getInt() == 1;
     }
 
     public boolean unbindWindow() {
-        return dm.invoke("unbindWindow").getInt() == 1;
+        return Dispatch.call(dm, "unbindWindow").getInt() == 1;
+    }
+
+    @Override
+    public boolean setWindowState(long hwnd, int state) {
+        return Dispatch.call(dm, "setWindowState", getParam(hwnd), getParam(state)).getInt() == 1;
+    }
+
+    public static void main(String[] args) throws IOException {
+
     }
 }

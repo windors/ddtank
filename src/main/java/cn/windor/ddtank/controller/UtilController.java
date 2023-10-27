@@ -1,7 +1,10 @@
 package cn.windor.ddtank.controller;
 
+import cn.windor.ddtank.base.Library;
+import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.core.DDTankPic;
 import cn.windor.ddtank.core.DDTankCoreThread;
+import cn.windor.ddtank.service.DDTankConfigService;
 import cn.windor.ddtank.service.DDTankThreadService;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
 import cn.windor.dto.HttpDataResponse;
@@ -23,18 +26,27 @@ public class UtilController {
     @Autowired
     private DDTankThreadService threadService;
 
+    @Autowired
+    private DDTankConfigService configService;
+
+    @Autowired
+    private DDTankConfigProperties defaultProperties;
+
+    @Autowired
+    private Library dm;
+
     @PostMapping("/test")
     public HttpDataResponse<Object> test(@RequestParam String methodName,
-                                 @RequestParam long hwnd) {
+                                         @RequestParam long hwnd) {
         DDTankCoreThread thread = threadService.getAllStartedThreadMap().get(hwnd);
-        if(thread == null) {
+        if (thread == null) {
             return new HttpDataResponse(HttpResponseEnum.ILLEGAL_INPUT, null);
         }
-        try{
+        try {
             Method method = DDTankPic.class.getMethod(methodName);
             Object result = method.invoke(thread.getDdtankPic());
             return new HttpDataResponse(HttpResponseEnum.OK, result == null ? "null" : result.toString());
-        }catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
             return new HttpDataResponse(HttpResponseEnum.ERROR, e);
         }
@@ -43,7 +55,7 @@ public class UtilController {
     @PostMapping("/suspend")
     public HttpResponse suspendCoreThread(@RequestParam long hwnd) {
         DDTankCoreThread thread = threadService.getAllStartedThreadMap().get(hwnd);
-        if(thread == null) {
+        if (thread == null) {
             return new HttpResponse(HttpResponseEnum.ILLEGAL_INPUT);
         }
         thread.sendSuspend();
@@ -53,7 +65,7 @@ public class UtilController {
     @PostMapping("/continue")
     public HttpResponse continueCoreThread(@RequestParam long hwnd) {
         DDTankCoreThread thread = threadService.getAllStartedThreadMap().get(hwnd);
-        if(thread == null) {
+        if (thread == null) {
             return new HttpResponse(HttpResponseEnum.ILLEGAL_INPUT);
         }
         thread.sendContinue();
@@ -62,31 +74,84 @@ public class UtilController {
 
     /**
      * TODO 将返回值映射到前端
+     *
      * @param hwnd
      * @return
      */
     @PostMapping("/state")
     public HttpDataResponse<CoreThreadStateEnum> getCoreThreadState(@RequestParam long hwnd) {
         DDTankCoreThread thread = threadService.getAllStartedThreadMap().get(hwnd);
-        if(thread == null) {
+        if (thread == null) {
             return HttpDataResponse.ok(CoreThreadStateEnum.NOT_STARTED);
         }
         return HttpDataResponse.ok(thread.getCoreState());
     }
 
-    @PostMapping("/capture")
-    public StreamingResponseBody capture(@RequestParam long hwnd) {
-        return null;
+    @PostMapping("/position")
+    public HttpResponse capture(@RequestParam long hwnd) {
+        dm.setWindowState(hwnd, 1);
+        dm.setWindowState(hwnd, 7);
+        return HttpResponse.ok();
     }
 
     @PostMapping("/start")
-    public HttpDataResponse start(@RequestParam long hwnd,
-                              @RequestParam int keyboardMode,
-                              @RequestParam int mouseMode,
-                              @RequestParam int picMode,
-                              @RequestParam int operateMode,
+    public HttpResponse start(@RequestParam long hwnd,
+                              @RequestParam String name,
+                              @RequestParam String version,
                               @RequestParam int propertiesMode,
-                              @RequestParam String name) {
-        return HttpDataResponse.ok(threadService.start(hwnd, keyboardMode, mouseMode, picMode, operateMode, propertiesMode, name));
+                              Integer levelLine,
+                              Integer levelRow,
+                              Double levelDifficulty,
+                              String attackSkill,
+                              Integer enemyFindMode,
+                              Boolean isHandleCalcDistance,
+                              Double handleDistance) {
+//        threadService.start(hwnd, version, propertiesMode, name);
+        DDTankConfigProperties startProperties;
+        if (propertiesMode == 0) {
+            startProperties = defaultProperties.clone();
+        } else {
+            startProperties = configService.getByIndex(propertiesMode - 1).clone();
+        }
+        if (levelLine != null) {
+            startProperties.setLevelLine(levelLine);
+        }
+        if (levelRow != null) {
+            startProperties.setLevelRow(levelRow);
+        }
+        if (levelDifficulty != null) {
+            startProperties.setLevelDifficulty(levelDifficulty);
+        }
+        if (attackSkill != null) {
+            startProperties.setAttackSkill(attackSkill);
+        }
+        if (enemyFindMode != null) {
+            startProperties.setEnemyFindMode(enemyFindMode);
+        }
+        if (isHandleCalcDistance != null) {
+            startProperties.setIsHandleCalcDistance(isHandleCalcDistance);
+        }
+        if (handleDistance != null) {
+            startProperties.setHandleDistance(handleDistance);
+        }
+        return HttpResponse.auto(threadService.start(hwnd, version, name, startProperties));
+    }
+
+    @PostMapping("/restart")
+    public HttpResponse restart(@RequestParam long hwnd) {
+        threadService.restart(hwnd);
+        return HttpResponse.ok();
+    }
+
+    @PostMapping("/stop")
+    public HttpResponse stop(@RequestParam long hwnd) {
+        threadService.stop(hwnd);
+        return HttpResponse.ok();
+    }
+
+    @PostMapping("/remove")
+    public HttpResponse remove(@RequestParam long hwnd) {
+        threadService.remove(hwnd);
+        return HttpResponse.ok();
     }
 }

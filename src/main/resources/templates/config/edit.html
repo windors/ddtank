@@ -1,15 +1,20 @@
 <!DOCTYPE html>
-<html lang="zh" xmlns:th="http://www.thymeleaf.org" th:replace="~{base/main :: main (title=~{::title}?:_, content=~{::body}, link=~{::link}?:~{}, script=~{::script}?:~{}, style=~{::style}?:~{}, contentBefore=~{}, contentAfter=~{},
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" th:replace="~{base/main :: main (title=~{::title}?:_, content=~{::.config-edit-main}, link=~{::link}?:~{}, script=~{::script}?:~{}, style=~{::style}?:~{}, contentBefore=~{::.bg}, contentAfter=~{},
       h1='配置编辑 <small>编辑已保存的配置，便于下次直接选择</small>')}">
 <head>
     <meta charset="UTF-8">
     <title>配置编辑</title>
     <link rel="stylesheet" href="/static/css/rsSliderLens.css" th:href="@{/static/css/rsSliderLens.css}">
     <link rel="stylesheet" href="/static/css/common/form.css" th:href="@{/static/css/common/form.css}">
+    <link rel="stylesheet" th:href="@{/static/css/bg.css}"/>
     <script src="/static/js/jquery.rsSliderLens.js" th:src="@{/static/js/jquery.rsSliderLens.js}"></script>
 </head>
 <body>
-<div class="row">
+<div class="bg">
+    <div class="bg-cover"
+         th:style="'background-image:url(/static/img/bg/speed.jpg);'"></div>
+</div>
+<div class="row config-edit-main">
     <form id="configEditForm" class="form-horizontal">
         <div th:replace="common/form :: form-default(${config}, ~{::begin}, ~{::end})">
             <div th:fragment="begin">
@@ -29,7 +34,7 @@
 </body>
 <script>
     $("#configEditForm").submit(function () {
-        postAjax("/config/default", $(this).serialize(), function (data) {
+        putAjax("/config/[[${index}]]", $(this).serialize(), function (data) {
             windorAlert("提示", "已保存配置！")
         })
         return false;

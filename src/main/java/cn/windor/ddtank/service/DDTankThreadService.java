@@ -33,7 +33,7 @@ public interface DDTankThreadService {
     /**
      * 指定配置并运行脚本
      */
-    boolean start(long hwnd, int keyboardMode, int mouseMode, int picMode, int operateMode, int propertiesMode, String name);
+    boolean start(long hwnd, String version, String name, DDTankConfigProperties startProperties);
 
     /**
      * 将当前鼠标所指向的窗口计入待启动列表
@@ -47,13 +47,11 @@ public interface DDTankThreadService {
     void stop(long hwnd);
 
     /**
-     * 立刻停止指定脚本
-     * @param hwnd
-     */
-    void stopDirectly(long hwnd);
-
-    /**
      * 更新指定脚本的配置
      */
     boolean updateProperties(long hwnd, DDTankConfigProperties config);
+
+    boolean restart(long hwnd);
+
+    boolean remove(long hwnd);
 }

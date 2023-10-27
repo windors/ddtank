@@ -60,6 +60,7 @@ public class ConfigControllerRouting {
     public String editConfig(Map<String, Object> map,
                              @PathVariable int index) {
         map.put("config", configService.getByIndex(index));
+        map.put("index", index);
         return "config/edit";
     }
 
