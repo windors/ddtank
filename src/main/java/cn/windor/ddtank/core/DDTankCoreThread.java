@@ -13,9 +13,7 @@ import com.jacob.activeX.ActiveXComponent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.lang.management.ManagementFactory;
-import java.lang.management.ThreadInfo;
-import java.lang.management.ThreadMXBean;
+import java.time.LocalDateTime;
 import java.util.concurrent.*;
 
 /**
@@ -109,7 +107,7 @@ public class DDTankCoreThread extends Thread {
     }
 
     public void updateProperties(DDTankConfigProperties properties) {
-        task.updateMsg("更新了[" + Thread.currentThread().getName() + "]的配置文件");
+        task.updateLog("更新了[" + Thread.currentThread().getName() + "]的配置文件");
         task.properties.update(properties);
     }
 
@@ -139,7 +137,7 @@ public class DDTankCoreThread extends Thread {
         synchronized (task) {
             if (!task.suspend) {
                 task.coreState = CoreThreadStateEnum.WAITING_SUSPEND;
-                task.updateMsg("暂停运行");
+                task.updateLog("暂停运行");
                 task.suspend = true;
             }
         }
@@ -149,7 +147,7 @@ public class DDTankCoreThread extends Thread {
         synchronized (task) {
             if (task.suspend) {
                 task.coreState = CoreThreadStateEnum.WAITING_CONTINUE;
-                task.updateMsg("恢复运行");
+                task.updateLog("恢复运行");
                 task.suspend = false;
             }
         }
@@ -171,10 +169,11 @@ public class DDTankCoreThread extends Thread {
         return task.getCurrentMsg();
     }
 
-    public int getTimes() {
-        return task.getTimes();
-    }
+    public int getPasses() {return task.getPasses();}
 
+    public long getTimes() {return task.getTimes();}
+
+    public LocalDateTime getStartTime() {return task.getStartTime();}
     public boolean restartTask() {
         if(coreThread.isAlive()) {
             return false;

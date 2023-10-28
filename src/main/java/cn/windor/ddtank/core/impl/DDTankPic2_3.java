@@ -52,6 +52,12 @@ public class DDTankPic2_3 extends DDTankPic10_4 {
                 path + "蛋2-开始1.bmp", "101010", 0.9, 0, point)
                 || dm.findPic(891, 454, 981, 495,
                 path + "蛋2-开始2.bmp", "101010", 0.9, 0, point)) {
+            mouse.moveAndClick(560, 844);
+            mouse.moveAndClick(801, 137);
+            mouse.moveAndClick(882, 141);
+            mouse.moveAndClick(949, 346);
+            mouse.moveAndClick(949, 346);
+            mouse.moveAndClick(949, 346);
             mouse.moveAndClick(point.getX() + 10, point.getY() + 10);
             return true;
         }

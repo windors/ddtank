@@ -115,10 +115,11 @@ public class DDTankPic2_4 extends DDTankPic2_3 {
             if(picEx != null && picEx.size() > 1) {
                 Random random = new Random();
                 for (int i = 0; i < picEx.size(); i++) {
-                    Point now = picEx.get(i);
+                    Point now = picEx.remove(i);
                     if(now.isCloseTo(putInBag, 130, 90)) {
                         continue;
                     }
+                    if(picEx.size() == 0) break;
                     mouse.moveAndClick(now);
                     delay(100, true);
                     mouse.moveAndClick(picEx.get(random.nextInt(picEx.size())));

@@ -7,13 +7,14 @@ import cn.windor.ddtank.base.Point;
 import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.core.impl.*;
 import cn.windor.ddtank.exception.StopTaskException;
-import cn.windor.ddtank.handler.DDTankAngleAdjustMoveHandler;
 import cn.windor.ddtank.handler.DDTankFindPositionMoveHandler;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
 import cn.windor.ddtank.type.TowardEnum;
 import com.jacob.com.ComThread;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.time.LocalDateTime;
 
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 
@@ -33,7 +34,13 @@ public class DDTankCoreTask implements Runnable {
 
     @Getter
     // 已通关副本数
-    private int times;
+    private int passes;
+
+    @Getter
+    private long times;
+
+    @Getter
+    private LocalDateTime startTime;
 
     // 1距的距离
     protected Double distance;
@@ -53,7 +60,7 @@ public class DDTankCoreTask implements Runnable {
 
     // 当前状态消息，给外部提供查看接口
     // TODO 将msg设置为一个定长集合，便于查看历史消息
-    protected String msg;
+    protected DDTankLog ddtLog = new DDTankLog();
 
 
     protected Library dm;
@@ -115,8 +122,9 @@ public class DDTankCoreTask implements Runnable {
     public void run() {
         if (bind()) {
             init();
+            startTime = LocalDateTime.now();
             try {
-                updateMsg("脚本已启动！");
+                updateLog("脚本已启动！");
                 while (!Thread.interrupted()) {
                     if (suspend) {
                         coreState = CoreThreadStateEnum.SUSPEND;
@@ -125,33 +133,33 @@ public class DDTankCoreTask implements Runnable {
                         try {
                             coreState = CoreThreadStateEnum.RUN;
                             if (ddtankPic.needActiveWindow()) {
-                                updateMsg("窗口未被激活，已重新激活窗口");
+                                updateLog("窗口未被激活，已重新激活窗口");
                             }
 
                             if (ddtankPic.needGoingToWharf()) {
-                                updateMsg("检测到处于大厅，自动进入远征码头");
+                                updateLog("检测到处于大厅，自动进入远征码头");
                             }
 
                             if (ddtankPic.needCreateRoom()) {
-                                updateMsg("检测到处于远征码头，自动创建房间");
+                                updateLog("检测到处于远征码头，自动创建房间");
                             }
 
                             if (ddtankPic.needChooseMap()) {
-                                updateMsg("检测到未选择副本，自动选择副本：" + properties.getLevelLine() + "行" + properties.getLevelRow() + "列");
+                                updateLog("检测到未选择副本，自动选择副本：" + properties.getLevelLine() + "行" + properties.getLevelRow() + "列");
                                 ddtankOperate.chooseMap();
                                 // TODO 未选择上脚本
                             }
 
                             if (ddtankPic.needCloseTip()) {
-                                updateMsg("检测到提示，已自动关闭");
+                                updateLog("检测到提示，已自动关闭");
                             }
 
                             if (ddtankPic.needClickPrepare()) {
-                                updateMsg("检测到准备，点击准备按钮");
+                                updateLog("检测到准备，点击准备按钮");
                             }
 
                             if (ddtankPic.needClickStart()) {
-                                updateMsg("检测到开始，点击开始按钮");
+                                updateLog("检测到开始，点击开始按钮");
                                 initEveryTimes();
                             }
 
@@ -160,19 +168,20 @@ public class DDTankCoreTask implements Runnable {
                                 if (properties.getIsCalcDistanceQuickly() && !properties.getIsHandleCalcDistance() && !properties.getIsHandleAttack() && !isCalcedDistance) {
                                     distance = ddtankPic.calcUnitDistance();
                                     isCalcedDistance = true;
-                                    updateMsg("勾选了快速测量屏距：" + distance);
+                                    updateLog("勾选了快速测量屏距：" + distance);
                                 }
                                 if (ddtankPic.isMyRound()) {
                                     round = round + 1;
-                                    updateMsg("第" + (times + 1) + "次副本，第" + round + "回合");
+                                    updateLog("第" + (passes + 1) + "次副本，第" + round + "回合");
                                     attack();
                                 }
                             }
 
                             if (ddtankPic.needDraw()) {
-                                times++;
+                                passes++;
                             }
                             delay(properties.getDelay(), true);
+                            times++;
                             log.trace("脚本运行中。。。");
                         } catch (StopTaskException ignored) {
                         } catch (Exception e) {
@@ -184,9 +193,9 @@ public class DDTankCoreTask implements Runnable {
             } finally {
                 unBind();
             }
-            updateMsg("脚本已停止");
+            updateLog("脚本已停止");
         } else {
-            updateMsg("窗口绑定失败，请重新尝试启动脚本");
+            updateLog("窗口绑定失败，请重新尝试启动脚本");
             log.error("窗口绑定失败，请重新尝试启动脚本，大漠错误码：{}", dm.getLastError());
         }
         coreState = CoreThreadStateEnum.STOP;
@@ -199,13 +208,13 @@ public class DDTankCoreTask implements Runnable {
         isCalcedDistance = false;
     }
 
-    public void updateMsg(String msg) {
-        this.msg = msg;
-        log.info(msg);
+    public void updateLog(String msg) {
+        ddtLog.log(msg);
+        log.debug(msg);
     }
 
     public String getCurrentMsg() {
-        return msg;
+        return ddtLog.newestLog();
     }
 
     private void attack() {
@@ -222,7 +231,7 @@ public class DDTankCoreTask implements Runnable {
                 // 需要自动计算屏距
                 distance = ddtankPic.calcUnitDistance();
                 isCalcedDistance = true;
-                updateMsg("自动测量屏距：1距=" + distance + "px");
+                updateLog("自动测量屏距：1距=" + distance + "px");
             }
 
             if (properties.getIsHandleAttack()) {
@@ -280,10 +289,10 @@ public class DDTankCoreTask implements Runnable {
                     toward = ddtankPic.getToward();
                     if (toward == TowardEnum.LEFT && enemyPosition.getX() > myPosition.getX()) {
                         keyboard.keyPress('d');
-                        updateMsg("检测到当前方向向左，敌人在右，已自动转向");
+                        updateLog("检测到当前方向向左，敌人在右，已自动转向");
                     } else if (toward == TowardEnum.RIGHT && enemyPosition.getX() < myPosition.getX()) {
                         keyboard.keyPress('a');
-                        updateMsg("检测到当前方向向右，敌人在左，已自动转向");
+                        updateLog("检测到当前方向向右，敌人在左，已自动转向");
                     }
                 }
 
@@ -297,15 +306,15 @@ public class DDTankCoreTask implements Runnable {
                 if (ddtankOperate.angleAdjust(angle, handlerSelector.getAngleMoveHandler(), targetToward)) {
                     double horizontal = (enemyPosition.getX() - myPosition.getX()) / distance;
                     double vertical = (myPosition.getY() - enemyPosition.getY()) / distance;
-                    updateMsg("我的坐标：" + myPosition + ", 敌人的坐标：" + enemyPosition + ", 水平屏距：" + horizontal + ", 垂直屏距：" + vertical);
+                    updateLog("我的坐标：" + myPosition + ", 敌人的坐标：" + enemyPosition + ", 水平屏距：" + horizontal + ", 垂直屏距：" + vertical);
                     strength = ddtankOperate.getStrength(angle, horizontal, vertical);
                     strength += properties.getOffsetStrength();
-                    updateMsg("自动攻击：" + angle + "度, " + strength + "力");
+                    updateLog("自动攻击：" + angle + "度, " + strength + "力");
                     keyboard.keysPress(properties.getAttackSkill(), 10);
                     ddtankOperate.attack(strength);
                 } else {
                     // TODO 调整角度失败的情况，即调整角度策略失效
-                    updateMsg("未能调整到指定角度，当前角度：" + ddtankPic.getAngle() + ", 目标角度：" + angle);
+                    updateLog("未能调整到指定角度，当前角度：" + ddtankPic.getAngle() + ", 目标角度：" + angle);
                 }
             }
         }
@@ -315,7 +324,7 @@ public class DDTankCoreTask implements Runnable {
     public boolean bind() {
         ComThread.InitSTA();
         if (dm.bindWindowEx(hwnd, properties.getBindDisplay(), properties.getBindMouse(), properties.getBindKeypad(), properties.getBindPublic(), properties.getBindMode())) {
-            updateMsg("绑定句柄：" + hwnd);
+            updateLog("绑定句柄：" + hwnd);
             delay(1000, true);
             return true;
         }
@@ -323,7 +332,7 @@ public class DDTankCoreTask implements Runnable {
     }
 
     public void unBind() {
-        updateMsg(hwnd + "解除绑定");
+        updateLog(hwnd + "解除绑定");
         delay(1000, true);
         dm.unbindWindow();
         ComThread.Release();
