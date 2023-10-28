@@ -38,12 +38,12 @@ public class DMLibrary implements Library {
     }
 
     private Variant getParam(Object param) {
-        if(paramMap.get(param) != null) {
+        if (paramMap.get(param) != null) {
             return paramMap.get(param);
         }
         Variant result;
         synchronized (paramMap) {
-            if((result = paramMap.get(param)) == null) {
+            if ((result = paramMap.get(param)) == null) {
                 result = new Variant(param);
                 paramMap.put(param, result);
             }
@@ -52,7 +52,7 @@ public class DMLibrary implements Library {
     }
 
     private Variant getParam(Object param, boolean ref) {
-        if(!ref) return getParam(param);
+        if (!ref) return getParam(param);
         return new Variant(param, true);
     }
 
@@ -150,13 +150,16 @@ public class DMLibrary implements Library {
      * @return
      */
     public boolean findColor(int x1, int y1, int x2, int y2, String color, double sim, int dir, Point result) {
-        Variant resultX = getParam(-1, true);
-        Variant resultY = getParam(-2, true);
+
         if (Dispatch.call(dm, "findColor", getParam(x1), getParam(y1), getParam(x2), getParam(y2),
-                getParam(color), getParam(sim), getParam(dir), resultX, resultY).getInt() == 0) {
+                getParam(color), getParam(sim), getParam(dir), getParam(-1), getParam(-1)).getInt() == 0) {
             return false;
         } else {
             if (result != null) {
+                Variant resultX = getParam(-1, true);
+                Variant resultY = getParam(-2, true);
+                if(Dispatch.call(dm, "findColor", getParam(x1), getParam(y1), getParam(x2), getParam(y2),
+                        getParam(color), getParam(sim), getParam(dir), resultX, resultY).getInt() != 0)
                 result.setX(resultX.getInt());
                 result.setY(resultY.getInt());
             }
@@ -216,17 +219,25 @@ public class DMLibrary implements Library {
      * @return 是否找到了图片
      */
     public boolean findPic(int x1, int y1, int x2, int y2, String picName, String deltaColor, double sim, int dir, Point result) {
-        Variant resultX = getParam(-1, true);
-        Variant resultY = getParam(-2, true);
+
         if (Dispatch.call(dm, "findPic",
                 getParam(x1), getParam(y1), getParam(x2), getParam(y2),
                 getParam(picName), getParam(deltaColor),
-                getParam(sim), getParam(dir), resultX, resultY).getInt() == -1) {
+                getParam(sim), getParam(dir), getParam(-1), getParam(-1)).getInt() == -1) {
             return false;
         } else {
             if (result != null) {
-                result.setX(resultX.getInt());
-                result.setY(resultY.getInt());
+                Variant resultX = getParam(-1, true);
+                Variant resultY = getParam(-2, true);
+                if(Dispatch.call(dm, "findPic",
+                        getParam(x1), getParam(y1), getParam(x2), getParam(y2),
+                        getParam(picName), getParam(deltaColor),
+                        getParam(sim), getParam(dir), resultX, resultY).getInt() != -1) {
+                    result.setX(resultX.getInt());
+                    result.setY(resultY.getInt());
+                }else {
+                    return false;
+                }
             }
             return true;
         }
@@ -256,15 +267,21 @@ public class DMLibrary implements Library {
      * @return 是否找到了指定字符串
      */
     public boolean findStr(int x1, int y1, int x2, int y2, String str, String colorFormat, double sim, Point result) {
-        Variant resultX = getParam(-1, true);
-        Variant resultY = getParam(-2, true);
+
         if (Dispatch.call(dm, "findStr", getParam(x1), getParam(y1), getParam(x2), getParam(y2),
-                getParam(str), getParam(colorFormat), getParam(sim), resultX, resultY).getInt() == -1) {
+                getParam(str), getParam(colorFormat), getParam(sim), getParam(-1), getParam(-1)).getInt() == -1) {
             return false;
         } else {
             if (result != null) {
-                result.setX(resultX.getInt());
-                result.setY(resultY.getInt());
+                Variant resultX = getParam(-1, true);
+                Variant resultY = getParam(-2, true);
+                if (Dispatch.call(dm, "findStr", getParam(x1), getParam(y1), getParam(x2), getParam(y2),
+                        getParam(str), getParam(colorFormat), getParam(sim), resultX, resultY).getInt() != -1) {
+                    result.setX(resultX.getInt());
+                    result.setY(resultY.getInt());
+                } else {
+                    return false;
+                }
             }
             return true;
         }

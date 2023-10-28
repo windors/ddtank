@@ -1,6 +1,7 @@
 package cn.windor.ddtank.base.impl;
 
 import cn.windor.ddtank.util.FileUtils;
+import com.jacob.com.ComThread;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -10,9 +11,11 @@ public class LibraryFactory {
     public static com.jacob.activeX.ActiveXComponent getActiveXCompnent() {
         com.jacob.activeX.ActiveXComponent dm;
         try {
+            ComThread.InitSTA();
             dm = new com.jacob.activeX.ActiveXComponent("dm.dmsoft");
             String ver = dm.invoke("ver").toString();
             if (!"7.2336".equals(ver)) {
+                ComThread.Release();
                 throw new com.jacob.com.ComFailException();
             }
         } catch (com.jacob.com.ComFailException e) {

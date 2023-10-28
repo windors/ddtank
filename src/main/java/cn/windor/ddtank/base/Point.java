@@ -16,4 +16,8 @@ public class Point {
         this.x += x;
         this.y += y;
     }
+
+    public boolean isCloseTo(Point point, int offsetX, int offsetY) {
+        return Math.abs(point.x - x) <= offsetX && Math.abs(point.y - y) <= offsetY;
+    }
 }

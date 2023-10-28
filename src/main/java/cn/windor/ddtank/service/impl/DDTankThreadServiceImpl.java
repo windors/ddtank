@@ -85,15 +85,8 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
             }
             return false;
         } else {
-            // 0. 设置键盘鼠标等基本参数
-            com.jacob.activeX.ActiveXComponent component = LibraryFactory.getActiveXCompnent();
-            Library dm = new DMLibrary(component);
-            Keyboard startKeyboard = new DMKeyboard(component);
-            Mouse startMouse = new DMMouse(component);
-
             // 2. 创建任务
-            DDTankCoreTask task = new DDTankCoreTask(hwnd, dm, startMouse, startKeyboard, version, startProperties);
-            DDTankCoreThread thread = new DDTankCoreThread(task, name);
+            DDTankCoreThread thread = new DDTankCoreThread(hwnd, version, startProperties, name);
             threadMap.put(hwnd, thread);
 
             // 3. 启动线程
@@ -155,7 +148,7 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
             thread.stop(3000);
         }
 
-        thread = new DDTankCoreThread(thread.getTask(), thread.getName());
+        thread = new DDTankCoreThread(thread);
         threadMap.put(hwnd, thread);
         thread.start();
         return true;

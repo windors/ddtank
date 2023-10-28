@@ -100,23 +100,29 @@ public class DDTankPic2_4 extends DDTankPic2_3 {
             List<Point> waitOpens = dm.findPicEx(412, 121, 735, 442, path + "蛋2-罐子1.bmp|" + path + "蛋2-罐子2.bmp", "101010", 0.8, 0);
             if(waitOpens != null) {
                 for (Point waitOpen : waitOpens) {
+                    if(waitOpen.isCloseTo(putInBag, 130, 90)) {
+                        continue;
+                    }
                     mouse.moveAndClick(waitOpen);
-                    delay(200, true);
-                    waitOpen.setOffset(20, 10);
+                    delay(500, true);
+                    waitOpen.setOffset(20, 15);
                     mouse.moveAndClick(waitOpen);
-                    delay(400, true);
+                    delay(800, true);
                 }
             }
             // 叠加勋章
             List<Point> picEx = dm.findPicEx(412, 121, 735, 442, path + "蛋2-勋章.bmp", "101010", 0.8, 0);
             if(picEx != null && picEx.size() > 1) {
-                Point first = picEx.get(new Random().nextInt(picEx.size()));
+                Random random = new Random();
                 for (int i = 0; i < picEx.size(); i++) {
                     Point now = picEx.get(i);
+                    if(now.isCloseTo(putInBag, 130, 90)) {
+                        continue;
+                    }
                     mouse.moveAndClick(now);
-                    delay(300, true);
-                    mouse.moveAndClick(first);
-                    delay(300, true);
+                    delay(100, true);
+                    mouse.moveAndClick(picEx.get(random.nextInt(picEx.size())));
+                    delay(100, true);
                 }
             }
             mouse.moveAndClick(putInBag);
@@ -135,7 +141,7 @@ public class DDTankPic2_4 extends DDTankPic2_3 {
 
     @Override
     public Integer getAngle() {
-        String reuslt = dm.ocr(42, 548, 86, 588, "c22b30-404040|67d5e4-404040|23bbf3-404040|c43ba7-404040|60ca32-404040|eb780a-404040|cf5b4c-404040|c1dc3b-404040|1eb458-404040", 0.95);
+        String reuslt = dm.ocr(42, 548, 86, 588, "b33731-404040|67d5e4-404040|48b1cf-404040|c43ba7-404040|60ca32-404040|eb780a-404040|cf5b4c-404040|c1dc3b-404040|1eb458-404040", 0.95);
         reuslt = reuslt.replaceAll("\\D", "");
         if ("".equals(reuslt)) {
             log.error("角度获取失败，请更新字库！");

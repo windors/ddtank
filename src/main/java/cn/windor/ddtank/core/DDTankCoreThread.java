@@ -1,8 +1,15 @@
 package cn.windor.ddtank.core;
 
+import cn.windor.ddtank.base.Keyboard;
 import cn.windor.ddtank.base.Library;
+import cn.windor.ddtank.base.Mouse;
+import cn.windor.ddtank.base.impl.DMKeyboard;
+import cn.windor.ddtank.base.impl.DMLibrary;
+import cn.windor.ddtank.base.impl.DMMouse;
+import cn.windor.ddtank.base.impl.LibraryFactory;
 import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
+import com.jacob.activeX.ActiveXComponent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,28 +24,40 @@ import java.util.concurrent.*;
 @Slf4j
 public class DDTankCoreThread extends Thread {
 
+    private long gameHwnd;
+    private String gameVersion;
+    private DDTankConfigProperties properties;
+
     protected Library dm;
 
-    private long gameHwnd;
-
     @Getter
-    private final DDTankCoreTask task;
+    private DDTankCoreTask task;
 
     private Thread coreThread;
 
     private final LinkedBlockingQueue<FutureTask<?>> daemonTaskQueue = new LinkedBlockingQueue<>();
 
 
-    public DDTankCoreThread(DDTankCoreTask task, String name) {
-        this.task = task;
-        this.coreThread = new Thread(task, name + "-exec");
-        this.gameHwnd = this.task.hwnd;
-        this.dm = this.task.dm;
+    public DDTankCoreThread(long hwnd, String version, DDTankConfigProperties properties, String name) {
+        this.gameHwnd = hwnd;
+        this.gameVersion = version;
+        this.properties = properties;
         this.setName(name);
+    }
+
+    public DDTankCoreThread(DDTankCoreThread srcThread) {
+        this(srcThread.gameHwnd, srcThread.gameVersion, srcThread.properties, srcThread.getName());
     }
 
     @Override
     public void run() {
+        ActiveXComponent compnent = LibraryFactory.getActiveXCompnent();
+        Library dm = new DMLibrary(compnent);
+        Mouse mouse = new DMMouse(compnent);
+        Keyboard keyboard = new DMKeyboard(compnent);
+        this.dm = dm;
+        this.task = new DDTankCoreTask(gameHwnd, dm, mouse, keyboard, gameVersion, properties);
+        this.coreThread = new Thread(task, getName() + "-exec");
         if (task.bind()) {
             log.info("窗口[{}]绑定成功，即将启动脚本", gameHwnd);
             try {
@@ -49,8 +68,9 @@ public class DDTankCoreThread extends Thread {
                     if (!dm.getWindowState(gameHwnd, 0)) {
                         // 调用dm在出错时往往会弹出窗口，所以需要手动关闭线程
                         log.error("检测到游戏窗口关闭，停止脚本运行");
-                        coreThread.stop();
+                        coreThread.interrupt();
                         // TODO 后处理
+                        break;
                     }
                     // 执行任务
                     try {
@@ -95,9 +115,12 @@ public class DDTankCoreThread extends Thread {
 
     public void stop(long waitMillis) {
         task.coreState = CoreThreadStateEnum.WAITING_STOP;
-        coreThread.interrupt();
-        this.interrupt();
-        log.info("正在尝试停止线程");
+        if(coreThread.isAlive()) {
+            coreThread.interrupt();
+        }
+        if(this.isAlive()) {
+            this.interrupt();
+        }
         try {
             coreThread.join(waitMillis);
             this.join(waitMillis);

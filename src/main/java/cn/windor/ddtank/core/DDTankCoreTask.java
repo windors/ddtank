@@ -190,6 +190,7 @@ public class DDTankCoreTask implements Runnable {
             log.error("窗口绑定失败，请重新尝试启动脚本，大漠错误码：{}", dm.getLastError());
         }
         coreState = CoreThreadStateEnum.STOP;
+        System.gc();
     }
 
     private void initEveryTimes() {
@@ -299,7 +300,6 @@ public class DDTankCoreTask implements Runnable {
                     updateMsg("我的坐标：" + myPosition + ", 敌人的坐标：" + enemyPosition + ", 水平屏距：" + horizontal + ", 垂直屏距：" + vertical);
                     strength = ddtankOperate.getStrength(angle, horizontal, vertical);
                     strength += properties.getOffsetStrength();
-                    angle += properties.getOffsetAngle();
                     updateMsg("自动攻击：" + angle + "度, " + strength + "力");
                     keyboard.keysPress(properties.getAttackSkill(), 10);
                     ddtankOperate.attack(strength);
