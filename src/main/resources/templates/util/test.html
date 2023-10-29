@@ -22,7 +22,7 @@
     <div th:if="${startedThreadMap.size() > 0}" style="margin-bottom: 20px">
         <select id="select-debug" class="form-control">
             <option value="-1">请选择测试环境</option>
-            <option th:value="${hwnd}" th:each="hwnd:${startedThreadMap.keySet()}" th:selected="${startedThreadMap.get(hwnd).suspend}">[[${startedThreadMap.get(hwnd).name}]]</option>
+            <option th:value="${hwnd}" th:each="hwnd:${startedThreadMap.keySet()}" th:selected="${startedThreadMap.get(hwnd).isSuspend()}">[[${startedThreadMap.get(hwnd).name}]]</option>
         </select>
     </div>
 </div>

@@ -2,6 +2,7 @@ package cn.windor.ddtank.base.impl;
 
 import cn.windor.ddtank.util.FileUtils;
 import com.jacob.com.ComThread;
+import com.jacob.com.Variant;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -34,11 +35,14 @@ public class LibraryFactory {
             }
         }
 
-
         int zc = dm.invoke("reg",
-                new com.jacob.com.Variant("mh84909b3bf80d45c618136887775ccc90d27d7"), new com.jacob.com.Variant("m88i5mlsu6lh9y7")).getInt();
+                new com.jacob.com.Variant("mh84909b3bf80d45c618136887775ccc90d27d7"), new Variant("m88i5mlsu6lh9y7")).getInt();
         if (zc == 1) {
             log.info("大漠插件注册成功");
+            // 关闭大漠错误弹窗，防止线程卡在某个失败用例上
+            if(dm.invoke("setShowAsmErrorMsg", new Variant(0)).getInt() == 0) {
+                log.error("关闭大漠弹窗失败，当某个线程被停止后若大漠错误窗口未被关闭则程序将会停止运行！");
+            }
         } else {
             switch (zc) {
                 case -2:

@@ -4,19 +4,26 @@ import cn.windor.ddtank.base.Keyboard;
 import cn.windor.ddtank.base.Library;
 import cn.windor.ddtank.base.Mouse;
 import cn.windor.ddtank.base.Point;
+import cn.windor.ddtank.base.impl.DMKeyboard;
+import cn.windor.ddtank.base.impl.DMLibrary;
+import cn.windor.ddtank.base.impl.DMMouse;
+import cn.windor.ddtank.base.impl.LibraryFactory;
 import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.core.impl.*;
 import cn.windor.ddtank.exception.StopTaskException;
 import cn.windor.ddtank.handler.DDTankFindPositionMoveHandler;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
 import cn.windor.ddtank.type.TowardEnum;
+import com.jacob.activeX.ActiveXComponent;
 import com.jacob.com.ComThread;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static cn.windor.ddtank.util.ThreadUtils.delay;
+import static cn.windor.ddtank.util.ThreadUtils.delayPersisted;
 
 @Slf4j
 public class DDTankCoreTask implements Runnable {
@@ -36,11 +43,14 @@ public class DDTankCoreTask implements Runnable {
     // 已通关副本数
     private int passes;
 
+    // 已运行循环次数
     @Getter
     private long times;
 
-    @Getter
-    private LocalDateTime startTime;
+    private long startTime = -1;
+    // runTime是上一次暂停前运行的时间
+    private long endTime = -1;
+    private long runTime;
 
     // 1距的距离
     protected Double distance;
@@ -55,11 +65,11 @@ public class DDTankCoreTask implements Runnable {
 
     boolean suspend = false;
 
-    @Getter
-    CoreThreadStateEnum coreState;
+    volatile boolean needRestart = false;
+
+    AtomicReference<CoreThreadStateEnum> coreState = new AtomicReference<>(CoreThreadStateEnum.NOT_STARTED);
 
     // 当前状态消息，给外部提供查看接口
-    // TODO 将msg设置为一个定长集合，便于查看历史消息
     protected DDTankLog ddtLog = new DDTankLog();
 
 
@@ -70,6 +80,7 @@ public class DDTankCoreTask implements Runnable {
 
     protected DDTankOperate ddtankOperate;
     protected Keyboard keyboard;
+    protected Mouse mouse;
 
     @Getter
     protected DDTankConfigProperties properties;
@@ -77,13 +88,40 @@ public class DDTankCoreTask implements Runnable {
     DDTankCoreHandlerSelector handlerSelector;
 
 
-    public DDTankCoreTask(long hwnd, Library dm, Mouse mouse, Keyboard keyboard, String version, DDTankConfigProperties properties) {
+    public DDTankCoreTask(long hwnd, String version, DDTankConfigProperties properties) {
         this.hwnd = hwnd;
-        this.dm = dm;
-        this.keyboard = keyboard;
         this.version = version;
+        this.coreState.set(CoreThreadStateEnum.WAITING_START);
+        this.properties = properties;
+    }
 
+    public DDTankCoreTask(DDTankCoreTask task) {
+        this(task.hwnd, task.version, task.properties);
+        this.round = task.round;
+        this.toward = task.toward;
+        this.passes = task.passes;
+        this.times = 0;
+        this.runTime = task.getRunTime();
+        this.distance = task.distance;
+        this.myPosition = task.myPosition;
+        this.enemyPosition = task.enemyPosition;
+        this.myLastPosition = task.myLastPosition;
+        this.enemyLastPosition = task.enemyLastPosition;
+        this.angle = task.angle;
+        this.strength = task.strength;
+        this.isCalcedDistance = task.isCalcedDistance;
+        this.suspend = task.suspend;
+        this.needRestart = false;
+        this.ddtLog = task.ddtLog;
 
+    }
+
+    private void init() {
+        // 将大漠组件推迟到运行
+        ActiveXComponent compnent = LibraryFactory.getActiveXCompnent();
+        this.dm = new DMLibrary(compnent);
+        this.mouse = new DMMouse(compnent);
+        this.keyboard = new DMKeyboard(compnent);
         if ("10".equals(version)) {
             this.ddtankPic = new DDTankPic10_4(dm, "C:/tmp/", properties, mouse);
         } else if ("2.4".equalsIgnoreCase(version)) {
@@ -97,41 +135,48 @@ public class DDTankCoreTask implements Runnable {
         } else {
             this.ddtankOperate = new DDtankOperate2_3(dm, mouse, keyboard, ddtankPic, properties);
         }
-        this.properties = properties;
-        this.coreState = CoreThreadStateEnum.WAITING_START;
         this.handlerSelector = new DDTankCoreHandlerSelector(keyboard, properties);
-    }
-
-    private void init() {
-        // 设置大漠字库
-        if (!dm.setDict(0, "C:/tmp/ddtankLibrary.txt")) {
-            log.error("大漠字库设置失败！");
-        } else if (!dm.useDict(0)) {
-            log.error("大漠字库使用失败！");
-        } else {
-            myPosition = new Point();
-            enemyPosition = new Point();
-            myLastPosition = new Point();
-            enemyLastPosition = new Point();
-            log.info("大漠字库设置并使用成功！");
-        }
     }
 
 
     @Override
     public void run() {
-        if (bind()) {
-            init();
-            startTime = LocalDateTime.now();
+        init();
+        if (bind(this.dm)) {
+            // 设置大漠字库
+            if (!dm.setDict(0, "C:/tmp/ddtankLibrary.txt")) {
+                log.error("大漠字库设置失败！");
+            } else if (!dm.useDict(0)) {
+                log.error("大漠字库使用失败！");
+            } else {
+                myPosition = new Point();
+                enemyPosition = new Point();
+                myLastPosition = new Point();
+                enemyLastPosition = new Point();
+                log.info("大漠字库设置并使用成功！");
+            }
+
             try {
+                startTime = System.currentTimeMillis();
                 updateLog("脚本已启动！");
                 while (!Thread.interrupted()) {
                     if (suspend) {
-                        coreState = CoreThreadStateEnum.SUSPEND;
-                        delay(1000, true);
+                        // 使用compareAndSet而不是直接替换是因为在等待暂停的这段时间里调用了一些方法使状态发生了改变，例如调用了停止方法但仅仅设置了状态值还未来得及中断，使用CompareAndSet可以防止看到错误的状态。下同
+                        coreState.compareAndSet(CoreThreadStateEnum.WAITING_SUSPEND, CoreThreadStateEnum.SUSPEND);
+                        while (suspend) {
+                            delay(1000, true);
+                        }
+                        coreState.compareAndSet(CoreThreadStateEnum.WAITING_CONTINUE, CoreThreadStateEnum.RUN);
                     } else {
+                        if (needRestart) {
+                            // 只有在运行情况下才能够让程序自主重启
+                            break;
+                        }
+                        if (coreState.get() != CoreThreadStateEnum.RUN) {
+                            coreState.compareAndSet(CoreThreadStateEnum.WAITING_START, CoreThreadStateEnum.RUN);
+                            coreState.compareAndSet(CoreThreadStateEnum.WAITING_CONTINUE, CoreThreadStateEnum.RUN);
+                        }
                         try {
-                            coreState = CoreThreadStateEnum.RUN;
                             if (ddtankPic.needActiveWindow()) {
                                 updateLog("窗口未被激活，已重新激活窗口");
                             }
@@ -183,6 +228,7 @@ public class DDTankCoreTask implements Runnable {
                             delay(properties.getDelay(), true);
                             times++;
                             log.trace("脚本运行中。。。");
+
                         } catch (StopTaskException ignored) {
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -191,14 +237,20 @@ public class DDTankCoreTask implements Runnable {
                     }
                 }
             } finally {
-                unBind();
+                // 副绑定不用管
+                unBind(this.dm);
             }
+            endTime = System.currentTimeMillis();
             updateLog("脚本已停止");
         } else {
             updateLog("窗口绑定失败，请重新尝试启动脚本");
             log.error("窗口绑定失败，请重新尝试启动脚本，大漠错误码：{}", dm.getLastError());
         }
-        coreState = CoreThreadStateEnum.STOP;
+        if (!suspend) {
+            // 当前脚本未处于暂停状态，可以使用startTime
+
+        }
+        coreState.set(CoreThreadStateEnum.STOP);
         System.gc();
     }
 
@@ -249,7 +301,7 @@ public class DDTankCoreTask implements Runnable {
     private void attackAuto() {
         int tiredTimes = 0;
         boolean needFind = true;
-        while (needFind) {
+        while (needFind && ddtankPic.isMyRound()) {
             for (int i = 0; i < 10; i++) {
                 if ((myPosition = ddtankPic.getMyPosition()) != null) {
                     needFind = false;
@@ -321,20 +373,37 @@ public class DDTankCoreTask implements Runnable {
     }
 
 
-    public boolean bind() {
+    public CoreThreadStateEnum getCoreState() {
+        return coreState.get();
+    }
+
+    public boolean bind(Library dm) {
         ComThread.InitSTA();
         if (dm.bindWindowEx(hwnd, properties.getBindDisplay(), properties.getBindMouse(), properties.getBindKeypad(), properties.getBindPublic(), properties.getBindMode())) {
             updateLog("绑定句柄：" + hwnd);
-            delay(1000, true);
+            delayPersisted(1000, false);
             return true;
         }
         return false;
     }
 
-    public void unBind() {
+    public void unBind(Library dm) {
         updateLog(hwnd + "解除绑定");
-        delay(1000, true);
+        delayPersisted(1000, false);
         dm.unbindWindow();
         ComThread.Release();
+    }
+
+    public long getRunTime() {
+        if (startTime == -1) {
+            // 脚本未正常运行
+            return runTime;
+        }
+        if (endTime == -1) {
+            // 脚本未停止
+            return runTime + System.currentTimeMillis() - startTime;
+        } else {
+            return runTime + endTime - startTime;
+        }
     }
 }

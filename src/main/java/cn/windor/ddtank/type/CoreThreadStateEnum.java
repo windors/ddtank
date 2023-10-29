@@ -11,6 +11,7 @@ public enum CoreThreadStateEnum {
      * 准备启动（加载了配置但并未调用start方法）
      */
     WAITING_START("等待启动"),
+
     /**
      * 正常运行
      */

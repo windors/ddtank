@@ -35,6 +35,5 @@ public interface Library {
     long getResultCount(String ret);
     boolean bindWindowEx(long hwnd, String display, String mouse, String keypad, String publicAttr, int mode);
     boolean unbindWindow();
-
     boolean setWindowState(long hwnd, int state);
 }

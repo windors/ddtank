@@ -1,7 +1,9 @@
 package cn.windor.ddtank.util;
 
 import cn.windor.ddtank.exception.StopTaskException;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class ThreadUtils {
     /**
      * 线程休眠方法，被打断则重新设置打断状态
@@ -26,17 +28,16 @@ public class ThreadUtils {
     public static void delayPersisted(long millis, boolean exitDirect) {
         long start = System.currentTimeMillis();
         try {
-            Thread.sleep(millis);
+            if(millis > 0) {
+                Thread.sleep(millis);
+            }
         } catch (InterruptedException e) {
+            log.warn("在不可中断的方法上中断");
             long need = System.currentTimeMillis() - start;
             while(need > 0) {
                 start = System.currentTimeMillis();
-                try {
-                    Thread.sleep(need);
-                } catch (InterruptedException ex) {
-                    throw new RuntimeException(ex);
-                }
-                need = System.currentTimeMillis() - start;
+                delayPersisted(need, exitDirect);
+                need -= System.currentTimeMillis() - start;
             }
             Thread.currentThread().interrupt();
             if(exitDirect) {

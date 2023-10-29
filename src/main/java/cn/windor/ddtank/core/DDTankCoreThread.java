@@ -49,14 +49,10 @@ public class DDTankCoreThread extends Thread {
 
     @Override
     public void run() {
-        ActiveXComponent compnent = LibraryFactory.getActiveXCompnent();
-        Library dm = new DMLibrary(compnent);
-        Mouse mouse = new DMMouse(compnent);
-        Keyboard keyboard = new DMKeyboard(compnent);
-        this.dm = dm;
-        this.task = new DDTankCoreTask(gameHwnd, dm, mouse, keyboard, gameVersion, properties);
+        this.dm = new DMLibrary(LibraryFactory.getActiveXCompnent());
+        this.task = new DDTankCoreTask(gameHwnd, gameVersion, properties);
         this.coreThread = new Thread(task, getName() + "-exec");
-        if (task.bind()) {
+        if (task.bind(this.dm)) {
             log.info("窗口[{}]绑定成功，即将启动脚本", gameHwnd);
             try {
                 // 启动脚本线程
@@ -67,8 +63,22 @@ public class DDTankCoreThread extends Thread {
                         // 调用dm在出错时往往会弹出窗口，所以需要手动关闭线程
                         log.error("检测到游戏窗口关闭，停止脚本运行");
                         coreThread.interrupt();
+                        coreThread.join();
+                        System.gc();
                         // TODO 后处理
                         break;
+                    }
+                    if(task.getTimes() > 8000) {
+                        log.info("{}已运行达到阈值，即将重启任务", getName());
+                        task.needRestart = true;
+                        try {
+                            coreThread.join();
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                        newTask();
+                        coreThread = new Thread(task);
+                        coreThread.start();
                     }
                     // 执行任务
                     try {
@@ -82,12 +92,18 @@ public class DDTankCoreThread extends Thread {
                         e.printStackTrace();
                     }
                 }
+            } catch (InterruptedException ignored) {
+                // 在调用某些方法的时候发生了中断，直接执行finally即可
             } finally {
-                task.unBind();
+                task.unBind(this.dm);
             }
         } else {
             log.error("窗口[{}]绑定失败，请重新尝试启动脚本，大漠错误码：{}", gameHwnd, dm.getLastError());
         }
+    }
+
+    private synchronized void newTask() {
+        this.task = new DDTankCoreTask(this.task);
     }
 
     public boolean screenshot(String filepath) {
@@ -111,24 +127,35 @@ public class DDTankCoreThread extends Thread {
         task.properties.update(properties);
     }
 
+    public boolean isSuspend() {
+        return task.suspend;
+    }
+
+    /**
+     * 停止操作是线程安全的，因为isAlive()方法并不受线程上下文干扰
+     */
     public void stop(long waitMillis) {
-        task.coreState = CoreThreadStateEnum.WAITING_STOP;
-        if(coreThread.isAlive()) {
+        log.info("{}尝试停止操作", getName());
+        if(coreThread.isAlive() || this.isAlive()) {
+            task.coreState.set(CoreThreadStateEnum.WAITING_STOP);
+        }
+
+        if (coreThread.isAlive()) {
             coreThread.interrupt();
         }
-        if(this.isAlive()) {
+        if (this.isAlive()) {
             this.interrupt();
         }
         try {
             coreThread.join(waitMillis);
             this.join(waitMillis);
-        }catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
-        if(coreThread.isAlive()) {
+        if (coreThread.isAlive()) {
             log.warn("线程{}未在{}ms内关闭", coreThread.getName(), waitMillis);
         }
-        if(this.isAlive()) {
+        if (this.isAlive()) {
             log.warn("线程{}未在{}ms内关闭", this.getName(), waitMillis);
         }
     }
@@ -136,8 +163,23 @@ public class DDTankCoreThread extends Thread {
     public void sendSuspend() {
         synchronized (task) {
             if (!task.suspend) {
-                task.coreState = CoreThreadStateEnum.WAITING_SUSPEND;
-                task.updateLog("暂停运行");
+                switch (task.getCoreState()) {
+                    case NOT_STARTED:
+                    case WAITING_STOP:
+                    case STOP:
+                        task.updateLog("已设定下次启动后暂停");
+                        break;
+                    case RUN:
+                        // 尝试替换状态，若被其他未加task对象锁的代码替换说明这段时间被调用了停止方法
+                        if (!task.coreState.compareAndSet(CoreThreadStateEnum.RUN, CoreThreadStateEnum.WAITING_SUSPEND)) {
+                            task.updateLog("已设定下次启动后暂停");
+                            break;
+                        }
+                    case WAITING_START:
+                    case WAITING_CONTINUE:
+                        task.updateLog("即将暂停运行");
+                        break;
+                }
                 task.suspend = true;
             }
         }
@@ -146,8 +188,25 @@ public class DDTankCoreThread extends Thread {
     public void sendContinue() {
         synchronized (task) {
             if (task.suspend) {
-                task.coreState = CoreThreadStateEnum.WAITING_CONTINUE;
-                task.updateLog("恢复运行");
+                switch (task.getCoreState()) {
+                    case NOT_STARTED:
+                    case WAITING_STOP:
+                    case STOP:
+                        task.updateLog("已取消下次启动后的暂停操作");
+                        break;
+                    case SUSPEND:
+                        // 尝试替换状态，若被其他未加task对象锁的代码替换说明这段时间被调用了停止方法
+                        if (!task.coreState.compareAndSet(CoreThreadStateEnum.SUSPEND, CoreThreadStateEnum.WAITING_CONTINUE)) {
+                            task.updateLog("已取消下次启动后的暂停操作");
+                            break;
+                        } else {
+                            task.updateLog("即将恢复运行");
+                        }
+                    case WAITING_START:
+                    case WAITING_SUSPEND:
+                        task.updateLog("取消暂停操作");
+                        break;
+                }
                 task.suspend = false;
             }
         }
@@ -169,13 +228,16 @@ public class DDTankCoreThread extends Thread {
         return task.getCurrentMsg();
     }
 
-    public int getPasses() {return task.getPasses();}
+    public int getPasses() {
+        return task.getPasses();
+    }
 
-    public long getTimes() {return task.getTimes();}
+    public long getTimes() {
+        return task.getTimes();
+    }
 
-    public LocalDateTime getStartTime() {return task.getStartTime();}
     public boolean restartTask() {
-        if(coreThread.isAlive()) {
+        if (coreThread.isAlive()) {
             return false;
         }
         coreThread = new Thread(task);
@@ -185,6 +247,10 @@ public class DDTankCoreThread extends Thread {
 
 
     public CoreThreadStateEnum getCoreState() {
-        return task.coreState;
+        return task.getCoreState();
+    }
+
+    public long getRunTime() {
+        return task.getRunTime();
     }
 }
