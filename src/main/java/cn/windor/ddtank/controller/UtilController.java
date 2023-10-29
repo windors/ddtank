@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.lang.reflect.Method;
+import java.util.List;
 
 @RestController
 @RequestMapping("/util")
@@ -53,23 +54,31 @@ public class UtilController {
     }
 
     @PostMapping("/suspend")
-    public HttpResponse suspendCoreThread(@RequestParam long hwnd) {
-        DDTankCoreThread thread = threadService.getAllStartedThreadMap().get(hwnd);
-        if (thread == null) {
-            return new HttpResponse(HttpResponseEnum.ILLEGAL_INPUT);
+    public HttpDataResponse<Integer> suspendCoreThread(@RequestParam(name = "hwnd") List<Long> hwnds) {
+        int success = 0;
+        for (Long hwnd : hwnds) {
+            DDTankCoreThread thread = threadService.getAllStartedThreadMap().get(hwnd);
+            if (thread == null) {
+                continue;
+            }
+            thread.sendSuspend();
+            success++;
         }
-        thread.sendSuspend();
-        return HttpResponse.ok();
+        return HttpDataResponse.ok(success);
     }
 
     @PostMapping("/continue")
-    public HttpResponse continueCoreThread(@RequestParam long hwnd) {
-        DDTankCoreThread thread = threadService.getAllStartedThreadMap().get(hwnd);
-        if (thread == null) {
-            return new HttpResponse(HttpResponseEnum.ILLEGAL_INPUT);
+    public HttpResponse continueCoreThread(@RequestParam(name = "hwnd") List<Long> hwnds) {
+        int success = 0;
+        for (Long hwnd : hwnds) {
+            DDTankCoreThread thread = threadService.getAllStartedThreadMap().get(hwnd);
+            if (thread == null) {
+                continue;
+            }
+            thread.sendContinue();
+            success++;
         }
-        thread.sendContinue();
-        return HttpResponse.ok();
+        return HttpDataResponse.ok(success);
     }
 
     /**
@@ -138,20 +147,26 @@ public class UtilController {
     }
 
     @PostMapping("/restart")
-    public HttpResponse restart(@RequestParam long hwnd) {
-        threadService.restart(hwnd);
+    public HttpResponse restart(@RequestParam(name = "hwnd") List<Long> hwnds) {
+        for (Long hwnd : hwnds) {
+            threadService.restart(hwnd);
+        }
         return HttpResponse.ok();
     }
 
     @PostMapping("/stop")
-    public HttpResponse stop(@RequestParam long hwnd) {
-        threadService.stop(hwnd);
+    public HttpResponse stop(@RequestParam(name = "hwnd") List<Long> hwnds) {
+        for (Long hwnd : hwnds) {
+            threadService.stop(hwnd);
+        }
         return HttpResponse.ok();
     }
 
     @PostMapping("/remove")
-    public HttpResponse remove(@RequestParam long hwnd) {
-        threadService.remove(hwnd);
+    public HttpResponse remove(@RequestParam(name = "hwnd") List<Long> hwnds) {
+        for (Long hwnd : hwnds) {
+            threadService.remove(hwnd);
+        }
         return HttpResponse.ok();
     }
 }

@@ -55,15 +55,15 @@
          th:style="'background-image:url(/static/img/bg/void_system_by_elreviae_d8wihvy.jpg);'"
          th:if="${startedMap.size() > 0}"></div>
 </div>
-<div class="row index-main">
-    <div class="alert alert-warning alert-dismissible fade in" role="alert"
-         th:if="${waitStartMap.keySet().size() == 0 && startedMap.keySet().size() == 0}">
+<div class="row index-main" th:if="${waitStartMap.keySet().size() == 0 && startedMap.keySet().size() == 0}">
+    <div class="alert alert-warning alert-dismissible fade in" role="alert">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>
         当前还未标记任何窗口哦，请使用快捷键<kbd>alt + 1</kbd>标记游戏窗口吧。已标记？请 <a href="">刷新</a>
     </div>
-
+</div>
+<div class="row index-main">
     <!--导航栏-->
     <div th:if="${waitStartMap.keySet().size() > 0}">
         <ul class="nav nav-tabs" role="tablist">
@@ -162,43 +162,48 @@
     <!--        </button>-->
     <!--        当前还无任何脚本在启动中哦~。已启动？请 <a href="">刷新</a>-->
     <!--    </div>-->
-
+</div>
+<div class="row index-main">
     <div th:if="${startedMap.keySet().size() > 0}">
-        <table id="started-table" class="table" >
-            <caption>已启动脚本</caption>
-            <tr>
-                <th class="text-center"><input type="checkbox"/></th>
-                <th class="text-center">句柄</th>
-                <th class="text-center">脚本名称</th>
-                <th class="text-center">当前状态</th>
-                <th class="text-center">最后消息</th>
-                <th class="text-center">选择副本</th>
-                <th class="text-center">通关次数</th>
-                <th class="text-center">循环次数</th>
-                <th class="text-center">开始时间</th>
-                <th class="text-center">操作</th>
-            </tr>
-            <tr th:each="hwnd:${startedMap.keySet()}">
-                <td><input type="checkbox"/></td>
-                <td th:text="${hwnd}"></td>
-                <td th:text="${startedMap.get(hwnd).name}"></td>
-                <td th:text="${startedMap.get(hwnd).coreState.getMsg()}"></td>
-                <td th:text="${startedMap.get(hwnd).getCurrentMsg()}"></td>
-                <td>[[${startedMap.get(hwnd).properties.levelLine}]]-[[${startedMap.get(hwnd).properties.levelRow}]]</td>
-                <td th:text="${startedMap.get(hwnd).passes}"></td>
-                <td th:text="${startedMap.get(hwnd).times}"></td>
-                <td th:text="${startedMap.get(hwnd).startTime}"></td>
-                <td>
-                    <a class="btn btn-default" th:href="@{/config/run/{hwnd}(hwnd=${hwnd})}">配置</a>
-                    <a class="btn btn-info" th:href="@{/detail/run/{hwnd}(hwnd=${hwnd})}">详细</a>
-                    <button class="btn btn-danger remove-btn" th:onclick="stop([[${hwnd}]])">停止</button>
-                    <button class="btn btn-warning restart-btn" th:onclick="restart([[${hwnd}]])">重启</button>
-                    <button class="btn btn-danger remove-btn" th:onclick="remove([[${hwnd}]])">移除</button>
-                </td>
-            </tr>
-        </table>
-        <div class="col-md-offset-6">
-            <button class="btn">操作</button>
+        <form id="ddt">
+            <table id="started-table" class="table" >
+                <caption>已启动脚本</caption>
+                <tr>
+                    <th class="text-center"><input type="checkbox"/></th>
+                    <th class="text-center">句柄</th>
+                    <th class="text-center">脚本名称</th>
+                    <th class="text-center">当前状态</th>
+                    <th class="text-center">最后消息</th>
+                    <th class="text-center">选择副本</th>
+                    <th class="text-center">通关次数</th>
+                    <th class="text-center">循环次数</th>
+                    <th class="text-center">运行时间</th>
+                    <th class="text-center">操作</th>
+                </tr>
+                <tr th:each="hwnd:${startedMap.keySet()}">
+                    <td><input type="checkbox" name="hwnd" th:value="${hwnd}"/></td>
+                    <td th:text="${hwnd}"></td>
+                    <td th:text="${startedMap.get(hwnd).name}"></td>
+                    <td th:text="${startedMap.get(hwnd).coreState.getMsg()}"></td>
+                    <td th:text="${startedMap.get(hwnd).getCurrentMsg()}"></td>
+                    <td>[[${startedMap.get(hwnd).properties.levelLine}]]-[[${startedMap.get(hwnd).properties.levelRow}]]</td>
+                    <td th:text="${startedMap.get(hwnd).passes}"></td>
+                    <td th:text="${startedMap.get(hwnd).times}"></td>
+                    <td th:text="${startedMap.get(hwnd).runTime}"></td>
+                    <td>
+                        <a class="btn btn-default" th:href="@{/config/run/{hwnd}(hwnd=${hwnd})}">配置</a>
+                        <a class="btn btn-info" th:href="@{/detail/run/{hwnd}(hwnd=${hwnd})}">详细</a>
+                    </td>
+                </tr>
+            </table>
+        </form>
+
+        <div class="pull-right">
+            <button id="ddt-suspend" class="btn btn-primary remove-btn">暂停</button>
+            <button id="ddt-continue" class="btn btn-default remove-btn">继续</button>
+            <button id="ddt-stop" class="btn btn-danger remove-btn">停止</button>
+            <button id="ddt-restart" class="btn btn-warning restart-btn">重启</button>
+            <button id="ddt-remove" class="btn btn-danger remove-btn">移除</button>
         </div>
     </div>
 
@@ -211,86 +216,16 @@
             <button id="danger" class="btn btn-danger">秘</button>
         </div>
     </div>
+    <script>
+        $(function () {
+            $("#danger").click(function () {
+                windorAlert("surprise", "啊 :)")
+                $("#danger-data").html("<source src='/static/music/surprise.mp3'/>");
+                $("#danger-data")[0].play();
+            })
+        })
+    </script>
 </div>
 </body>
-<script>
-    $(".start-btn").click(function () {
-        let tr = $(this).parent().parent();
-        let select = tr.find("select");
-        postAjax("/util/start", {
-            hwnd: $(tr.find("td")[0]).html(),
-            version: $(select[0]).val(),
-            propertiesMode: $(select[1]).val(),
-            name: $(tr.find("input")[0]).val()
-        }, function (data) {
-            if (data.data) {
-                windorAlert('提示', '已尝试启动脚本');
-            } else {
-                windorAlert('提示', "脚本已在运行，请勿重复启动");
-            }
-        })
-    });
-
-    function restart(hwnd) {
-        postAjax("/util/restart", {hwnd: hwnd}, function (data) {
-            windorAlert('提示', '已重启脚本')
-        });
-    }
-
-    function remove(hwnd) {
-        postAjax("/util/remove", {hwnd: hwnd}, function (data) {
-            windorAlert('提示', '已移除脚本')
-        });
-    }
-
-    function stop(hwnd) {
-        postAjax("/util/stop", {hwnd: hwnd}, function (data) {
-            windorAlert('提示', '已停止脚本')
-        })
-    }
-
-    $(".ddtank-start-form").submit(function () {
-        postAjax("/util/start", $(this).serialize(), function (data) {
-            windorAlert('提示', '脚本启动成功！');
-        });
-        return false;
-    })
-
-    $("#start-all-form").submit(function () {
-        let allForm = $(this);
-        // 版本配置
-        $(".ddtank-start-form select[name='version']").val(allForm.find("select[name='version']").val());
-        $(".ddtank-start-form select[name='propertiesMode']").val(allForm.find("select[name='propertiesMode']").val());
-        $(".ddtank-start-form select[name='levelLine']").val(allForm.find("select[name='levelLine']").val());
-        $(".ddtank-start-form select[name='levelRow']").val(allForm.find("select[name='levelRow']").val());
-        $(".ddtank-start-form input[name='levelDifficulty']").val(allForm.find("input[name='levelDifficulty']").val());
-        $(".ddtank-start-form input[name='attackSkill']").val(allForm.find("input[name='attackSkill']").val());
-        $(".ddtank-start-form select[name='enemyFindMode']").val(allForm.find("select[name='enemyFindMode']").val());
-        $(".ddtank-start-form input[name='isHandleCalcDistance']").attr("checked", false);
-        if(allForm.find("input[name='isHandleCalcDistance']").val() === 'true') {
-            $(".ddtank-start-form input[name='isHandleCalcDistance'][value='true']").attr("checked", true);
-        }else{
-            $(".ddtank-start-form input[name='isHandleCalcDistance'][value='false']").attr("checked", true);
-        }
-        $(".ddtank-start-form input[name='handleDistance']").val(allForm.find("input[name='handleDistance']").val());
-        $(".ddtank-start-form").submit();
-        windorAlert('提示', '已尝试一键启动');
-        return false;
-    })
-</script>
-<script>
-    $(function () {
-        $("#danger").click(function () {
-            windorAlert("surprise", "啊 :)")
-            $("#danger-data").html("<source src='/static/music/surprise.mp3'/>");
-            $("#danger-data")[0].play();
-        })
-    })
-
-    function freshSlider() {
-        $(".sliderlens.horiz").css("width", "100%");
-        $(".sliderlens.horiz").css("height", "34px");
-        $(".handle .slider-img").css("height", "auto");
-    }
-</script>
+<script src="/static/js/index.js"></script>
 </html>

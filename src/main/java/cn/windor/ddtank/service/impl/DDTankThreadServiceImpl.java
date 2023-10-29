@@ -122,7 +122,7 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
     @Override
     public void stop(long hwnd) {
         DDTankCoreThread thread = threadMap.get(hwnd);
-        thread.stop(3000);
+        thread.tryStop();
     }
 
 
@@ -145,7 +145,7 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
         }
 
         if(thread.isAlive()) {
-            thread.stop(3000);
+            thread.tryStop();
         }
 
         thread = new DDTankCoreThread(thread);
@@ -161,7 +161,7 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
             return false;
         }
         if(coreThread.isAlive()) {
-            coreThread.stop(3000);
+            coreThread.tryStop();
         }
         return true;
     }

@@ -135,17 +135,7 @@ public class DDTankCoreThread extends Thread {
      * 停止操作是线程安全的，因为isAlive()方法并不受线程上下文干扰
      */
     public void stop(long waitMillis) {
-        log.info("{}尝试停止操作", getName());
-        if(coreThread.isAlive() || this.isAlive()) {
-            task.coreState.set(CoreThreadStateEnum.WAITING_STOP);
-        }
-
-        if (coreThread.isAlive()) {
-            coreThread.interrupt();
-        }
-        if (this.isAlive()) {
-            this.interrupt();
-        }
+        tryStop();
         try {
             coreThread.join(waitMillis);
             this.join(waitMillis);
@@ -157,6 +147,20 @@ public class DDTankCoreThread extends Thread {
         }
         if (this.isAlive()) {
             log.warn("线程{}未在{}ms内关闭", this.getName(), waitMillis);
+        }
+    }
+
+    public void tryStop() {
+        log.info("{}尝试停止操作", getName());
+        if(coreThread.isAlive() || this.isAlive()) {
+            task.coreState.set(CoreThreadStateEnum.WAITING_STOP);
+        }
+
+        if (coreThread.isAlive()) {
+            coreThread.interrupt();
+        }
+        if (this.isAlive()) {
+            this.interrupt();
         }
     }
 
@@ -198,12 +202,13 @@ public class DDTankCoreThread extends Thread {
                         // 尝试替换状态，若被其他未加task对象锁的代码替换说明这段时间被调用了停止方法
                         if (!task.coreState.compareAndSet(CoreThreadStateEnum.SUSPEND, CoreThreadStateEnum.WAITING_CONTINUE)) {
                             task.updateLog("已取消下次启动后的暂停操作");
-                            break;
                         } else {
                             task.updateLog("即将恢复运行");
                         }
-                    case WAITING_START:
+                        break;
                     case WAITING_SUSPEND:
+                        task.coreState.compareAndSet(CoreThreadStateEnum.WAITING_SUSPEND, CoreThreadStateEnum.RUN);
+                    case WAITING_START:
                         task.updateLog("取消暂停操作");
                         break;
                 }
