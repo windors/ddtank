@@ -80,18 +80,19 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
     public synchronized boolean start(long hwnd, String version, String name, DDTankConfigProperties startProperties) {
         if (threadMap.get(hwnd) != null) {
             DDTankCoreThread coreThread = threadMap.get(hwnd);
-            if(!coreThread.restartTask()) {
+            if (!coreThread.restartTask()) {
                 log.warn("请勿重复启动，当前窗口已正在运行脚本");
             }
             return false;
         } else {
-            // 2. 创建任务
-            DDTankCoreThread thread = new DDTankCoreThread(hwnd, version, startProperties, name);
+            DDTankStartParam startParam = waitStartMap.remove(hwnd);
+            startParam.setName(name);
+            // 1. 创建任务
+            DDTankCoreThread thread = new DDTankCoreThread(hwnd, version, startProperties, startParam);
             threadMap.put(hwnd, thread);
 
-            // 3. 启动线程
+            // 2. 启动线程
             thread.start();
-            waitStartMap.remove(hwnd);
             return true;
         }
     }
@@ -99,22 +100,36 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
     @Override
     public Long mark() {
         Long hwnd = dm.getMousePointWindow();
-        if ("MacromediaFlashPlayerActiveX".equals(dm.getWindowClass(hwnd))) {
+        String className = dm.getWindowClass(hwnd);
+        if ("MacromediaFlashPlayerActiveX".equals(className)
+                // 360浏览器/qq浏览器极速模式
+                || "Chrome_RenderWidgetHostHWND".equals(className)
+                // 360游戏大厅前台模式
+                || "NativeWindowClass".equals(className)) {
             synchronized (this) {
                 DDTankCoreThread coreThread = threadMap.get(hwnd);
-                if(coreThread != null) {
+                if (coreThread != null) {
                     log.info("窗口[{}]已记录在首页中，对应脚本名称为[{}]；若需启动当前脚本请在首页点击重启按钮；若需要更换版本配置请在首页手动将脚本移除后再次尝试", hwnd, coreThread.getName());
-                }
-                else if (waitStartMap.get(hwnd) == null) {
-                    waitStartMap.put(hwnd, new DDTankStartParam());
-                    log.info("已成功记录当前窗口[{}]，请前往配置页面设置启动参数", hwnd);
+                } else if (waitStartMap.get(hwnd) == null) {
+                    if ("MacromediaFlashPlayerActiveX".equals(className) || "NativeWindowClass".equals(className)) {
+                        log.info("已成功记录当前窗口[{}]，请前往配置页面设置启动参数", hwnd);
+                        waitStartMap.put(hwnd, new DDTankStartParam());
+                    } else {
+                        log.warn("当前窗口[{}]为前台模式（脚本启动后鼠标和键盘操作都将变为前台），请勿随意调整窗口大小和最小化。若需要使用后台模式请将浏览器设置为兼容模式", hwnd);
+                        hwnd = dm.getWindow(hwnd, 7);
+                        if (waitStartMap.get(hwnd) == null) {
+                            waitStartMap.put(hwnd, new DDTankStartParam(true));
+                            log.info("已记录当前顶层窗口{}", hwnd);
+                        } else {
+                            log.info("当前标签栏{}已被记录，前台模式多开请将标签栏拖出为一个新的窗口", hwnd);
+                        }
+                    }
                 } else {
                     log.info("已记录过当前窗口[{}]，请前往配置页面设置启动参数", hwnd);
                 }
             }
         } else {
-            hwnd = null;
-            log.warn("当前窗口类名不为[MacromediaFlashPlayerActiveX]！");
+            log.warn("当前窗口类名不为[MacromediaFlashPlayerActiveX]且不为[Chrome_RenderWidgetHostHWND]！");
         }
         return hwnd;
     }
@@ -122,9 +137,16 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
     @Override
     public void stop(long hwnd) {
         DDTankCoreThread thread = threadMap.get(hwnd);
-        thread.tryStop();
+        if(thread == null) {
+            hwnd = dm.getWindow(hwnd, 7);
+            thread = threadMap.get(hwnd);
+        }
+        if(thread != null) {
+            thread.tryStop();
+        }else {
+            log.error("当前窗口不在脚本内记录");
+        }
     }
-
 
 
     @Override
@@ -140,11 +162,11 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
     @Override
     public boolean restart(long hwnd) {
         DDTankCoreThread thread = threadMap.get(hwnd);
-        if(thread == null) {
+        if (thread == null) {
             return false;
         }
 
-        if(thread.isAlive()) {
+        if (thread.isAlive()) {
             thread.tryStop();
         }
 
@@ -157,10 +179,10 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
     @Override
     public boolean remove(long hwnd) {
         DDTankCoreThread coreThread = threadMap.remove(hwnd);
-        if(coreThread == null) {
+        if (coreThread == null) {
             return false;
         }
-        if(coreThread.isAlive()) {
+        if (coreThread.isAlive()) {
             coreThread.tryStop();
         }
         return true;

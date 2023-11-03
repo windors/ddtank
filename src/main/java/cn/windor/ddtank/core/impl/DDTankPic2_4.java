@@ -97,7 +97,7 @@ public class DDTankPic2_4 extends DDTankPic2_3 {
 
 
             // 使用罐子
-            List<Point> waitOpens = dm.findPicEx(412, 121, 735, 442, path + "蛋2-罐子1.bmp|" + path + "蛋2-罐子2.bmp", "101010", 0.8, 0);
+            List<Point> waitOpens = dm.findPicEx(412, 121, 735, 442, path + "蛋2-罐子1.bmp|" + path + "蛋2-罐子2.bmp|" + path + "蛋2-罐子3.bmp", "101010", 0.8, 0);
             if(waitOpens != null) {
                 for (Point waitOpen : waitOpens) {
                     if(waitOpen.isCloseTo(putInBag, 130, 90)) {

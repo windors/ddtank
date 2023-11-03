@@ -25,7 +25,6 @@ public class DDTankPic10_4 implements DDTankPic {
 
     protected Mouse mouse;
 
-
     protected BinaryPicProcess binaryPicProcess;
     public DDTankPic10_4(Library dm, String path, DDTankConfigProperties properties, Mouse mouse) {
         this.dm = dm;
@@ -51,9 +50,9 @@ public class DDTankPic10_4 implements DDTankPic {
     @Override
     public boolean isMyRound() {
         if (dm.findPic(955, 160, 990, 200,
-                path + "蛋10.4-出手判定1.bmp", "000000", 0.7, 0, null)
+                path + "蛋10.4-出手判定2.bmp", "000000", 0.7, 0, null)
                 || dm.findPic(955, 160, 990, 200,
-                path + "蛋10.4-出手判定2.bmp", "000000", 0.7, 0, null)) {
+                path + "蛋10.4-出手判定1.bmp", "000000", 0.7, 0, null)) {
             return dm.findPic(476, 158, 525, 176,
                     path + "蛋10.4-该出手了.bmp", "202020", 0.5, 0, null)
                     || dm.findPic(476, 158, 525, 176,
@@ -66,8 +65,8 @@ public class DDTankPic10_4 implements DDTankPic {
 
     @Override
     public boolean needActiveWindow() {
-        if (dm.findPic(450, 250, 530, 330,
-                path + "蛋10.4-需要激活窗口.bmp", "303030", 0.8, 0, null)) {
+        if (dm.findPic(463, 339, 541, 363,
+                path + "需要激活窗口.bmp", "202020", 0.8, 0, null)) {
             mouse.moveAndClick(84, 578);
             return true;
         }
@@ -79,7 +78,8 @@ public class DDTankPic10_4 implements DDTankPic {
         Point point = new Point();
         if (dm.findPic(500, 400, 740, 500,
                 path + "蛋10.4-随机地图.bmp", "101010", 0.8, 0, point)) {
-            mouse.moveAndClick(point.getX() + 10, point.getY() + 10);
+            point.setOffset(10, 10);
+            mouse.moveAndClick(point);
             delay(300, true);
         }
         return dm.findPic(200, 30, 320, 80,
@@ -91,7 +91,8 @@ public class DDTankPic10_4 implements DDTankPic {
         Point point = new Point();
         if (dm.findPic(900, 430, 990, 550,
                 path + "蛋10.4-开始1.bmp", "101010", 0.9, 0, point)) {
-            mouse.moveAndClick(point.getX() + 10, point.getY() + 10);
+            point.setOffset(10, 10);
+            mouse.moveAndClick(point);
             return true;
         }
         return false;
@@ -102,8 +103,7 @@ public class DDTankPic10_4 implements DDTankPic {
         Point point = new Point();
         if (dm.findPic(900, 430, 990, 550,
                 path + "蛋10.4-准备.bmp", "101010", 0.9, 0, point)) {
-            mouse.moveTo(point.getX(), point.getY());
-            mouse.leftClick();
+            mouse.moveAndClick(point);
             return true;
         }
         return false;
@@ -129,7 +129,7 @@ public class DDTankPic10_4 implements DDTankPic {
             result = true;
         }
         Point point = new Point();
-        if (dm.findPic(900, 330, 980, 400,
+        if (dm.findPic(82, 53, 981, 545,
                 path + "蛋10.4-tip.bmp", "101010", 0.8, 0, point)) {
             point.setOffset(20, 10);
             mouse.moveAndClick(point);
@@ -155,8 +155,10 @@ public class DDTankPic10_4 implements DDTankPic {
     public boolean needDraw() {
         List<Point> cardList;
         boolean over = false;
+        boolean find = false;
         while ((cardList = dm.findPicEx(88, 59, 904, 571,
                 path + "蛋10.4-卡牌.bmp", "101010", 0.8, 0)) != null) {
+            find = true;
             if (!over) {
                 for (int i = 0; i < 10; i++) {
                     Point point = cardList.get((int) (System.currentTimeMillis() % cardList.size()));
@@ -164,7 +166,7 @@ public class DDTankPic10_4 implements DDTankPic {
                     delay(100, true);
                 }
 
-                if (dm.findPic(650, 200, 750, 280, "蛋10.4-翻第三张牌.bmp", "101010", 0.8, 0, null)) {
+                if (dm.findPic(650, 200, 750, 280, path + "蛋10.4-翻第三张牌.bmp", "101010", 0.8, 0, null)) {
                     over = true;
                     if (properties.getIsThirdDraw()) {
                         mouse.moveAndClick(400, 340);
@@ -174,7 +176,7 @@ public class DDTankPic10_4 implements DDTankPic {
             }
             delay(1000, true);
         }
-        return false;
+        return find;
     }
 
     @Override
@@ -213,28 +215,36 @@ public class DDTankPic10_4 implements DDTankPic {
     @Override
     public Point getEnemyPosition() {
         Point result = new Point();
-        if (dm.findColor(properties.getStaticX1(), properties.getStaticY1(), properties.getStaticX2(), properties.getStaticY2(),
-                properties.getColorEnemy(), 1, properties.getEnemyFindMode(), result)) {
-            switch (properties.getEnemyFindMode()) {
-                case 0:
-                    break;
-                case 1:
-                case 7:
-                    result.setOffset(-1, -6);
-                    break;
-                case 2:
-                case 6:
-                    result.setOffset(-4, 0);
-                    break;
-                case 3:
-                case 8:
-                    result.setOffset(-3, -6);
-                    break;
+        String[] colors = properties.getColorEnemy().split("\\|");
+        for (String color : colors) {
+            if (dm.findColor(properties.getStaticX1(), properties.getStaticY1(), properties.getStaticX2(), properties.getStaticY2(),
+                    color, 1, properties.getEnemyFindMode(), result)) {
+                switch (properties.getEnemyFindMode()) {
+                    case 0:
+                    case 5:
+                        // 找的是左上角
+                        result.setOffset(2, 2);
+                        break;
+                    case 1:
+                    case 7:
+                        // 找的是左下角
+                        result.setOffset(2, -2);
+                        break;
+                    case 2:
+                    case 6:
+                        // 找的是右上角
+                        result.setOffset(-2, 2);
+                        break;
+                    case 3:
+                    case 8:
+                        // 找的是右下角
+                        result.setOffset(-2, -2);
+                        break;
+                }
+            return result;
             }
-        } else {
-            return null;
         }
-        return result;
+        return null;
     }
 
     @Override
@@ -265,51 +275,8 @@ public class DDTankPic10_4 implements DDTankPic {
 
     @Override
     public double calcUnitDistance() {
-        int count = 0;
-        Point result = new Point();
-        int[] arr = new int[5];
-        // 计算多次，将结果存入arr中，最终取平均值
-        for (int i = 0; i < arr.length; i++) {
-            arr[i] = -1;
-            // 多次检测防止未检测到屏字
-            for (int j = 0; j < 5; j++) {
-                if (dm.findStr(properties.getStaticX1(), properties.getStaticY1(), properties.getStaticX2(), properties.getStaticY2(),
-                        "屏", "999999-000000", 1, result)) {
-                    int x = result.getX(), y = result.getY();
-                    count = 1;
-                    while (x < properties.getStaticX2() && dm.findColor(x, y, properties.getStaticX2(), y + 1, "999999-000000", 1, 0, null)) {
-                        count++;
-                        x++;
-                    }
-                    arr[i] = count;
-                    break;
-                }
-            }
-        }
-        Arrays.sort(arr);
-
-        // 选择出出现元素最多的计算结果
-        int times = 0, nowDistance = -1, maxTimes = -1, maxDistance = -1;
-        for (int i = 0; i < arr.length; i++) {
-            if (arr[i] == -1) {
-                continue;
-            }
-            if (arr[i] == nowDistance) {
-                times++;
-            } else {
-                times = 1;
-                nowDistance = arr[i];
-            }
-            if (times > maxTimes) {
-                maxTimes = times;
-                maxDistance = nowDistance;
-            }
-        }
-        if (maxDistance == -1) {
-            log.error("屏距自动检测失败！本轮副本使用使用手动屏距！");
-            return properties.getHandleDistance();
-        }
-
-        return (double) maxDistance / 10;
+        double rectangleWidth = binaryPicProcess.findRectangleWidth(properties.getStaticX1(), properties.getStaticY1(), properties.getStaticX2(), properties.getStaticY2(),
+                "999999", 1);
+        return rectangleWidth / 10;
     }
 }

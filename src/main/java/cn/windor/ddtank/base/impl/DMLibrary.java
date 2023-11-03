@@ -3,25 +3,14 @@ package cn.windor.ddtank.base.impl;
 import cn.windor.ddtank.base.Library;
 import cn.windor.ddtank.base.Point;
 import com.jacob.activeX.ActiveXComponent;
-import com.jacob.com.ComThread;
 import com.jacob.com.Variant;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-
 import com.jacob.com.Dispatch;
-
-import java.awt.image.BufferedImageFilter;
-import java.awt.image.Raster;
-import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import static cn.windor.ddtank.util.ThreadUtils.delay;
 
 /**
  * 大漠库，当前版本必须先进行注册
@@ -29,6 +18,10 @@ import static cn.windor.ddtank.util.ThreadUtils.delay;
 @Slf4j
 public class DMLibrary implements Library {
     private ActiveXComponent dm;
+
+    private int offsetX;
+
+    private int offsetY;
 
     private final Map<Object, Variant> paramMap = new ConcurrentHashMap<>();
     private final Map<Object, Variant> varParamMap = new ConcurrentHashMap<>();
@@ -68,7 +61,7 @@ public class DMLibrary implements Library {
 
     @Override
     public boolean capture(int x1, int y1, int x2, int y2, String filepath) {
-        return Dispatch.call(dm, "capture", getParam(x1), getParam(y1), getParam(x2), getParam(y2), getParam(filepath)).getInt() == 1;
+        return Dispatch.call(dm, "capture", getParam(x1 +  + offsetX), getParam(y1 + offsetY), getParam(x2 + offsetX), getParam(y2 + offsetY), getParam(filepath)).getInt() == 1;
     }
 
     @Override
@@ -76,7 +69,7 @@ public class DMLibrary implements Library {
         int[] result = new int[2];
         Variant width = getParam(-1, true);
         Variant height = getParam(-2, true);
-        if (Dispatch.call(dm, "getClientSize", getParam(hwnd), getParam(width), getParam(height)).getInt() == 1) {
+        if (Dispatch.call(dm, "getClientSize", getParam(hwnd), width, height).getInt() == 1) {
             result[0] = width.getInt();
             result[1] = height.getInt();
         } else {
@@ -115,7 +108,7 @@ public class DMLibrary implements Library {
      * @return 颜色字符串(注意这里都是小写字符 ， 和工具相匹配)
      */
     public String getColor(int x, int y) {
-        return Dispatch.call(dm, "getColor", getParam(x), getParam(y)).getString();
+        return Dispatch.call(dm, "getColor", getParam(x + offsetX), getParam(y + offsetY)).getString();
     }
 
     /**
@@ -124,12 +117,12 @@ public class DMLibrary implements Library {
      * @return 颜色字符串(注意这里都是小写字符 ， 和工具相匹配)
      */
     public String getColorBGR(int x, int y) {
-        return Dispatch.call(dm, "getColorBGR", getParam(x), getParam(y)).getString();
+        return Dispatch.call(dm, "getColorBGR", getParam(x + offsetX), getParam(y + offsetY)).getString();
     }
 
     @Override
     public String getAveRGB(int x1, int y1, int x2, int y2) {
-        return Dispatch.call(dm, "getAveRGB", getParam(x1), getParam(y1), getParam(x2), getParam(y2)).getString();
+        return Dispatch.call(dm, "getAveRGB", getParam(x1 + offsetX), getParam(y1 + offsetY), getParam(x2 + offsetX), getParam(y2 + offsetY)).getString();
     }
 
     /**
@@ -151,14 +144,14 @@ public class DMLibrary implements Library {
      */
     public boolean findColor(int x1, int y1, int x2, int y2, String color, double sim, int dir, Point result) {
 
-        if (Dispatch.call(dm, "findColor", getParam(x1), getParam(y1), getParam(x2), getParam(y2),
+        if (Dispatch.call(dm, "findColor", getParam(x1 + offsetX), getParam(y1 + offsetY), getParam(x2 + offsetX), getParam(y2 + offsetY),
                 getParam(color), getParam(sim), getParam(dir), getParam(-1), getParam(-1)).getInt() == 0) {
             return false;
         } else {
             if (result != null) {
                 Variant resultX = getParam(-1, true);
                 Variant resultY = getParam(-2, true);
-                if(Dispatch.call(dm, "findColor", getParam(x1), getParam(y1), getParam(x2), getParam(y2),
+                if(Dispatch.call(dm, "findColor", getParam(x1 + offsetX), getParam(y1 + offsetY), getParam(x2 + offsetX), getParam(y2 + offsetY),
                         getParam(color), getParam(sim), getParam(dir), resultX, resultY).getInt() != 0)
                 result.setX(resultX.getInt());
                 result.setY(resultY.getInt());
@@ -183,7 +176,7 @@ public class DMLibrary implements Library {
      * @return 返回所有颜色信息的坐标值, 然后通过GetResultCount等接口来解析 (由于内存限制,返回的颜色数量最多为1800个左右)
      */
     public String[] findColorEx(int x1, int y1, int x2, int y2, String color, double sim, int dir) {
-        String findColorEx = Dispatch.call(dm, "findColorEx", getParam(x1), getParam(y1), getParam(x2), getParam(y2),
+        String findColorEx = Dispatch.call(dm, "findColorEx", getParam(x1 + offsetX), getParam(y1 + offsetY), getParam(x2 + offsetX), getParam(y2 + offsetY),
                 getParam(color), getParam(sim), getParam(dir)).getString();
         if ("".equals(findColorEx)) {
             return new String[0];
@@ -219,9 +212,8 @@ public class DMLibrary implements Library {
      * @return 是否找到了图片
      */
     public boolean findPic(int x1, int y1, int x2, int y2, String picName, String deltaColor, double sim, int dir, Point result) {
-
         if (Dispatch.call(dm, "findPic",
-                getParam(x1), getParam(y1), getParam(x2), getParam(y2),
+                getParam(x1 + offsetX), getParam(y1 + offsetY), getParam(x2 + offsetX), getParam(y2 + offsetY),
                 getParam(picName), getParam(deltaColor),
                 getParam(sim), getParam(dir), getParam(-1), getParam(-1)).getInt() == -1) {
             return false;
@@ -230,7 +222,7 @@ public class DMLibrary implements Library {
                 Variant resultX = getParam(-1, true);
                 Variant resultY = getParam(-2, true);
                 if(Dispatch.call(dm, "findPic",
-                        getParam(x1), getParam(y1), getParam(x2), getParam(y2),
+                        getParam(x1 + offsetX), getParam(y1 + offsetY), getParam(x2 + offsetX), getParam(y2 + offsetY),
                         getParam(picName), getParam(deltaColor),
                         getParam(sim), getParam(dir), resultX, resultY).getInt() != -1) {
                     result.setX(resultX.getInt());
@@ -245,7 +237,8 @@ public class DMLibrary implements Library {
 
     @Override
     public List<Point> findPicEx(int x1, int y1, int x2, int y2, String picName, String deltaColor, double sim, int dir) {
-        String dmResultStr = Dispatch.call(dm, "findPicEx", getParam(x1), getParam(y1), getParam(x2), getParam(y2),
+        Dispatch.call(dm, "loadPic", getParam(picName));
+        String dmResultStr = Dispatch.call(dm, "findPicEx", getParam(x1 + offsetX), getParam(y1 + offsetY), getParam(x2 + offsetX), getParam(y2 + offsetY),
                 getParam(picName), getParam(deltaColor), getParam(sim), getParam(dir)).getString();
         if ("".equals(dmResultStr)) {
             return null;
@@ -259,6 +252,11 @@ public class DMLibrary implements Library {
         return result;
     }
 
+    @Override
+    public boolean freePic(String picName) {
+        return Dispatch.call(dm, "freePic", getParam(picName)).getInt() == 1;
+    }
+
     /**
      * @param str         待查找的字符串,可以是字符串组合，比如"长安|洛阳|大雁塔",中间用"|"来分割字符串
      * @param colorFormat 颜色格式串, 可以包含换行分隔符,语法是","后加分割字符串. 具体可以查看下面的示例 .注意，RGB和HSV,以及灰度格式都支持.
@@ -268,14 +266,14 @@ public class DMLibrary implements Library {
      */
     public boolean findStr(int x1, int y1, int x2, int y2, String str, String colorFormat, double sim, Point result) {
 
-        if (Dispatch.call(dm, "findStr", getParam(x1), getParam(y1), getParam(x2), getParam(y2),
+        if (Dispatch.call(dm, "findStr", getParam(x1 + offsetX), getParam(y1 + offsetY), getParam(x2 + offsetX), getParam(y2 + offsetY),
                 getParam(str), getParam(colorFormat), getParam(sim), getParam(-1), getParam(-1)).getInt() == -1) {
             return false;
         } else {
             if (result != null) {
                 Variant resultX = getParam(-1, true);
                 Variant resultY = getParam(-2, true);
-                if (Dispatch.call(dm, "findStr", getParam(x1), getParam(y1), getParam(x2), getParam(y2),
+                if (Dispatch.call(dm, "findStr", getParam(x1 + offsetX), getParam(y1 + offsetY), getParam(x2 + offsetX), getParam(y2 + offsetY),
                         getParam(str), getParam(colorFormat), getParam(sim), resultX, resultY).getInt() != -1) {
                     result.setX(resultX.getInt());
                     result.setY(resultY.getInt());
@@ -318,7 +316,7 @@ public class DMLibrary implements Library {
      * @return 识别到的字符串
      */
     public String ocr(int x1, int y1, int x2, int y2, String colorFormat, double sim) {
-        return Dispatch.call(dm, "ocr", getParam(x1), getParam(y1), getParam(x2), getParam(y2),
+        return Dispatch.call(dm, "ocr", getParam(x1 + offsetX), getParam(y1 + offsetY), getParam(x2 + offsetX), getParam(y2 + offsetY),
                 getParam(colorFormat), getParam(sim)).getString();
     }
 
@@ -348,6 +346,27 @@ public class DMLibrary implements Library {
     @Override
     public boolean setWindowState(long hwnd, int state) {
         return Dispatch.call(dm, "setWindowState", getParam(hwnd), getParam(state)).getInt() == 1;
+    }
+
+    @Override
+    public void setFindOffset(int x, int y) {
+        this.offsetX = x;
+        this.offsetY = y;
+    }
+
+    @Override
+    public int getOffsetX() {
+        return this.offsetX;
+    }
+
+    @Override
+    public int getOffsetY() {
+        return this.offsetY;
+    }
+
+    @Override
+    public long getWindow(long hwnd, int flag) {
+        return Dispatch.call(dm, "getWindow", getParam(hwnd), getParam(flag)).getInt();
     }
 
     public static void main(String[] args) throws IOException {

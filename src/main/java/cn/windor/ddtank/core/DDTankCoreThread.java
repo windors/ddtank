@@ -8,6 +8,7 @@ import cn.windor.ddtank.base.impl.DMLibrary;
 import cn.windor.ddtank.base.impl.DMMouse;
 import cn.windor.ddtank.base.impl.LibraryFactory;
 import cn.windor.ddtank.config.DDTankConfigProperties;
+import cn.windor.ddtank.config.DDTankStartParam;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
 import com.jacob.activeX.ActiveXComponent;
 import lombok.Getter;
@@ -26,6 +27,8 @@ public class DDTankCoreThread extends Thread {
     private String gameVersion;
     private DDTankConfigProperties properties;
 
+    private boolean needCorrect;
+
     protected Library dm;
 
     @Getter
@@ -36,22 +39,29 @@ public class DDTankCoreThread extends Thread {
     private final LinkedBlockingQueue<FutureTask<?>> daemonTaskQueue = new LinkedBlockingQueue<>();
 
 
-    public DDTankCoreThread(long hwnd, String version, DDTankConfigProperties properties, String name) {
+    public DDTankCoreThread(long hwnd, String version, DDTankConfigProperties properties, DDTankStartParam startParam) {
         this.gameHwnd = hwnd;
         this.gameVersion = version;
         this.properties = properties;
-        this.setName(name);
+        this.setName(startParam.getName());
+        this.needCorrect = startParam.isNeedCorrect();
+        this.task = new DDTankCoreTask(gameHwnd, gameVersion, properties, needCorrect);
+        this.coreThread = new Thread(task, getName() + "-exec");
     }
 
     public DDTankCoreThread(DDTankCoreThread srcThread) {
-        this(srcThread.gameHwnd, srcThread.gameVersion, srcThread.properties, srcThread.getName());
+        this.gameHwnd = srcThread.gameHwnd;
+        this.gameVersion = srcThread.gameVersion;
+        this.properties = srcThread.properties;
+        this.setName(srcThread.getName());
+        this.needCorrect = srcThread.needCorrect;
+        this.task = new DDTankCoreTask(srcThread.task);
+        this.coreThread = new Thread(task, getName() + "-exec");
     }
 
     @Override
     public void run() {
         this.dm = new DMLibrary(LibraryFactory.getActiveXCompnent());
-        this.task = new DDTankCoreTask(gameHwnd, gameVersion, properties);
-        this.coreThread = new Thread(task, getName() + "-exec");
         if (task.bind(this.dm)) {
             log.info("窗口[{}]绑定成功，即将启动脚本", gameHwnd);
             try {
@@ -68,7 +78,7 @@ public class DDTankCoreThread extends Thread {
                         // TODO 后处理
                         break;
                     }
-                    if(task.getTimes() > 8000) {
+                    if (task.getTimes() > 8000) {
                         log.info("{}已运行达到阈值，即将重启任务", getName());
                         task.needRestart = true;
                         try {
@@ -122,8 +132,18 @@ public class DDTankCoreThread extends Thread {
         }
     }
 
+    public boolean refreshPic() {
+        FutureTask<Boolean> refreshPicTask = new FutureTask<>(() -> dm.freePic("*.bmp"));
+        try {
+            daemonTaskQueue.put(refreshPicTask);
+            return refreshPicTask.get();
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void updateProperties(DDTankConfigProperties properties) {
-        task.updateLog("更新了[" + Thread.currentThread().getName() + "]的配置文件");
+        task.updateLogInfo("更新了[" + getName() + "]的配置文件");
         task.properties.update(properties);
     }
 
@@ -152,7 +172,7 @@ public class DDTankCoreThread extends Thread {
 
     public void tryStop() {
         log.info("{}尝试停止操作", getName());
-        if(coreThread.isAlive() || this.isAlive()) {
+        if (coreThread.isAlive() || this.isAlive()) {
             task.coreState.set(CoreThreadStateEnum.WAITING_STOP);
         }
 
@@ -248,6 +268,10 @@ public class DDTankCoreThread extends Thread {
         coreThread = new Thread(task);
         coreThread.start();
         return true;
+    }
+
+    public DDTankLog getDDTankLog() {
+        return task.ddtLog;
     }
 
 

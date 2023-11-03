@@ -7,6 +7,8 @@ import com.jacob.activeX.ActiveXComponent;
 import com.jacob.com.Variant;
 
 public class DMMouse implements Mouse {
+    private int offsetX;
+    private int offsetY;
     private ActiveXComponent dm;
 
     public DMMouse(ActiveXComponent dm) {
@@ -15,7 +17,7 @@ public class DMMouse implements Mouse {
 
     @Override
     public void moveTo(double x, double y) {
-        dm.invoke("moveTo", new Variant(x), new Variant(y));
+        dm.invoke("moveTo", new Variant(x + offsetX), new Variant(y + offsetY));
     }
 
     @Override
@@ -31,7 +33,7 @@ public class DMMouse implements Mouse {
 
     @Override
     public void moveAndClick(Point point) {
-        moveTo(point.getX(), point.getY());
+        dm.invoke("moveTo", new Variant(point.getX()), new Variant(point.getY()));
         leftClick();
     }
 
@@ -48,5 +50,11 @@ public class DMMouse implements Mouse {
     @Override
     public void leftUp() {
         dm.invoke("leftUp");
+    }
+
+    @Override
+    public void setOffset(int x, int y) {
+        this.offsetX = x;
+        this.offsetY = y;
     }
 }

@@ -15,8 +15,15 @@ public class DDTankStartParam {
     @Setter
     private String name;
 
+    @Getter
+    private boolean needCorrect;
 
     public DDTankStartParam() {
         this.name = "脚本" + idAdder.getAndIncrement();
+    }
+
+    public DDTankStartParam(boolean needCorrect) {
+        this();
+        this.needCorrect = needCorrect;
     }
 }

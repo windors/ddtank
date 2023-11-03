@@ -52,12 +52,12 @@ public class DDTankPic2_3 extends DDTankPic10_4 {
                 path + "蛋2-开始1.bmp", "101010", 0.9, 0, point)
                 || dm.findPic(891, 454, 981, 495,
                 path + "蛋2-开始2.bmp", "101010", 0.9, 0, point)) {
-            mouse.moveAndClick(560, 844);
-            mouse.moveAndClick(801, 137);
-            mouse.moveAndClick(882, 141);
-            mouse.moveAndClick(949, 346);
-            mouse.moveAndClick(949, 346);
-            mouse.moveAndClick(949, 346);
+//            mouse.moveAndClick(560, 844);
+//            mouse.moveAndClick(801, 137);
+//            mouse.moveAndClick(882, 141);
+//            mouse.moveAndClick(949, 346);
+//            mouse.moveAndClick(949, 346);
+//            mouse.moveAndClick(949, 346);
             mouse.moveAndClick(point.getX() + 10, point.getY() + 10);
             return true;
         }
@@ -165,7 +165,7 @@ public class DDTankPic2_3 extends DDTankPic10_4 {
 
     @Override
     public Integer getAngle() {
-        String reuslt = dm.ocr(42, 548, 86, 588, "1a1a1a-000000|1a260d-000000|101724-000000|1a2016-000000|28222b-000000|260d0d-000000|1c1d20-000000|211d1d-000000|171d32-000000|1c0d03-000000", 1);
+        String reuslt = dm.ocr(42, 548, 86, 588, "1a1a1a-000000|1a260d-000000|101724-000000|1a2016-000000|28222b-000000|260d0d-000000|1c1d20-000000|211d1d-000000|171d32-000000|1c0d03-000000", 0.95);
         reuslt = reuslt.replaceAll("\\D", "");
         if ("".equals(reuslt)) {
             log.error("角度获取失败，请更新字库！");
