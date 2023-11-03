@@ -32,8 +32,7 @@ public class ThreadUtils {
                 Thread.sleep(millis);
             }
         } catch (Exception e) {
-            log.warn("在不可中断的方法上出现了异常");
-            long need = System.currentTimeMillis() - start - millis;
+            long need = millis - (System.currentTimeMillis() - start);
             while(need > 0) {
                 start = System.currentTimeMillis();
                 delayPersisted(need, exitDirect);
