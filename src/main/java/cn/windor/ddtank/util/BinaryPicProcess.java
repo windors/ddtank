@@ -39,7 +39,7 @@ public class BinaryPicProcess {
     private BinaryPicProcess update(int x1, int y1, int x2, int y2, String color, double sim) {
         areasMap = new HashMap<>();
         area = 0;
-        this.x1 =x1;
+        this.x1 = x1;
         this.y1 = y1;
 
         // 将图片保存
@@ -66,7 +66,9 @@ public class BinaryPicProcess {
         final int length = pixels.length;
         for (int i = 0; i < length; i += 3) {
             if (ColorUtils.isSimColor(pixels[i], pixels[i + 1], pixels[i + 2], color)) {
-                data[i / width / 3][i / 3 % width] = PASS;
+                int y = i / width / 3;
+                int x = i / 3 % width;
+                data[y][x] = PASS;
             }
         }
 
@@ -116,7 +118,7 @@ public class BinaryPicProcess {
                             offset++;
                         }
                         if (isOtherArea(i + offset, j + 2, area)) {
-                            return new Point(j + this.x1, i + offset + this.y1);
+                            return new Point(j + this.x1 + dm.getOffsetX(), i + offset + this.y1 + dm.getOffsetY());
                         }
                         break;
                     } else {
@@ -154,7 +156,7 @@ public class BinaryPicProcess {
             xList.add(point.getX());
             rectPointMap.put(point.getY(), xList);
         }
-        // 检测每一行的点是否是连续的
+        // 检测每一行连续点的个数：key表示连续点，value表示统计出现的次数
         Map<Integer, Integer> lineContinuous = new HashMap<>();
         for (Integer y : rectPointMap.keySet()) {
             List<Integer> xList = rectPointMap.get(y);
@@ -162,17 +164,23 @@ public class BinaryPicProcess {
                 continue;
             }
             Collections.sort(xList);
-            Integer now = xList.get(0);
-            boolean continuous = true;
+            Integer min = xList.get(0);
+            int continuous = 0;
+            boolean exit = false;
             for (int i = 0; i < xList.size(); i++) {
-                if (!xList.contains(now + i)) {
-                    continuous = false;
+                // 允许断5个点
+                for (int j = 0; j < 5; j++) {
+                    if (xList.contains(min + i + j)) {
+                        break;
+                    }
+                    exit = true;
+                }
+                if(exit) {
                     break;
                 }
+                continuous++;
             }
-            if (continuous) {
-                lineContinuous.merge(xList.size(), 1, Integer::sum);
-            }
+            lineContinuous.merge(continuous, 1, Integer::sum);
         }
 
         // 找出次数最多的
@@ -231,8 +239,8 @@ public class BinaryPicProcess {
     private synchronized void cropping() {
         int up = 0, left = 0, right = width, down = height;
         // 裁剪数据集
+        boolean end = false;
         for (int i = 0; i < height; i++) {
-            boolean end = false;
             for (int j = 0; j < width; j++) {
                 if (data[i][j] != BLANK) {
                     end = true;
@@ -245,8 +253,8 @@ public class BinaryPicProcess {
                 break;
             }
         }
+        end = false;
         for (int i = height - 1; i >= 0; i--) {
-            boolean end = false;
             for (int j = 0; j < width; j++) {
                 if (data[i][j] != BLANK) {
                     end = true;
@@ -254,13 +262,13 @@ public class BinaryPicProcess {
                 }
             }
             if (end) {
-                // 此行有满足要求的，此时前i行都没有用
+                // 此行有满足要求的，此时后i行都没有用
                 down = height - i;
                 break;
             }
         }
+        end = false;
         for (int i = 0; i < width; i++) {
-            boolean end = false;
             for (int j = 0; j < height; j++) {
                 if (data[j][i] != BLANK) {
                     end = true;
@@ -273,8 +281,8 @@ public class BinaryPicProcess {
                 break;
             }
         }
+        end = false;
         for (int i = width - 1; i >= 0; i--) {
-            boolean end = false;
             for (int j = 0; j < height; j++) {
                 if (data[j][i] != BLANK) {
                     end = true;
@@ -289,8 +297,8 @@ public class BinaryPicProcess {
         }
         this.x1 = x1 + left;
         this.y1 = y1 + up;
-        this.width = width - left - right;
-        this.height = height - up - down;
+        this.width = width - left - right + 1;
+        this.height = height - up - down + 1;
         int[][] newData = new int[this.height][this.width];
         for (int i = 0; i < this.height; i++) {
             System.arraycopy(data[i + up], left, newData[i], 0, this.width);
