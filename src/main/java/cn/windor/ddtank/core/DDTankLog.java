@@ -3,6 +3,7 @@ package cn.windor.ddtank.core;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -28,14 +29,14 @@ public class DDTankLog {
         if(logs.size() == 0) {
             return "当前还没有记录任何日志哦！";
         }
-        return logs.get(logs.size() - 1).msg;
+        return logs.get(0).msg;
     }
 
     public void log(String str) {
         if(logs.size() == maxSize) {
-            logs.remove(0);
+            logs.remove(logs.size() - 1);
         }
-        logs.add(new Log(str));
+        logs.add(0, new Log(str));
     }
 
     static class Log {
