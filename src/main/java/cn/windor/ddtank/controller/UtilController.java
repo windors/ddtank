@@ -2,6 +2,7 @@ package cn.windor.ddtank.controller;
 
 import cn.windor.ddtank.base.Library;
 import cn.windor.ddtank.config.DDTankConfigProperties;
+import cn.windor.ddtank.config.DDTankFileConfigProperties;
 import cn.windor.ddtank.core.DDTankPic;
 import cn.windor.ddtank.core.DDTankCoreThread;
 import cn.windor.ddtank.service.DDTankConfigService;
@@ -11,13 +12,14 @@ import cn.windor.dto.HttpDataResponse;
 import cn.windor.dto.HttpResponse;
 import cn.windor.type.HttpResponseEnum;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.util.FileCopyUtils;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.File;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 @RestController
@@ -43,6 +45,7 @@ public class UtilController {
         if (thread == null) {
             return new HttpDataResponse(HttpResponseEnum.ILLEGAL_INPUT, null);
         }
+        thread.refreshPic();
         try {
             Method method = DDTankPic.class.getMethod(methodName);
             Object result = method.invoke(thread.getDdtankPic());
@@ -51,6 +54,20 @@ public class UtilController {
             e.printStackTrace();
             return new HttpDataResponse(HttpResponseEnum.ERROR, e);
         }
+    }
+
+    @GetMapping("/screenshot")
+    public StreamingResponseBody getScreenshot(@RequestParam long hwnd) {
+        DDTankCoreThread thread = threadService.getAllStartedThreadMap().get(hwnd);
+        if (thread == null) {
+            return null;
+        }
+        String path = DDTankFileConfigProperties.getScreenshotPath();
+        thread.screenshot(path);
+        // 将文件返回给前端
+        return outputStream -> {
+            FileCopyUtils.copy(Files.newInputStream(new File(path).toPath()), outputStream);
+        };
     }
 
     @PostMapping("/suspend")
@@ -94,13 +111,6 @@ public class UtilController {
             return HttpDataResponse.ok(CoreThreadStateEnum.NOT_STARTED);
         }
         return HttpDataResponse.ok(thread.getCoreState());
-    }
-
-    @PostMapping("/position")
-    public HttpResponse capture(@RequestParam long hwnd) {
-        dm.setWindowState(hwnd, 1);
-        dm.setWindowState(hwnd, 7);
-        return HttpResponse.ok();
     }
 
     @PostMapping("/start")
@@ -168,5 +178,11 @@ public class UtilController {
             threadService.remove(hwnd);
         }
         return HttpResponse.ok();
+    }
+
+    @PostMapping("/refreshPic")
+    public HttpResponse refreshPic(long hwnd) {
+        DDTankCoreThread coreThread = threadService.getAllStartedThreadMap().get(hwnd);
+        return HttpResponse.auto(coreThread.refreshPic());
     }
 }
