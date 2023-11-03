@@ -21,8 +21,8 @@ public class LibraryFactory {
             }
         } catch (com.jacob.com.ComFailException e) {
             try {
-                FileUtils.putAttachment("library\\dm_7.2336.dll", new File("c:\\tmp"));
-                Runtime.getRuntime().exec("regsvr32 c:\\tmp\\dm_7.2336.dll");
+                FileUtils.putAttachment("library/dm_7.2336.dll", new File("c:\\tmp"));
+                Runtime.getRuntime().exec("regsvr32 c:\\tmp\\library-dm_7.2336.dll");
                 log.info("等待注册大漠对象到系统...");
                 dm = new com.jacob.activeX.ActiveXComponent("dm.dmsoft");
                 String ver = dm.invoke("ver").toString();
