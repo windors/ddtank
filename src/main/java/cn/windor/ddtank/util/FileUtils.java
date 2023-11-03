@@ -1,12 +1,10 @@
 package cn.windor.ddtank.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.parameters.P;
 import org.springframework.util.FileCopyUtils;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.nio.file.Files;
 import java.util.Objects;
 
@@ -65,22 +63,36 @@ public class FileUtils {
      * 将文件释放到指定目录
      */
     public static void putAttachment(String filename, File dir) {
-        File file = new File(Objects.requireNonNull(FileUtils.class.getResource("/")).getFile(), filename);
-        if (!file.exists()) {
-            log.error("将文件释放到指定目录失败：指定文件[{}]不存在", file.getAbsolutePath());
-        } else if (!dir.exists()) {
-            if (!dir.mkdirs()) {
-                log.error("将文件释放到指定目录失败：指定目录[{}]不存在，且自动创建失败！", dir.getAbsolutePath());
+        InputStream is = null;
+        OutputStream os = null;
+        try {
+            is = FileUtils.class.getResourceAsStream("/" + filename);
+            if(is == null) {
+                throw new RuntimeException(filename + "文件不存在");
             }
-        } else {
-            try {
-                FileCopyUtils.copy(file, new File(dir, file.getName()));
-                log.info("成功将附件[{}]放入到目录[{}]中", file.getAbsolutePath(), dir.getAbsolutePath());
-            } catch (IOException e) {
-                log.error("将文件释放到指定目录失败：复制过程中出现了异常[{}]", e.toString());
-                throw new RuntimeException(e);
+            if (!dir.exists()) {
+                if (!dir.mkdirs()) {
+                    log.error("将文件释放到指定目录失败：指定目录[{}]不存在，且自动创建失败！", dir.getAbsolutePath());
+                }
+            } else {
+                try {
+                    FileCopyUtils.copy(is, Files.newOutputStream(new File(dir, filename.replace("/", "-").replace("\\", "-")).toPath()));
+                    log.info("成功将附件[{}]放入到目录[{}]中", filename, dir.getAbsolutePath());
+                } catch (IOException e) {
+                    log.error("将文件释放到指定目录失败：复制过程中出现了异常[{}]", e.toString());
+                    throw new RuntimeException(e);
+                }
+            }
+        } catch (Exception e) {
+            log.error("将文件释放到指定目录失败", filename);
+        } finally {
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
         }
-
     }
 }
