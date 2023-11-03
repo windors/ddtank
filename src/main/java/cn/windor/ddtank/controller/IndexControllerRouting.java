@@ -41,6 +41,7 @@ public class IndexControllerRouting {
                             Map<String, Object> map) {
         DDTankCoreThread coreThread = dDtankThreadService.getAllStartedThreadMap().get(hwnd);
         map.put("name", coreThread.getName());
+        map.put("ddtankLog", coreThread.getDDTankLog());
         return "detail";
     }
 
