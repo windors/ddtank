@@ -6,5 +6,26 @@
     <title>life track</title>
 </head>
 <body>
+<div class="row">
+    <div class="col-md-9 container">
+        <div class="row">基本参数栏</div>
+        <div class="row">
+            <button id="btn-game-screen" class="btn btn-primary">查看游戏快照</button>
+        </div>
+        <div class="row">
+            <div id="game-screen">
+                <img th:src="@{/util/screenshot(hwnd=${hwnd})}"/>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <ul id="ddt-logs">
+            <li th:each="ddtlog:${ddtankLog.logs}">[[${#numbers.formatInteger(ddtlog.time.hour,
+                2)}]]:[[${#numbers.formatInteger(ddtlog.time.minute,
+                2)}]]:[[${#numbers.formatInteger(ddtlog.time.second, 2)}]] [[${ddtlog.msg}]]
+            </li>
+        </ul>
+    </div>
+</div>
 </body>
 </html>

@@ -176,7 +176,7 @@
                     <th class="text-center">最后消息</th>
                     <th class="text-center">选择副本</th>
                     <th class="text-center">通关次数</th>
-                    <th class="text-center">循环次数</th>
+                    <th class="text-center">主循环次数</th>
                     <th class="text-center">运行时间</th>
                     <th class="text-center">操作</th>
                 </tr>
@@ -189,7 +189,7 @@
                     <td>[[${startedMap.get(hwnd).properties.levelLine}]]-[[${startedMap.get(hwnd).properties.levelRow}]]</td>
                     <td th:text="${startedMap.get(hwnd).passes}"></td>
                     <td th:text="${startedMap.get(hwnd).times}"></td>
-                    <td th:text="${startedMap.get(hwnd).runTime}"></td>
+                    <td class="time-ms" th:text="${startedMap.get(hwnd).runTime}"></td>
                     <td>
                         <a class="btn btn-default" th:href="@{/config/run/{hwnd}(hwnd=${hwnd})}">配置</a>
                         <a class="btn btn-info" th:href="@{/detail/run/{hwnd}(hwnd=${hwnd})}">详细</a>
