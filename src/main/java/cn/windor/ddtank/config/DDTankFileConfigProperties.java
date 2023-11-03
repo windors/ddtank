@@ -39,6 +39,20 @@ public class DDTankFileConfigProperties {
         return file.getAbsolutePath();
     }
 
+    /**
+     * 截图用的文件临时保存位置
+     * @return
+     */
+    public static String getScreenshotPath() {
+        File file = new File(tmpPicDir);
+        if(!file.exists()) {
+            if(!file.mkdirs()) {
+                log.error("文件夹{}创建失败，部分功能将不可用", file.getAbsolutePath());
+            }
+        }
+        return new File(file, "screenshot-" + Thread.currentThread().getName() + ".bmp").getAbsolutePath();
+    }
+
     public void setDir(String dir) {
         DDTankFileConfigProperties.dir = dir;
     }
