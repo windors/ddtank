@@ -31,9 +31,9 @@ public class ThreadUtils {
             if(millis > 0) {
                 Thread.sleep(millis);
             }
-        } catch (InterruptedException e) {
-            log.warn("在不可中断的方法上中断");
-            long need = System.currentTimeMillis() - start;
+        } catch (Exception e) {
+            log.warn("在不可中断的方法上出现了异常");
+            long need = System.currentTimeMillis() - start - millis;
             while(need > 0) {
                 start = System.currentTimeMillis();
                 delayPersisted(need, exitDirect);
