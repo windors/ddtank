@@ -43,6 +43,9 @@ public class LibraryFactory {
             if(dm.invoke("setShowAsmErrorMsg", new Variant(0)).getInt() == 0) {
                 log.error("关闭大漠弹窗失败，当某个线程被停止后若大漠错误窗口未被关闭则程序将会停止运行！");
             }
+            if(dm.invoke("setShowErrorMsg", new Variant(0)).getInt() == 0) {
+                log.error("关闭大漠弹窗失败，当某个线程被停止后若大漠错误窗口未被关闭则程序将会停止运行！");
+            }
         } else {
             switch (zc) {
                 case -2:

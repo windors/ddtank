@@ -1,20 +1,14 @@
 package cn.windor.ddtank.core;
 
-import cn.windor.ddtank.base.Keyboard;
 import cn.windor.ddtank.base.Library;
-import cn.windor.ddtank.base.Mouse;
-import cn.windor.ddtank.base.impl.DMKeyboard;
 import cn.windor.ddtank.base.impl.DMLibrary;
-import cn.windor.ddtank.base.impl.DMMouse;
 import cn.windor.ddtank.base.impl.LibraryFactory;
 import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.config.DDTankStartParam;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
-import com.jacob.activeX.ActiveXComponent;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.LocalDateTime;
 import java.util.concurrent.*;
 
 /**
@@ -39,6 +33,13 @@ public class DDTankCoreThread extends Thread {
     private final LinkedBlockingQueue<FutureTask<?>> daemonTaskQueue = new LinkedBlockingQueue<>();
 
 
+    /**
+     * 初始构造函数
+     * @param hwnd 游戏窗口句柄（能检测到游戏画面的句柄，同时需要键盘和鼠标操作在该拆窗口有效）
+     * @param version 游戏版本
+     * @param properties
+     * @param startParam
+     */
     public DDTankCoreThread(long hwnd, String version, DDTankConfigProperties properties, DDTankStartParam startParam) {
         this.gameHwnd = hwnd;
         this.gameVersion = version;
@@ -49,6 +50,10 @@ public class DDTankCoreThread extends Thread {
         this.coreThread = new Thread(task, getName() + "-exec");
     }
 
+    /**
+     *
+     * @param srcThread
+     */
     public DDTankCoreThread(DDTankCoreThread srcThread) {
         this.gameHwnd = srcThread.gameHwnd;
         this.gameVersion = srcThread.gameVersion;
@@ -57,6 +62,12 @@ public class DDTankCoreThread extends Thread {
         this.needCorrect = srcThread.needCorrect;
         this.task = new DDTankCoreTask(srcThread.task);
         this.coreThread = new Thread(task, getName() + "-exec");
+    }
+
+    public DDTankCoreThread(DDTankCoreThread srcThread, long newHwnd) {
+        this(srcThread);
+        this.gameHwnd = newHwnd;
+        this.task.hwnd = newHwnd;
     }
 
     @Override
@@ -133,7 +144,7 @@ public class DDTankCoreThread extends Thread {
     }
 
     public boolean refreshPic() {
-        FutureTask<Boolean> refreshPicTask = new FutureTask<>(() -> dm.freePic("*.bmp"));
+        FutureTask<Boolean> refreshPicTask = new FutureTask<>(() -> dm.freePic("*.bmp") & task.dm.freePic("*.bmp"));
         try {
             daemonTaskQueue.put(refreshPicTask);
             return refreshPicTask.get();
@@ -249,8 +260,8 @@ public class DDTankCoreThread extends Thread {
         return task.properties;
     }
 
-    public String getCurrentMsg() {
-        return task.getCurrentMsg();
+    public DDTankLog.Log getCurrentLog() {
+        return task.getCurrentLog();
     }
 
     public int getPasses() {

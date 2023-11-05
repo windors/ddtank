@@ -166,7 +166,7 @@
 <div class="row index-main">
     <div th:if="${startedMap.keySet().size() > 0}">
         <form id="ddt">
-            <table id="started-table" class="table" >
+            <table id="started-table" class="table table-hover">
                 <caption>已启动脚本</caption>
                 <tr>
                     <th class="text-center"><input type="checkbox"/></th>
@@ -174,25 +174,26 @@
                     <th class="text-center">脚本名称</th>
                     <th class="text-center">当前状态</th>
                     <th class="text-center">最后消息</th>
+                    <th class="text-center">消息时间</th>
                     <th class="text-center">选择副本</th>
                     <th class="text-center">通关次数</th>
-                    <th class="text-center">主循环次数</th>
                     <th class="text-center">运行时间</th>
                     <th class="text-center">操作</th>
                 </tr>
-                <tr th:each="hwnd:${startedMap.keySet()}">
+                <tr th:each="hwnd:${startedMap.keySet()}" th:with="core=${startedMap.get(hwnd)}"
+                    th:classappend="${core.properties.isHandleCalcDistance ? '' : 'warning '}">
                     <td><input type="checkbox" name="hwnd" th:value="${hwnd}"/></td>
                     <td th:text="${hwnd}"></td>
-                    <td th:text="${startedMap.get(hwnd).name}"></td>
-                    <td th:text="${startedMap.get(hwnd).coreState.getMsg()}"></td>
-                    <td th:text="${startedMap.get(hwnd).getCurrentMsg()}"></td>
-                    <td>[[${startedMap.get(hwnd).properties.levelLine}]]-[[${startedMap.get(hwnd).properties.levelRow}]]</td>
-                    <td th:text="${startedMap.get(hwnd).passes}"></td>
-                    <td th:text="${startedMap.get(hwnd).times}"></td>
-                    <td class="time-ms" th:text="${startedMap.get(hwnd).runTime}"></td>
+                    <td th:text="${core.name}"></td>
+                    <td th:text="${core.coreState.getMsg()}"></td>
+                    <td th:text="${core.getCurrentLog().msg}"></td>
+                    <td th:text="${time.hour + ':' + time.minute + ':' + time.second}" th:with="time=${core.getCurrentLog().time}"></td>
+                    <td>[[${core.properties.levelLine}]]-[[${core.properties.levelRow}]]</td>
+                    <td th:text="${core.passes}"></td>
+                    <td class="time-ms" th:text="${core.runTime}"></td>
                     <td>
-                        <a class="btn btn-default" th:href="@{/config/run/{hwnd}(hwnd=${hwnd})}">配置</a>
                         <a class="btn btn-info" th:href="@{/detail/run/{hwnd}(hwnd=${hwnd})}">详细</a>
+                        <a class="btn btn-default" th:href="@{/config/run/{hwnd}(hwnd=${hwnd})}">配置</a>
                     </td>
                 </tr>
             </table>

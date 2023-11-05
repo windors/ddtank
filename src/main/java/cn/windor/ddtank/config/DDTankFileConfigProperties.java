@@ -10,13 +10,13 @@ import java.io.File;
 @ConfigurationProperties(prefix = "ddtank")
 @Slf4j
 public class DDTankFileConfigProperties {
-    private static String dir = "C:/tmp/";
+    private static String baseDir = "C:/tmp/";
 
-    private static String tmpPicDir = dir + "tmp/pic";
+    private static String tmpPicDir = baseDir + "tmp/pic";
 
-    private static String failDir = dir + "fail";
-    public static String getDir() {
-        return dir;
+    private static String failDir = baseDir + "fail";
+    public static String getBaseDir() {
+        return baseDir;
     }
 
     public static String getTmpPicDir() {
@@ -54,7 +54,7 @@ public class DDTankFileConfigProperties {
     }
 
     public void setDir(String dir) {
-        DDTankFileConfigProperties.dir = dir;
+        DDTankFileConfigProperties.baseDir = dir;
     }
 
     public void setTmpPicDir(String tmpPicDir) {

@@ -4,28 +4,88 @@
 <head>
     <meta charset="UTF-8">
     <title>life track</title>
+    <style>
+        .detail-body {
+            display: flex;
+        }
+
+        #ddt-logs-wrapper {
+            background-color: rgb(241, 242, 243);
+            min-height: 454px;
+            border-radius: 10px;
+            box-sizing: content-box;
+            padding: 0 20px;
+        }
+
+        #ddt-logs-title {
+            height: 13%;
+            display: flex;
+            align-items: center;
+            font-size: 18px;
+        }
+
+        #ddt-logs {
+            min-width: 94%;
+            position: absolute;
+            overflow-y: scroll;
+            font-size: 13px;
+            height: 87%;
+            color: #505050;
+        }
+    </style>
 </head>
 <body>
-<div class="row">
-    <div class="col-md-9 container">
-        <div class="row">基本参数栏</div>
-        <div class="row">
-            <button id="btn-game-screen" class="btn btn-primary">查看游戏快照</button>
-        </div>
-        <div class="row">
-            <div id="game-screen">
-                <img th:src="@{/util/screenshot(hwnd=${hwnd})}"/>
+<div class="detail-body row">
+    <div class="col-md-9" style="margin-bottom: 0">
+        <div class="form-horizontal">
+            <div class="form-group">
+                <label class="col-md-2 control-label">当前句柄</label>
+                <div class="col-md-8">
+                    <input id="i-rebind-hwnd" class="form-control" th:value="${hwnd}"/>
+                </div>
+                <div class="col-md-2">
+                    <button id="ddt-rebind" class="btn btn-primary col-sm-12">重绑定</button>
+                </div>
             </div>
         </div>
+        <form class="form-horizontal">
+            <div class="form-group" style="margin-bottom: 0">
+                <label class="col-md-2 control-label">游戏快照</label>
+                <div id="game-screen" class="col-md-10">
+                    <img th:src="@{/util/screenshot(hwnd=${hwnd})}"/>
+                </div>
+            </div>
+        </form>
     </div>
-    <div class="col-md-3">
-        <ul id="ddt-logs">
-            <li th:each="ddtlog:${ddtankLog.logs}">[[${#numbers.formatInteger(ddtlog.time.hour,
-                2)}]]:[[${#numbers.formatInteger(ddtlog.time.minute,
-                2)}]]:[[${#numbers.formatInteger(ddtlog.time.second, 2)}]] [[${ddtlog.msg}]]
-            </li>
-        </ul>
+    <div id="ddt-logs-wrapper" class="col-md-3">
+        <div id="ddt-logs-title">
+            脚本日志
+        </div>
+        <div id="ddt-logs">
+            <ul>
+                <li th:each="ddtlog:${ddtankLog.logs}">[[${#numbers.formatInteger(ddtlog.time.hour,
+                    2)}]]:[[${#numbers.formatInteger(ddtlog.time.minute,
+                    2)}]]:[[${#numbers.formatInteger(ddtlog.time.second, 2)}]] [[${ddtlog.msg}]]
+                </li>
+            </ul>
+        </div>
+
     </div>
 </div>
 </body>
+<script>
+    $("#ddt-rebind").click(function () {
+        let param = {
+            hwnd: [[${hwnd}]],
+            newHwnd: $("#i-rebind-hwnd").val()
+        };
+        if(param['hwnd'] == param['newHwnd']) {
+            windorAlert("请更改句柄后再进行操作");
+        }else {
+            postAjax("/util/rebind", param, function (data) {
+                windorAlert('提示', '重绑定成功');
+            })
+        }
+    })
+</script>
 </html>

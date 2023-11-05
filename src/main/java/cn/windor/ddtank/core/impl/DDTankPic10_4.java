@@ -129,7 +129,7 @@ public class DDTankPic10_4 implements DDTankPic {
             result = true;
         }
         Point point = new Point();
-        if (dm.findPic(82, 53, 981, 545,
+        if (dm.findPic(60, 1, 981, 545,
                 path + "蛋10.4-tip.bmp", "101010", 0.8, 0, point)) {
             point.setOffset(20, 10);
             mouse.moveAndClick(point);
@@ -160,17 +160,17 @@ public class DDTankPic10_4 implements DDTankPic {
                 path + "蛋10.4-卡牌.bmp", "101010", 0.8, 0)) != null) {
             find = true;
             if (!over) {
-                for (int i = 0; i < 10; i++) {
+                for (int i = 0; i < 2; i++) {
                     Point point = cardList.get((int) (System.currentTimeMillis() % cardList.size()));
                     mouse.moveAndClick(point);
                     delay(100, true);
                 }
 
-                if (dm.findPic(650, 200, 750, 280, path + "蛋10.4-翻第三张牌.bmp", "101010", 0.8, 0, null)) {
+                if (dm.findPic(590, 185, 750, 290, path + "蛋10.4-翻第三张牌.bmp", "101010", 0.8, 0, null)) {
                     over = true;
                     if (properties.getIsThirdDraw()) {
-                        mouse.moveAndClick(400, 340);
-                        mouse.moveAndClick(400, 340);
+                        mouse.moveAndClick(400, 347);
+                        mouse.moveAndClick(400, 347);
                     }
                 }
             }
@@ -182,7 +182,7 @@ public class DDTankPic10_4 implements DDTankPic {
     @Override
     public boolean needGoingToWharf() {
         Point point = new Point();
-        if (dm.findPic(500, 90, 1000, 180,
+        if (dm.findPic(100, 90, 1000, 300,
                 path + "蛋10.4-大厅.bmp", "101010", 1, 0, point)) {
             mouse.moveAndClick(point);
             delay(3000, true);

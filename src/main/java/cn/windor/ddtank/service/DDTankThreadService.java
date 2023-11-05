@@ -54,4 +54,6 @@ public interface DDTankThreadService {
     boolean restart(long hwnd);
 
     boolean remove(long hwnd);
+
+    boolean rebind(long hwnd, long newHwnd);
 }

@@ -8,6 +8,9 @@ import cn.windor.ddtank.base.impl.LibraryFactory;
 import cn.windor.ddtank.config.DDTankStartParam;
 import cn.windor.ddtank.core.*;
 import cn.windor.ddtank.config.DDTankConfigProperties;
+import cn.windor.ddtank.exception.IllegalDDTankHwndException;
+import cn.windor.ddtank.handler.HwndMarkHandler;
+import cn.windor.ddtank.handler.impl.HwndMarkHandlerImpl;
 import cn.windor.ddtank.service.DDTankConfigService;
 import cn.windor.ddtank.service.DDTankThreadService;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
@@ -41,8 +44,11 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
 
     private final Map<Long, DDTankStartParam> waitStartMap = new ConcurrentHashMap<>();
 
+    private final HwndMarkHandler hwndMarkHandler;
+
     public DDTankThreadServiceImpl(Library dm) {
         this.dm = dm;
+        hwndMarkHandler = new HwndMarkHandlerImpl(dm);
         JIntellitype.getInstance().registerHotKey(SHORTCUT_START, JIntellitype.MOD_ALT, '1');
         JIntellitype.getInstance().registerHotKey(SHORTCUT_STOP,
                 JIntellitype.MOD_CONTROL + JIntellitype.MOD_ALT, '1');
@@ -99,29 +105,24 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
 
     @Override
     public Long mark() {
-        Long hwnd = dm.getMousePointWindow();
-        String className = dm.getWindowClass(hwnd);
-        if ("MacromediaFlashPlayerActiveX".equals(className)
-                // 360浏览器/qq浏览器极速模式
-                || "Chrome_RenderWidgetHostHWND".equals(className)
-                // 360游戏大厅前台模式
-                || "NativeWindowClass".equals(className)) {
+        long hwnd = dm.getMousePointWindow();
+        if (hwndMarkHandler.isLegalHwnd(hwnd)) {
+            long legalHwnd = hwndMarkHandler.getLegalHwnd(hwnd);
             synchronized (this) {
                 DDTankCoreThread coreThread = threadMap.get(hwnd);
                 if (coreThread != null) {
                     log.info("窗口[{}]已记录在首页中，对应脚本名称为[{}]；若需启动当前脚本请在首页点击重启按钮；若需要更换版本配置请在首页手动将脚本移除后再次尝试", hwnd, coreThread.getName());
                 } else if (waitStartMap.get(hwnd) == null) {
-                    if ("MacromediaFlashPlayerActiveX".equals(className) || "NativeWindowClass".equals(className)) {
+                    if (legalHwnd == hwnd) {
                         log.info("已成功记录当前窗口[{}]，请前往配置页面设置启动参数", hwnd);
                         waitStartMap.put(hwnd, new DDTankStartParam());
                     } else {
                         log.warn("当前窗口[{}]为前台模式（脚本启动后鼠标和键盘操作都将变为前台），请勿随意调整窗口大小和最小化。若需要使用后台模式请将浏览器设置为兼容模式", hwnd);
-                        hwnd = dm.getWindow(hwnd, 7);
-                        if (waitStartMap.get(hwnd) == null) {
-                            waitStartMap.put(hwnd, new DDTankStartParam(true));
-                            log.info("已记录当前顶层窗口{}", hwnd);
+                        if (waitStartMap.get(legalHwnd) == null) {
+                            waitStartMap.put(legalHwnd, new DDTankStartParam(true));
+                            log.info("已记录当前顶层窗口{}", legalHwnd);
                         } else {
-                            log.info("当前标签栏{}已被记录，前台模式多开请将标签栏拖出为一个新的窗口", hwnd);
+                            log.info("当前标签栏{}已被记录，前台模式多开请将标签栏拖出为一个新的窗口", legalHwnd);
                         }
                     }
                 } else {
@@ -129,7 +130,7 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
                 }
             }
         } else {
-            log.warn("当前窗口类名不为[MacromediaFlashPlayerActiveX]且不为[Chrome_RenderWidgetHostHWND]！");
+            log.warn("当前窗口未通过脚本预设值！");
         }
         return hwnd;
     }
@@ -137,13 +138,13 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
     @Override
     public void stop(long hwnd) {
         DDTankCoreThread thread = threadMap.get(hwnd);
-        if(thread == null) {
+        if (thread == null) {
             hwnd = dm.getWindow(hwnd, 7);
             thread = threadMap.get(hwnd);
         }
-        if(thread != null) {
+        if (thread != null) {
             thread.tryStop();
-        }else {
+        } else {
             log.error("当前窗口不在脚本内记录");
         }
     }
@@ -185,6 +186,47 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
         if (coreThread.isAlive()) {
             coreThread.tryStop();
         }
+        return true;
+    }
+
+    // TODO 前台模式下的重绑定操作
+    @Override
+    public boolean rebind(long hwnd, long newHwnd) {
+        // 1. 尝试标记 newHwnd
+        if(!hwndMarkHandler.isLegalHwnd(newHwnd)) {
+            log.error("重绑定失败，检测到窗口{}非法！", newHwnd);
+            return false;
+        }
+        
+        if(threadMap.get(hwndMarkHandler.getLegalHwnd(newHwnd)) != null) {
+            log.error("重绑定失败：新窗口已绑定到{}！", threadMap.get(hwndMarkHandler.getLegalHwnd(newHwnd)).getName());
+            return false;
+        }
+
+        // 2. 获取hwnd所挂脚本的状态, 如果线程未停止则先停止线程
+        DDTankCoreThread coreThread = threadMap.get(hwnd);
+        if(coreThread == null) {
+            log.error("重绑定失败，检测到脚本{}已被移除，请重新创建脚本！", hwnd);
+            return false;
+        }
+        if(coreThread.isAlive()) {
+            log.warn("重绑定警告：检测到{}仍在活动中，尝试停止", coreThread.getName());
+            stop(hwnd);
+            try {
+                coreThread.join();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            log.info("重绑定：{}成功停止", coreThread.getName());
+        }
+        // 3. 调用线程的重绑定方法
+        coreThread = new DDTankCoreThread(coreThread, newHwnd);
+        coreThread.start();
+
+        // 4. 重绑定成功，移除标记中的该窗口句柄
+        waitStartMap.remove(newHwnd);
+        threadMap.remove(hwnd);
+        threadMap.put(newHwnd, coreThread);
         return true;
     }
 

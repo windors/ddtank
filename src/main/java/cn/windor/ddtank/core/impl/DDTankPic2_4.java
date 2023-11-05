@@ -142,15 +142,26 @@ public class DDTankPic2_4 extends DDTankPic2_3 {
 
     @Override
     public Integer getAngle() {
-        String reuslt = dm.ocr(42, 548, 86, 588, "b33731-404040|67d5e4-404040|48b1cf-404040|c43ba7-404040|60ca32-404040|eb780a-404040|cf5b4c-404040|c1dc3b-404040|1eb458-404040", 0.95);
-        reuslt = reuslt.replaceAll("\\D", "");
+        String reuslt = dm.ocr(42, 548, 86, 588, "b33731-404040|67d5e4-404040|48b1cf-404040|c43ba7-404040|60ca32-404040|eb780a-404040|cf5b4c-404040|c1dc3b-404040|1eb458-404040", 0.8);
+        boolean success = true;
         if ("".equals(reuslt)) {
             log.error("角度获取失败，请更新字库！");
+            success = false;
+        }
+        int angle = 0;
+        try {
+            angle = Integer.parseInt(reuslt);
+        }catch (NumberFormatException e) {
+            log.error("角度获取失败，字库精准度不足！");
+            success = false;
+        }
+        if(success) {
+            return angle;
+        } else {
             dm.capture(42, 548, 86, 588, DDTankFileConfigProperties.getFailDir("angle") + "/" + System.currentTimeMillis() + ".bmp");
             delay(10000, true);
             return null;
         }
-        return Integer.parseInt(reuslt);
     }
 
     @Override

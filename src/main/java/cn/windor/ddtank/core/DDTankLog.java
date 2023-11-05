@@ -25,11 +25,11 @@ public class DDTankLog {
         logs = new LinkedList<>();
     }
 
-    public String newestLog() {
+    public Log newestLog() {
         if(logs.size() == 0) {
-            return "当前还没有记录任何日志哦！";
+            return new Log("当前还没有记录任何日志哦！");
         }
-        return logs.get(0).msg;
+        return logs.get(0);
     }
 
     public void log(String str) {

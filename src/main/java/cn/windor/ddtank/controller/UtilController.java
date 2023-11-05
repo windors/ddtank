@@ -172,6 +172,12 @@ public class UtilController {
         return HttpResponse.ok();
     }
 
+    @PostMapping("/rebind")
+    public HttpResponse rebind(@RequestParam(name = "hwnd") long hwnd,
+                               @RequestParam long newHwnd) {
+        return HttpResponse.auto(threadService.rebind(hwnd, newHwnd));
+    }
+
     @PostMapping("/remove")
     public HttpResponse remove(@RequestParam(name = "hwnd") List<Long> hwnds) {
         for (Long hwnd : hwnds) {
@@ -184,5 +190,12 @@ public class UtilController {
     public HttpResponse refreshPic(long hwnd) {
         DDTankCoreThread coreThread = threadService.getAllStartedThreadMap().get(hwnd);
         return HttpResponse.auto(coreThread.refreshPic());
+    }
+
+    @PostMapping("/rename")
+    public HttpResponse rename(long hwnd, String newName) {
+        DDTankCoreThread coreThread = threadService.getAllStartedThreadMap().get(hwnd);
+        coreThread.setName(newName);
+        return HttpResponse.ok();
     }
 }

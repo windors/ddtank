@@ -14,14 +14,12 @@ import cn.windor.ddtank.exception.StopTaskException;
 import cn.windor.ddtank.handler.DDTankFindPositionMoveHandler;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
 import cn.windor.ddtank.type.TowardEnum;
-import com.jacob.activeX.ActiveXComponent;
 import com.jacob.com.ComThread;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static cn.windor.ddtank.util.ThreadUtils.delay;
@@ -53,6 +51,7 @@ public class DDTankCoreTask implements Runnable {
     // runTime是上一次暂停前运行的时间
     private long endTime = -1;
     private long runTime;
+    private long suspendTime;
 
     // 1距的距离
     protected Double distance;
@@ -215,11 +214,14 @@ public class DDTankCoreTask implements Runnable {
                         break;
                     }
                     if (suspend) {
+                        long suspendStartTime;
                         // 使用compareAndSet而不是直接替换是因为在等待暂停的这段时间里调用了一些方法使状态发生了改变，例如调用了停止方法但仅仅设置了状态值还未来得及中断，使用CompareAndSet可以防止看到错误的状态。下同
                         coreState.compareAndSet(CoreThreadStateEnum.WAITING_SUSPEND, CoreThreadStateEnum.SUSPEND);
                         // 当处于暂停状态并且不需要重启时会一直等待，需要重启则会最终运行到上面的break;
                         while (suspend && !needRestart) {
+                            suspendStartTime = System.currentTimeMillis();
                             delay(1000, true);
+                            suspendTime += System.currentTimeMillis() - suspendStartTime;
                         }
                         coreState.compareAndSet(CoreThreadStateEnum.WAITING_CONTINUE, CoreThreadStateEnum.RUN);
                     } else {
@@ -322,7 +324,7 @@ public class DDTankCoreTask implements Runnable {
         log.error(msg);
     }
 
-    public String getCurrentMsg() {
+    public DDTankLog.Log getCurrentLog() {
         return ddtLog.newestLog();
     }
 
@@ -501,9 +503,9 @@ public class DDTankCoreTask implements Runnable {
         }
         if (endTime == -1) {
             // 脚本未停止
-            return runTime + System.currentTimeMillis() - startTime;
+            return runTime + System.currentTimeMillis() - startTime - suspendTime;
         } else {
-            return runTime + endTime - startTime;
+            return runTime + endTime - startTime - suspendTime;
         }
     }
 }
