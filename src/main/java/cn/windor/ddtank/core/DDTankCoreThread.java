@@ -37,8 +37,8 @@ public class DDTankCoreThread extends Thread {
      * 初始构造函数
      * @param hwnd 游戏窗口句柄（能检测到游戏画面的句柄，同时需要键盘和鼠标操作在该拆窗口有效）
      * @param version 游戏版本
-     * @param properties
-     * @param startParam
+     * @param properties 游戏配置
+     * @param startParam 起始参数，包含了线程名称、是否需要进行窗口矫正
      */
     public DDTankCoreThread(long hwnd, String version, DDTankConfigProperties properties, DDTankStartParam startParam) {
         this.gameHwnd = hwnd;
@@ -51,8 +51,8 @@ public class DDTankCoreThread extends Thread {
     }
 
     /**
-     *
-     * @param srcThread
+     * 通过现有的线程创建一个新的脚本，该方法用来重启脚本
+     * @param srcThread 现有脚本
      */
     public DDTankCoreThread(DDTankCoreThread srcThread) {
         this.gameHwnd = srcThread.gameHwnd;
@@ -64,8 +64,14 @@ public class DDTankCoreThread extends Thread {
         this.coreThread = new Thread(task, getName() + "-exec");
     }
 
-    public DDTankCoreThread(DDTankCoreThread srcThread, long newHwnd) {
+    /**
+     * 通过现有的线程创建一个新的脚本，该方法用来重绑定脚本
+     * @param srcThread 原来的脚本线程
+     * @param newHwnd 新的游戏窗口
+     */
+    public DDTankCoreThread(DDTankCoreThread srcThread, long newHwnd, boolean needCorrect) {
         this(srcThread);
+        this.needCorrect = needCorrect;
         this.gameHwnd = newHwnd;
         this.task.hwnd = newHwnd;
     }

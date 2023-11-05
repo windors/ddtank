@@ -168,7 +168,7 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
         }
 
         if (thread.isAlive()) {
-            thread.tryStop();
+            stop(hwnd);
         }
 
         thread = new DDTankCoreThread(thread);
@@ -189,7 +189,6 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
         return true;
     }
 
-    // TODO 前台模式下的重绑定操作
     @Override
     public boolean rebind(long hwnd, long newHwnd) {
         // 1. 尝试标记 newHwnd
@@ -197,9 +196,11 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
             log.error("重绑定失败，检测到窗口{}非法！", newHwnd);
             return false;
         }
+
+        long newLegalHwnd = hwndMarkHandler.getLegalHwnd(newHwnd);
         
-        if(threadMap.get(hwndMarkHandler.getLegalHwnd(newHwnd)) != null) {
-            log.error("重绑定失败：新窗口已绑定到{}！", threadMap.get(hwndMarkHandler.getLegalHwnd(newHwnd)).getName());
+        if(threadMap.get(newLegalHwnd) != null) {
+            log.error("重绑定失败：新窗口已绑定到{}！", threadMap.get(newLegalHwnd).getName());
             return false;
         }
 
@@ -212,15 +213,9 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
         if(coreThread.isAlive()) {
             log.warn("重绑定警告：检测到{}仍在活动中，尝试停止", coreThread.getName());
             stop(hwnd);
-            try {
-                coreThread.join();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            log.info("重绑定：{}成功停止", coreThread.getName());
         }
         // 3. 调用线程的重绑定方法
-        coreThread = new DDTankCoreThread(coreThread, newHwnd);
+        coreThread = new DDTankCoreThread(coreThread, newLegalHwnd, newLegalHwnd != newHwnd);
         coreThread.start();
 
         // 4. 重绑定成功，移除标记中的该窗口句柄
