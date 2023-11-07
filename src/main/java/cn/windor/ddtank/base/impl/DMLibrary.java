@@ -64,6 +64,13 @@ public class DMLibrary implements Library {
         return Dispatch.call(dm, "capture", getParam(x1 +  + offsetX), getParam(y1 + offsetY), getParam(x2 + offsetX), getParam(y2 + offsetY), getParam(filepath)).getInt() == 1;
     }
 
+    public static boolean capture(Library dm, long hwnd, String filepath) {
+        int[] size = dm.getClientSize(hwnd);
+        int width = size[0];
+        int height = size[1];
+        return dm.capture(0, 0, width, height, filepath);
+    }
+
     @Override
     public int[] getClientSize(long hwnd) {
         int[] result = new int[2];
@@ -369,7 +376,32 @@ public class DMLibrary implements Library {
         return Dispatch.call(dm, "getWindow", getParam(hwnd), getParam(flag)).getInt();
     }
 
-    public static void main(String[] args) throws IOException {
+    @Override
+    public long findWindow(String className, String title) {
+        return Dispatch.call(dm, "findWindow", getParam(className), getParam(title)).getInt();
+    }
 
+    @Override
+    public String getWindowTitle(long hwnd) {
+        return Dispatch.call(dm, "getWindowTitle", getParam(hwnd)).getString();
+    }
+
+    @Override
+    public long getWindowProcessId(long hwnd) {
+        return Dispatch.call(dm, "getWindowProcessId", getParam(hwnd)).getInt();
+    }
+
+    @Override
+    public long findWindowByProcessId(long pid, String className, String title) {
+        return Dispatch.call(dm, "findWindowByProcessId", getParam(pid), getParam(className), getParam(title)).getInt();
+    }
+
+    public static void main(String[] args) throws IOException {
+        Library dm = new DMLibrary(LibraryFactory.getActiveXCompnent());
+        long window = 5376622;
+        while(window != 0) {
+            window = dm.getWindow(window, 1);
+            System.out.println(window);
+        }
     }
 }

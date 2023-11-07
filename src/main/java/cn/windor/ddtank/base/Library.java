@@ -48,4 +48,12 @@ public interface Library {
      * 获取给定窗口相关的窗口句柄
      */
     long getWindow(long hwnd, int flag);
+
+    long findWindow(String className, String title);
+
+    String getWindowTitle(long hwnd);
+
+    long getWindowProcessId(long hwnd);
+
+    long findWindowByProcessId(long pid, String className, String title);
 }

@@ -15,6 +15,8 @@ public class DDTankFileConfigProperties {
     private static String tmpPicDir = baseDir + "tmp/pic";
 
     private static String failDir = baseDir + "fail";
+
+    private static String drawDir = baseDir + "draw";
     public static String getBaseDir() {
         return baseDir;
     }
@@ -44,13 +46,12 @@ public class DDTankFileConfigProperties {
      * @return
      */
     public static String getScreenshotPath() {
-        File file = new File(tmpPicDir);
-        if(!file.exists()) {
-            if(!file.mkdirs()) {
-                log.error("文件夹{}创建失败，部分功能将不可用", file.getAbsolutePath());
-            }
-        }
-        return new File(file, "screenshot-" + Thread.currentThread().getName() + ".bmp").getAbsolutePath();
+        return new File(getFileDir(new File(tmpPicDir)), "screenshot-" + Thread.currentThread().getName() + ".bmp").getAbsolutePath();
+    }
+
+    public static String getDrawDir(String dir) {
+        File fileDr = getFileDir(new File(drawDir, dir));
+        return fileDr.getAbsolutePath();
     }
 
     public void setDir(String dir) {
@@ -59,5 +60,14 @@ public class DDTankFileConfigProperties {
 
     public void setTmpPicDir(String tmpPicDir) {
         DDTankFileConfigProperties.tmpPicDir = tmpPicDir;
+    }
+
+    private static File getFileDir(File file) {
+        if(!file.exists()) {
+            if(!file.mkdirs()) {
+                log.error("文件夹{}创建失败，部分功能将不可用", file.getAbsolutePath());
+            }
+        }
+        return file;
     }
 }
