@@ -239,6 +239,9 @@ public class DDtankOperate10_4 implements DDTankOperate {
         } else {
             angle = 70;
         }
+        if (angle == 70) {
+            angle = (int) theta - 5;
+        }
         log.debug("敌我夹角：{}, 最佳角度: {}", theta, angle);
         return angle + properties.getOffsetAngle();
     }
@@ -248,6 +251,9 @@ public class DDtankOperate10_4 implements DDTankOperate {
         horizontal = Math.abs(horizontal);
         if (horizontal >= 20) {
             log.warn("当前屏距超过20，请更新力度公式。【当前屏距：{}, 垂直屏距：{}】", horizontal, vertical);
+            return 100;
+        }
+        if(angle > 70) {
             return 100;
         }
         double strength;
