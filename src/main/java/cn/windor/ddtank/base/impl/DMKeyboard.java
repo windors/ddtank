@@ -37,8 +37,9 @@ public class DMKeyboard implements Keyboard {
     public void keysPress(String str, long millis) {
         for (char k : str.toCharArray()) {
             k = Character.toUpperCase(k);
-            dm.invoke("keyPress", new Variant(k));
+            keyDown(k);
             delayPersisted(millis, true);
+            keyUp(k);
         }
     }
 
