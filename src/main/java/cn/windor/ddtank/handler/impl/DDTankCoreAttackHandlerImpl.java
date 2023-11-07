@@ -1,9 +1,10 @@
-package cn.windor.ddtank.core.impl;
+package cn.windor.ddtank.handler.impl;
 
 import cn.windor.ddtank.base.Keyboard;
 import cn.windor.ddtank.base.Point;
 import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.core.*;
+import cn.windor.ddtank.handler.DDTankCoreAttackHandler;
 import cn.windor.ddtank.handler.DDTankFindPositionMoveHandler;
 import cn.windor.ddtank.type.TowardEnum;
 import lombok.extern.slf4j.Slf4j;
