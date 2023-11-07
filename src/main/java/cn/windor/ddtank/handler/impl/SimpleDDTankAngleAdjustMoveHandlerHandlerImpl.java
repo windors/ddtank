@@ -6,11 +6,11 @@ import cn.windor.ddtank.type.TowardEnum;
 
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 
-public class SimpleDDTankAngleAdjustMoveHandlerHandler implements DDTankAngleAdjustMoveHandler {
+public class SimpleDDTankAngleAdjustMoveHandlerHandlerImpl implements DDTankAngleAdjustMoveHandler {
 
     private Keyboard keyboard;
 
-    public SimpleDDTankAngleAdjustMoveHandlerHandler(Keyboard keyboard) {
+    public SimpleDDTankAngleAdjustMoveHandlerHandlerImpl(Keyboard keyboard) {
         this.keyboard = keyboard;
     }
 

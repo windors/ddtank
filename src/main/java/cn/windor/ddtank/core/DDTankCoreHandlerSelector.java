@@ -4,8 +4,8 @@ import cn.windor.ddtank.base.Keyboard;
 import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.handler.DDTankAngleAdjustMoveHandler;
 import cn.windor.ddtank.handler.DDTankFindPositionMoveHandler;
-import cn.windor.ddtank.handler.impl.SimpleDDTankAngleAdjustMoveHandlerHandler;
-import cn.windor.ddtank.handler.impl.SimpleDDTankFindPositionMoveHandler;
+import cn.windor.ddtank.handler.impl.SimpleDDTankAngleAdjustMoveHandlerHandlerImpl;
+import cn.windor.ddtank.handler.impl.SimpleDDTankFindPositionMoveHandlerImpl;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,8 +19,8 @@ public class DDTankCoreHandlerSelector {
 
     public DDTankCoreHandlerSelector(Keyboard keyboard, DDTankConfigProperties properties) {
         this.properties = properties;
-        angleMoveHandlerMap.put(0, new SimpleDDTankAngleAdjustMoveHandlerHandler(keyboard));
-        positionMoveHandlerMap.put(0, new SimpleDDTankFindPositionMoveHandler(keyboard));
+        angleMoveHandlerMap.put(0, new SimpleDDTankAngleAdjustMoveHandlerHandlerImpl(keyboard));
+        positionMoveHandlerMap.put(0, new SimpleDDTankFindPositionMoveHandlerImpl(keyboard));
     }
 
     public DDTankAngleAdjustMoveHandler getAngleMoveHandler() {

@@ -5,11 +5,11 @@ import cn.windor.ddtank.handler.DDTankFindPositionMoveHandler;
 
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 
-public class SimpleDDTankFindPositionMoveHandler implements DDTankFindPositionMoveHandler {
+public class SimpleDDTankFindPositionMoveHandlerImpl implements DDTankFindPositionMoveHandler {
 
     private Keyboard keyboard;
 
-    public SimpleDDTankFindPositionMoveHandler(Keyboard keyboard) {
+    public SimpleDDTankFindPositionMoveHandlerImpl(Keyboard keyboard) {
         this.keyboard = keyboard;
     }
 
