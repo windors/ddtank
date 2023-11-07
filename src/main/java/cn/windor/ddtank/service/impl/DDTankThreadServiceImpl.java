@@ -40,9 +40,9 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
     public static final int SHORTCUT_START = 1; // 模拟任务开始快捷键
     public static final int SHORTCUT_STOP = 2; // 模拟手动结束任务快捷键
 
-    private final Map<Long, DDTankCoreThread> threadMap = new ConcurrentHashMap<>();
+    private static final Map<Long, DDTankCoreThread> threadMap = new ConcurrentHashMap<>();
 
-    private final Map<Long, DDTankStartParam> waitStartMap = new ConcurrentHashMap<>();
+    private static final Map<Long, DDTankStartParam> waitStartMap = new ConcurrentHashMap<>();
 
     private final HwndMarkHandler hwndMarkHandler;
 
@@ -222,6 +222,11 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
         waitStartMap.remove(newHwnd);
         threadMap.remove(hwnd);
         threadMap.put(newHwnd, coreThread);
+        return true;
+    }
+
+    public synchronized static boolean changeBindHwnd(long hwnd, long newHwnd) {
+        threadMap.put(newHwnd, threadMap.remove(hwnd));
         return true;
     }
 
