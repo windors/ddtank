@@ -11,12 +11,19 @@ import cn.windor.ddtank.base.impl.LibraryFactory;
 import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.config.DDTankFileConfigProperties;
 import cn.windor.ddtank.core.impl.*;
+import cn.windor.ddtank.entity.LevelRule;
 import cn.windor.ddtank.exception.StopTaskException;
+import cn.windor.ddtank.handler.DDTankCoreAttackHandler;
+import cn.windor.ddtank.handler.DDTankSelectMapHandler;
+import cn.windor.ddtank.handler.impl.DDTankCoreAttackHandlerImpl;
+import cn.windor.ddtank.handler.impl.DDTankSelectMapHandlerImpl;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
 import com.jacob.com.ComThread;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.digester.Rule;
 
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static cn.windor.ddtank.util.ThreadUtils.delay;
@@ -72,6 +79,7 @@ public class DDTankCoreTask extends DDTank implements Runnable {
     protected DDTankConfigProperties properties;
 
     private DDTankCoreAttackHandler ddTankCoreAttackHandler;
+    private DDTankSelectMapHandler ddtankSelectMapHandler;
 
 
     /**
@@ -82,6 +90,7 @@ public class DDTankCoreTask extends DDTank implements Runnable {
      * @param needCorrect
      */
     public DDTankCoreTask(long hwnd, String version, DDTankConfigProperties properties, boolean needCorrect) {
+        super();
         this.hwnd = hwnd;
         this.version = version;
         this.coreState.set(CoreThreadStateEnum.WAITING_START);
@@ -95,6 +104,7 @@ public class DDTankCoreTask extends DDTank implements Runnable {
      * @param task
      */
     public DDTankCoreTask(DDTankCoreTask task) {
+        super(task.ddtLog);
         this.hwnd = task.hwnd;
         this.version = task.version;
         this.coreState.set(CoreThreadStateEnum.WAITING_START);
@@ -141,7 +151,7 @@ public class DDTankCoreTask extends DDTank implements Runnable {
             this.ddtankOperate = new DDtankOperate2_3(dm, mouse, keyboard, ddtankPic, properties);
         }
         ddTankCoreAttackHandler = new DDTankCoreAttackHandlerImpl(properties, keyboard, ddtankPic, ddtankOperate, ddtLog);
-
+        ddtankSelectMapHandler = new DDTankSelectMapHandlerImpl(properties, ddtankOperate, ddtLog);
 
         // 矫正坐标
         if (needCorrect && (offsetX != 0 || offsetY != 0)) {
@@ -150,7 +160,7 @@ public class DDTankCoreTask extends DDTank implements Runnable {
             mouse.setOffset(offsetX, offsetY);
         } else if (needCorrect) {
             // 矫正坐标
-            log.info("开始矫正坐标...");
+            logInfo("开始矫正坐标...");
             int[] size = dm.getClientSize(hwnd);
             int width = size[0];
             int height = size[1];
@@ -227,10 +237,7 @@ public class DDTankCoreTask extends DDTank implements Runnable {
                             }
 
                             if (ddtankPic.needChooseMap()) {
-                                log("选择副本：" + properties.getLevelLine() + "行" + properties.getLevelRow() + "列");
-                                ddtankOperate.chooseMap();
-                                delay(1000, true);
-                                // TODO 未选择上脚本
+                                ddtankSelectMapHandler.select(passes);
                             }
 
                             if (ddtankPic.needCloseTip()) {
@@ -279,6 +286,18 @@ public class DDTankCoreTask extends DDTank implements Runnable {
         }
         coreState.set(CoreThreadStateEnum.STOP);
         System.gc();
+    }
+
+    public boolean addLevelSelectRule(LevelRule rule) {
+        return ddtankSelectMapHandler.addRule(rule);
+    }
+
+    public boolean removeLevelSelectRule(int index) {
+        return ddtankSelectMapHandler.removeRule(index);
+    }
+
+    public List<LevelRule> getLevelSelectRules() {
+        return ddtankSelectMapHandler.getRules();
     }
 
     /**

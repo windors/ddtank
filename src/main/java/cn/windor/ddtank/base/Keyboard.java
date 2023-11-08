@@ -16,5 +16,11 @@ public interface Keyboard {
 
     void keysPress(String str, long millis);
 
+    void keyPressChar(String k);
+
+    void keyDownChar(String k);
+
+    void keyUpChar(String k);
+
     void keysPressStr(String str);
 }

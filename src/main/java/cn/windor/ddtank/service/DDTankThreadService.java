@@ -3,6 +3,7 @@ package cn.windor.ddtank.service;
 import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.config.DDTankStartParam;
 import cn.windor.ddtank.core.DDTankCoreThread;
+import cn.windor.ddtank.entity.LevelRule;
 
 import java.util.Map;
 
@@ -51,9 +52,29 @@ public interface DDTankThreadService {
      */
     boolean updateProperties(long hwnd, DDTankConfigProperties config);
 
+    /**
+     * 重启脚本
+     * @param hwnd
+     * @return
+     */
     boolean restart(long hwnd);
 
+    /**
+     * 移除脚本
+     * @param hwnd
+     * @return
+     */
     boolean remove(long hwnd);
 
+    /**
+     * 重绑定
+     * @param hwnd
+     * @param newHwnd
+     * @return
+     */
     boolean rebind(long hwnd, long newHwnd);
+
+    boolean addRule(long hwnd, LevelRule rule);
+
+    boolean removeRule(long hwnd, int index);
 }

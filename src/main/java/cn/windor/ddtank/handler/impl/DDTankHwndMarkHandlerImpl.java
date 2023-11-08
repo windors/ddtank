@@ -1,18 +1,13 @@
 package cn.windor.ddtank.handler.impl;
 
 import cn.windor.ddtank.base.Library;
-import cn.windor.ddtank.config.DDTankStartParam;
-import cn.windor.ddtank.core.DDTankCoreThread;
-import cn.windor.ddtank.exception.IllegalDDTankHwndException;
-import cn.windor.ddtank.handler.HwndMarkHandler;
+import cn.windor.ddtank.handler.DDTankHwndMarkHandler;
 
-import java.util.Map;
-
-public class HwndMarkHandlerImpl implements HwndMarkHandler {
+public class DDTankHwndMarkHandlerImpl implements DDTankHwndMarkHandler {
 
     private final Library dm;
 
-    public HwndMarkHandlerImpl(Library dm) {
+    public DDTankHwndMarkHandlerImpl(Library dm) {
         this.dm = dm;
     }
 

@@ -7,7 +7,11 @@ public abstract class DDTank {
     protected DDTankLog ddtLog;
 
     public DDTank() {
-        ddtLog = new DDTankLog();
+        this.ddtLog = new DDTankLog();
+    }
+
+    public DDTank(DDTankLog ddtLog) {
+        this.ddtLog = ddtLog;
     }
 
     public void log(String msg) {

@@ -44,6 +44,21 @@ public class DMKeyboard implements Keyboard {
     }
 
     @Override
+    public void keyPressChar(String k) {
+        dm.invoke("keyPressChar", new Variant(k));
+    }
+
+    @Override
+    public void keyDownChar(String k) {
+        dm.invoke("keyDownChar", new Variant(k));
+    }
+
+    @Override
+    public void keyUpChar(String k) {
+        dm.invoke("keyUpChar", new Variant(k));
+    }
+
+    @Override
     public void keysPressStr(String str) {
         dm.invoke("keyPressStr", new Variant(str), new Variant(0));
     }

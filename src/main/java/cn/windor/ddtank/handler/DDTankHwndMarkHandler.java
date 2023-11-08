@@ -1,12 +1,6 @@
 package cn.windor.ddtank.handler;
 
-import cn.windor.ddtank.config.DDTankStartParam;
-import cn.windor.ddtank.core.DDTankCoreThread;
-import cn.windor.ddtank.exception.IllegalDDTankHwndException;
-
-import java.util.Map;
-
-public interface HwndMarkHandler {
+public interface DDTankHwndMarkHandler {
 
     /**
      * 检测hwnd是否合法

@@ -1,39 +1,46 @@
 package cn.windor.ddtank.handler.impl;
 
+import cn.windor.ddtank.base.Keyboard;
 import cn.windor.ddtank.base.Library;
 import cn.windor.ddtank.base.Mouse;
 import cn.windor.ddtank.base.Point;
+import cn.windor.ddtank.base.impl.DMKeyboard;
 import cn.windor.ddtank.base.impl.DMMouse;
 import cn.windor.ddtank.config.DDTankFileConfigProperties;
+import cn.windor.ddtank.core.DDTankLog;
 import cn.windor.ddtank.handler.DDTankCoreTaskRefindHandler;
-import cn.windor.ddtank.handler.HwndMarkHandler;
+import cn.windor.ddtank.handler.DDTankHwndMarkHandler;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.parameters.P;
 
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 
 @Slf4j
 public class DDTankCoreTaskRefindHandlerImpl implements DDTankCoreTaskRefindHandler {
-    private HwndMarkHandler hwndMarkHandler;
+    private DDTankHwndMarkHandler DDTankHwndMarkHandler;
     private long hwnd;
 
     private Library dm;
 
     private Mouse mouse;
 
+    private Keyboard keyboard;
+
+    private DDTankLog ddtLog;
+
     private final String path = DDTankFileConfigProperties.getBaseDir();
 
-    public DDTankCoreTaskRefindHandlerImpl(long hwnd, Library dm) {
+    public DDTankCoreTaskRefindHandlerImpl(long hwnd, Library dm, DDTankLog ddtLog) {
         this.dm = dm;
-        this.hwndMarkHandler = new HwndMarkHandlerImpl(dm);
+        this.ddtLog = ddtLog;
+        this.DDTankHwndMarkHandler = new DDTankHwndMarkHandlerImpl(dm);
         this.mouse = new DMMouse(dm.getSource());
+        this.keyboard = new DMKeyboard(dm.getSource());
         // 从顶级窗口进行查找
         this.hwnd = dm.getWindow(hwnd, 7);
     }
 
     /**
      * 关闭弹窗
-     *
      * @return
      */
     private boolean shutdownAlertMessageBox(long topHwnd) {
@@ -61,6 +68,97 @@ public class DDTankCoreTaskRefindHandlerImpl implements DDTankCoreTaskRefindHand
         if (hwnd == 0) {
             return 0;
         }
+        String className = dm.getWindowClass(hwnd);
+        if("Afx:00400000:8:00010003:00000006:00000000".equals(className)) {
+            // 糖果浏览器
+            return refindHwndTg();
+        }else if("DUIWindow".equals(className)) {
+            // 360游戏大厅
+            return refindHwnd360();
+        }else {
+            return 0;
+        }
+    }
+
+    private long findHwnd(String className) {
+        return findHwnd(hwnd, className);
+    }
+
+    private long findHwnd(long hwnd, String className) {
+        while(hwnd != 0) {
+            hwnd = dm.getWindow(hwnd, 1);
+            if(className.equals(dm.getWindowClass(hwnd))) {
+                return hwnd;
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * 先从顶级窗口下找到类名为Internet Explorer_Server的句柄，然后后退，前进用来刷新游戏窗口，糖果的刷新规则是Internet Explorer_Server窗口不会变
+     * 正常情况 |cookie存在| cookie消失
+     * 2559914 | 2559914 | 2559914
+     * 3804868 | 3804868 | 3804868
+     * 4458804 | 4458804 | 4458804
+     * 987572  | 987572  | 987572 (Internet Explorer_Server)
+     * 1051362 | 2363092 | 0      (MacromediaFlashPlayerActiveX)
+     *
+     **/
+    private long refindHwndTg() {
+        long hwnd = findHwnd("Internet Explorer_Server");
+        long gameHwnd = 0;
+        if(hwnd == 0) {
+            return 0;
+        }
+        int failTimes = 0;
+        while(!bindWrapper(hwnd)) {
+            delay(1000, true);
+            failTimes++;
+            if(failTimes % 5 == 0) {
+                // 5次绑定失败，返回0
+                logError("重绑定失败，尝试绑定窗口失败！");
+                return 0;
+            }
+        }
+
+        failTimes = 0;
+        // 尝试寻找该窗口下的 MacromediaFlashPlayerActiveX 句柄
+        while((gameHwnd = findHwnd(hwnd, "MacromediaFlashPlayerActiveX")) == 0) {
+            delay(1000, true);
+            failTimes++;
+            if(failTimes++ % 5 == 0) {
+                freshWindowTg();
+                log("重绑定失败，未能找到有效窗口");
+            }
+            if(failTimes > 18) {
+                logError("未能找到有效的游戏窗口");
+            }
+        }
+        // 最终解除外部绑定
+        dm.unbindWindow();
+        return gameHwnd;
+    }
+
+    private void freshWindowTg() {
+        // 先后退
+        mouse.moveAndClick(1, 1);
+        keyboard.keyPressChar("back");
+
+        delay(1000, true);
+        // 再前进
+        keyboard.keyDownChar("shift");
+        delay(300, true);
+        keyboard.keyPressChar("back");
+        delay(300, true);
+        keyboard.keyUpChar("shift");
+        delay(1000, true);
+    }
+
+    private boolean bindWrapper(long hwnd) {
+        return dm.bindWindowEx(hwnd, "dx2", "dx2", "dx", "dx.public.active.message", 0);
+    }
+
+    private long refindHwnd360() {
         // 进入循环
         long startTime = System.currentTimeMillis();
         for (int i = 0; ; ) {
@@ -72,10 +170,6 @@ public class DDTankCoreTaskRefindHandlerImpl implements DDTankCoreTaskRefindHand
                 log.error("在自动重启时绑定失败！");
                 return 0;
             }
-        }
-        if(!"DUIWindow".equals(dm.getWindowClass(hwnd))) {
-            // 目前仅支持360游戏大厅
-            return 0;
         }
         Point prev = new Point(143, 54);
         if (dm.findPic(0, 0, 210, 80, path + "360-上一步.bmp", "505050", 1, 0, prev)) {
@@ -111,7 +205,7 @@ public class DDTankCoreTaskRefindHandlerImpl implements DDTankCoreTaskRefindHand
             // 4. 尝试获取有效的游戏窗口
             long window = this.hwnd;
             do {
-                if(hwndMarkHandler.isLegalHwnd(window)) {
+                if(DDTankHwndMarkHandler.isLegalHwnd(window)) {
                     // 找到了合适的句柄
                     dm.unbindWindow();
                     return window;
@@ -122,5 +216,25 @@ public class DDTankCoreTaskRefindHandlerImpl implements DDTankCoreTaskRefindHand
         }
         dm.unbindWindow();
         return 0;
+    }
+
+    public void log(String msg) {
+        ddtLog.log(msg);
+        log.debug(msg);
+    }
+
+    public void logInfo(String msg) {
+        ddtLog.log(msg);
+        log.info(msg);
+    }
+
+    public void logWarn(String msg) {
+        ddtLog.log(msg);
+        log.warn(msg);
+    }
+
+    public void logError(String msg) {
+        ddtLog.log(msg);
+        log.error(msg);
     }
 }

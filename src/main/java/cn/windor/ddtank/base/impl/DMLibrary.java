@@ -398,9 +398,12 @@ public class DMLibrary implements Library {
 
     public static void main(String[] args) throws IOException {
         Library dm = new DMLibrary(LibraryFactory.getActiveXCompnent());
-        long window = 5376622;
+        long window = 657734;
         while(window != 0) {
             window = dm.getWindow(window, 1);
+            if("Internet Explorer_Server".equals(dm.getWindowClass(window))) {
+
+            }
             System.out.println(window);
         }
     }

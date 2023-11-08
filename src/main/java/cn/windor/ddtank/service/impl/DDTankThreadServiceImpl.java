@@ -1,26 +1,20 @@
 package cn.windor.ddtank.service.impl;
 
 import cn.windor.ddtank.base.*;
-import cn.windor.ddtank.base.impl.DMKeyboard;
-import cn.windor.ddtank.base.impl.DMLibrary;
-import cn.windor.ddtank.base.impl.DMMouse;
-import cn.windor.ddtank.base.impl.LibraryFactory;
 import cn.windor.ddtank.config.DDTankStartParam;
 import cn.windor.ddtank.core.*;
 import cn.windor.ddtank.config.DDTankConfigProperties;
-import cn.windor.ddtank.exception.IllegalDDTankHwndException;
-import cn.windor.ddtank.handler.HwndMarkHandler;
-import cn.windor.ddtank.handler.impl.HwndMarkHandlerImpl;
+import cn.windor.ddtank.entity.LevelRule;
+import cn.windor.ddtank.handler.DDTankHwndMarkHandler;
+import cn.windor.ddtank.handler.impl.DDTankHwndMarkHandlerImpl;
 import cn.windor.ddtank.service.DDTankConfigService;
 import cn.windor.ddtank.service.DDTankThreadService;
-import cn.windor.ddtank.type.CoreThreadStateEnum;
 import com.melloware.jintellitype.HotkeyListener;
 import com.melloware.jintellitype.JIntellitype;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -44,11 +38,11 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
 
     private static final Map<Long, DDTankStartParam> waitStartMap = new ConcurrentHashMap<>();
 
-    private final HwndMarkHandler hwndMarkHandler;
+    private final DDTankHwndMarkHandler DDTankHwndMarkHandler;
 
     public DDTankThreadServiceImpl(Library dm) {
         this.dm = dm;
-        hwndMarkHandler = new HwndMarkHandlerImpl(dm);
+        DDTankHwndMarkHandler = new DDTankHwndMarkHandlerImpl(dm);
         JIntellitype.getInstance().registerHotKey(SHORTCUT_START, JIntellitype.MOD_ALT, '1');
         JIntellitype.getInstance().registerHotKey(SHORTCUT_STOP,
                 JIntellitype.MOD_CONTROL + JIntellitype.MOD_ALT, '1');
@@ -106,8 +100,8 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
     @Override
     public Long mark() {
         long hwnd = dm.getMousePointWindow();
-        if (hwndMarkHandler.isLegalHwnd(hwnd)) {
-            long legalHwnd = hwndMarkHandler.getLegalHwnd(hwnd);
+        if (DDTankHwndMarkHandler.isLegalHwnd(hwnd)) {
+            long legalHwnd = DDTankHwndMarkHandler.getLegalHwnd(hwnd);
             synchronized (this) {
                 DDTankCoreThread coreThread = threadMap.get(hwnd);
                 if (coreThread != null) {
@@ -192,12 +186,12 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
     @Override
     public boolean rebind(long hwnd, long newHwnd) {
         // 1. 尝试标记 newHwnd
-        if(!hwndMarkHandler.isLegalHwnd(newHwnd)) {
+        if(!DDTankHwndMarkHandler.isLegalHwnd(newHwnd)) {
             log.error("重绑定失败，检测到窗口{}非法！", newHwnd);
             return false;
         }
 
-        long newLegalHwnd = hwndMarkHandler.getLegalHwnd(newHwnd);
+        long newLegalHwnd = DDTankHwndMarkHandler.getLegalHwnd(newHwnd);
         
         if(threadMap.get(newLegalHwnd) != null) {
             log.error("重绑定失败：新窗口已绑定到{}！", threadMap.get(newLegalHwnd).getName());
@@ -211,8 +205,7 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
             return false;
         }
         if(coreThread.isAlive()) {
-            log.warn("重绑定警告：检测到{}仍在活动中，尝试停止", coreThread.getName());
-            stop(hwnd);
+            coreThread.rebind(newHwnd);
         }
         // 3. 调用线程的重绑定方法
         coreThread = new DDTankCoreThread(coreThread, newLegalHwnd, newLegalHwnd != newHwnd);
@@ -223,6 +216,25 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
         threadMap.remove(hwnd);
         threadMap.put(newHwnd, coreThread);
         return true;
+    }
+
+    @Override
+    public boolean addRule(long hwnd, LevelRule rule) {
+        DDTankCoreThread coreThread = threadMap.get(hwnd);
+        if(coreThread == null) {
+            return false;
+        }
+
+        return coreThread.addRule(rule);
+    }
+
+    @Override
+    public boolean removeRule(long hwnd, int index) {
+        DDTankCoreThread coreThread = threadMap.get(hwnd);
+        if(coreThread == null) {
+            return false;
+        }
+        return coreThread.removeRule(index);
     }
 
     public synchronized static boolean changeBindHwnd(long hwnd, long newHwnd) {

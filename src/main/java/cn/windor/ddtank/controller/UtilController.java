@@ -5,6 +5,7 @@ import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.config.DDTankFileConfigProperties;
 import cn.windor.ddtank.core.DDTankPic;
 import cn.windor.ddtank.core.DDTankCoreThread;
+import cn.windor.ddtank.entity.LevelRule;
 import cn.windor.ddtank.service.DDTankConfigService;
 import cn.windor.ddtank.service.DDTankThreadService;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
@@ -18,6 +19,8 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import java.io.File;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -197,5 +200,22 @@ public class UtilController {
         DDTankCoreThread coreThread = threadService.getAllStartedThreadMap().get(hwnd);
         coreThread.setName(newName);
         return HttpResponse.ok();
+    }
+
+    @PostMapping("/run/{hwnd}/task")
+    public HttpResponse addTask(@PathVariable long hwnd,
+                                @RequestParam int passed,
+                                @RequestParam int levelLine,
+                                @RequestParam int levelRow,
+                                @RequestParam double levelDifficulty) {
+        BigDecimal difficulty = new BigDecimal(levelDifficulty);
+        LevelRule levelRule = new LevelRule(levelLine, levelRow, passed, difficulty.setScale(1, RoundingMode.UP).doubleValue());
+        return HttpResponse.auto(threadService.addRule(hwnd, levelRule));
+    }
+
+    @DeleteMapping("/run/{hwnd}/task")
+    public HttpResponse removeTask(@PathVariable long hwnd,
+                                   @RequestParam int index) {
+        return HttpResponse.auto(threadService.removeRule(hwnd, index));
     }
 }

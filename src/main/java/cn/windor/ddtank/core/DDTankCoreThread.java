@@ -5,12 +5,14 @@ import cn.windor.ddtank.base.impl.DMLibrary;
 import cn.windor.ddtank.base.impl.LibraryFactory;
 import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.config.DDTankStartParam;
+import cn.windor.ddtank.entity.LevelRule;
 import cn.windor.ddtank.handler.impl.DDTankCoreTaskRefindHandlerImpl;
 import cn.windor.ddtank.service.impl.DDTankThreadServiceImpl;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.concurrent.*;
 
 import static cn.windor.ddtank.util.ThreadUtils.delayPersisted;
@@ -88,7 +90,7 @@ public class DDTankCoreThread extends Thread {
     @Override
     public void run() {
         this.dm = new DMLibrary(LibraryFactory.getActiveXCompnent());
-        this.taskRefindHandler = new DDTankCoreTaskRefindHandlerImpl(gameHwnd, dm);
+        this.taskRefindHandler = new DDTankCoreTaskRefindHandlerImpl(gameHwnd, dm, getDDTankLog());
         if (task.bind(this.dm)) {
             log.info("窗口[{}]绑定成功，即将启动脚本", gameHwnd);
             try {
@@ -103,13 +105,14 @@ public class DDTankCoreThread extends Thread {
                         coreThread.join();
                         task.logInfo("脚本已成功停止！");
                         System.gc();
+                        // 后处理
                         dm.unbindWindow();
-                        // TODO 后处理
                         long hwnd = taskRefindHandler.refindHwnd(gameHwnd);
                         if (hwnd == 0) {
                             task.logError("自动重连失败，即将停止运行");
                             break;
                         } else {
+                            task.logInfo("自动重连：已重新找到窗口句柄");
                             rebind(hwnd);
                         }
                     }
@@ -153,10 +156,9 @@ public class DDTankCoreThread extends Thread {
      *
      * @param hwnd
      */
-    private boolean rebind(long hwnd) {
+    public boolean rebind(long hwnd) {
         if (hwnd != gameHwnd) {
             if (coreThread.isAlive()) {
-                log.error("重绑定前未停止线程");
                 stop(3000);
             }
             DDTankThreadServiceImpl.changeBindHwnd(gameHwnd, hwnd);
@@ -164,10 +166,10 @@ public class DDTankCoreThread extends Thread {
             this.gameHwnd = hwnd;
             // 当前线程重绑定
             if (dm.bindWindowEx(hwnd, properties.getBindDisplay(), properties.getBindMouse(), properties.getBindKeypad(), properties.getBindPublic(), properties.getBindMode())) {
-                task.log("重绑定成功！");
+                task.logInfo("自动重连：重绑定成功！");
                 delayPersisted(1000, false);
             } else {
-                task.logError("重绑定失败！即将退出脚本运行");
+                task.logError("自动重连：重绑定失败！");
                 return false;
             }
             // 启动task
@@ -325,6 +327,10 @@ public class DDTankCoreThread extends Thread {
         return task.getTimes();
     }
 
+    /**
+     * 如果线程未在运行中，那么将新创建一个线程运行脚本任务
+     * @return
+     */
     public boolean restartTask() {
         if (coreThread.isAlive()) {
             return false;
@@ -345,5 +351,16 @@ public class DDTankCoreThread extends Thread {
 
     public long getRunTime() {
         return task.getRunTime();
+    }
+
+    public boolean addRule(LevelRule rule) {
+        return task.addLevelSelectRule(rule);
+    }
+
+    public boolean removeRule(int index) {
+        return task.removeLevelSelectRule(index);
+    }
+    public List<LevelRule> getRules() {
+        return task.getLevelSelectRules();
     }
 }

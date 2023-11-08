@@ -15,7 +15,7 @@ import java.util.Map;
 public class IndexControllerRouting {
 
     @Autowired
-    private DDTankThreadService dDtankThreadService;
+    private DDTankThreadService ddtankThreadService;
 
     @Autowired
     private DDTankConfigService configService;
@@ -25,11 +25,11 @@ public class IndexControllerRouting {
 
     @GetMapping({"", "/", "/index"})
     public String index(Map<String, Object> map) {
-        map.put("waitStartMap", dDtankThreadService.getWaitStartMap());
-        if (dDtankThreadService.getWaitStartMap().size() > 0) {
+        map.put("waitStartMap", ddtankThreadService.getWaitStartMap());
+        if (ddtankThreadService.getWaitStartMap().size() > 0) {
             map.put("configList", configService.list());
         }
-        map.put("startedMap", dDtankThreadService.getAllStartedThreadMap());
+        map.put("startedMap", ddtankThreadService.getAllStartedThreadMap());
         if (System.currentTimeMillis() % 98 == 89) {
             map.put("danger", "");
         }
@@ -39,9 +39,11 @@ public class IndexControllerRouting {
     @GetMapping("/detail/run/{hwnd}")
     public String runDetail(@PathVariable long hwnd,
                             Map<String, Object> map) {
-        DDTankCoreThread coreThread = dDtankThreadService.getAllStartedThreadMap().get(hwnd);
+        DDTankCoreThread coreThread = ddtankThreadService.getAllStartedThreadMap().get(hwnd);
         map.put("name", coreThread.getName());
         map.put("ddtankLog", coreThread.getDDTankLog());
+        map.put("config", coreThread.getProperties());
+        map.put("rules", coreThread.getRules());
         return "detail";
     }
 

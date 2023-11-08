@@ -194,7 +194,7 @@ public class DDTankPic10_4 implements DDTankPic {
     @Override
     public Integer getAngle() {
         delay(100, true);
-        String reuslt = dm.ocr(23, 552, 77, 590, "000000-000000", 0.95);
+        String reuslt = dm.ocr(23, 552, 77, 590, "000000-000000", 0.9);
         reuslt = reuslt.replaceAll("\\D", "");
         if ("".equals(reuslt)) {
             return null;
