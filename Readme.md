@@ -16,6 +16,8 @@
 
 后端Spring Boot，前端thymeleaf模板技术（前后端不分离）。
 
+项目启动后每成功标记一个合格的游戏句柄则都会创建守护线程 `DDTankCoreThread coreThread`，该线程内部管理了一个运行的脚本 `DDTankCoreTask task`，`task` 会执行自动选图、自动攻击等操作。
+
 #### 核心类
 
 `cn.windor.ddtank.base.Library`：第三方接口，本项目使用大漠作为实现。
