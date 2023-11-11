@@ -17,6 +17,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Slf4j
 public class DMLibrary implements Library {
+
+    private long callTimes = 0;
     private ActiveXComponent dm;
 
     private int offsetX;
@@ -31,6 +33,7 @@ public class DMLibrary implements Library {
     }
 
     private Variant getParam(Object param) {
+        callTimes++;
         if (paramMap.get(param) != null) {
             return paramMap.get(param);
         }
@@ -44,7 +47,12 @@ public class DMLibrary implements Library {
         }
     }
 
+    public long getCallTimes() {
+        return callTimes;
+    }
+
     private Variant getParam(Object param, boolean ref) {
+        callTimes++;
         if (!ref) return getParam(param);
         return new Variant(param, true);
     }
@@ -394,6 +402,16 @@ public class DMLibrary implements Library {
     @Override
     public long findWindowByProcessId(long pid, String className, String title) {
         return Dispatch.call(dm, "findWindowByProcessId", getParam(pid), getParam(className), getParam(title)).getInt();
+    }
+
+    @Override
+    public boolean sendString(long hwnd, String str) {
+        return Dispatch.call(dm, "sendString", getParam(hwnd), getParam(str)).getInt() == 1;
+    }
+
+    @Override
+    public boolean sendStringIme(String str) {
+        return Dispatch.call(dm, "sendStringIme", getParam(str)).getInt() == 1;
     }
 
     public static void main(String[] args) throws IOException {

@@ -39,14 +39,9 @@ public class DDTankCoreTask extends DDTank implements Runnable {
     String version;
 
 
-
     @Getter
     // 已通关副本数
     private int passes;
-
-    // 已运行循环次数
-    @Getter
-    private long times;
 
     // 脚本开始时间
     private long startTime = -1;
@@ -84,6 +79,7 @@ public class DDTankCoreTask extends DDTank implements Runnable {
 
     /**
      * 普通的新建任务方法
+     *
      * @param hwnd
      * @param version
      * @param properties
@@ -101,6 +97,7 @@ public class DDTankCoreTask extends DDTank implements Runnable {
     /**
      * 根据现有的task再新建一个task
      * 用途：定期重启使用，防止内存溢出
+     *
      * @param task
      */
     public DDTankCoreTask(DDTankCoreTask task) {
@@ -110,9 +107,9 @@ public class DDTankCoreTask extends DDTank implements Runnable {
         this.coreState.set(CoreThreadStateEnum.WAITING_START);
         this.properties = task.properties;
         this.passes = task.passes;
-        this.times = 0;
         this.runTime = task.getRunTime();
         this.ddTankCoreAttackHandler = task.ddTankCoreAttackHandler;
+        this.ddtankSelectMapHandler = task.ddtankSelectMapHandler;
         this.suspend = task.suspend;
         this.needRestart = false;
         this.needCorrect = task.needCorrect;
@@ -199,6 +196,7 @@ public class DDTankCoreTask extends DDTank implements Runnable {
     public void run() {
         this.dm = new DMLibrary(LibraryFactory.getActiveXCompnent());
         if (bind(this.dm)) {
+            log(Thread.currentThread().getName() + "已成功绑定游戏窗口！");
             init();
             try {
                 startTime = System.currentTimeMillis();
@@ -219,10 +217,7 @@ public class DDTankCoreTask extends DDTank implements Runnable {
                         }
                         coreState.compareAndSet(CoreThreadStateEnum.WAITING_CONTINUE, CoreThreadStateEnum.RUN);
                     } else {
-                        if (coreState.get() != CoreThreadStateEnum.RUN) {
-                            coreState.compareAndSet(CoreThreadStateEnum.WAITING_START, CoreThreadStateEnum.RUN);
-                            coreState.compareAndSet(CoreThreadStateEnum.WAITING_CONTINUE, CoreThreadStateEnum.RUN);
-                        }
+                        coreState.set(CoreThreadStateEnum.RUN);
                         try {
                             if (ddtankPic.needActiveWindow()) {
                                 log("重新激活窗口");
@@ -238,6 +233,9 @@ public class DDTankCoreTask extends DDTank implements Runnable {
 
                             if (ddtankPic.needChooseMap()) {
                                 ddtankSelectMapHandler.select(passes);
+                                if ("10".equals(version)) {
+                                    delay(1000, true);
+                                }
                             }
 
                             if (ddtankPic.needCloseTip()) {
@@ -251,7 +249,6 @@ public class DDTankCoreTask extends DDTank implements Runnable {
                             if (ddtankPic.needClickStart()) {
                                 log("点击开始按钮");
                                 initEveryTimes();
-                                delay(1000, true);
                             }
 
                             if (ddtankPic.isEnterLevel()) {
@@ -264,7 +261,6 @@ public class DDTankCoreTask extends DDTank implements Runnable {
                                 passes++;
                             }
                             delay(properties.getDelay(), true);
-                            times++;
                         } catch (StopTaskException ignored) {
                         } catch (Exception e) {
                             e.printStackTrace();
@@ -314,7 +310,6 @@ public class DDTankCoreTask extends DDTank implements Runnable {
     public boolean bind(Library dm) {
         ComThread.InitSTA();
         if (dm.bindWindowEx(hwnd, properties.getBindDisplay(), properties.getBindMouse(), properties.getBindKeypad(), properties.getBindPublic(), properties.getBindMode())) {
-            log("绑定句柄：" + hwnd);
             delayPersisted(1000, false);
             return true;
         }
@@ -340,5 +335,12 @@ public class DDTankCoreTask extends DDTank implements Runnable {
         } else {
             return runTime + endTime - startTime - suspendTime;
         }
+    }
+
+    public long getCallTimes() {
+        if(dm == null) {
+            return 0;
+        }
+        return ((DMLibrary) dm).getCallTimes();
     }
 }

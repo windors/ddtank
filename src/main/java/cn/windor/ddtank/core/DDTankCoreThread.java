@@ -38,6 +38,7 @@ public class DDTankCoreThread extends Thread {
 
     private final LinkedBlockingQueue<FutureTask<?>> daemonTaskQueue = new LinkedBlockingQueue<>();
 
+    @Getter
     private DDTankCoreTaskRefindHandlerImpl taskRefindHandler;
 
 
@@ -65,6 +66,7 @@ public class DDTankCoreThread extends Thread {
      * @param srcThread 现有脚本
      */
     public DDTankCoreThread(DDTankCoreThread srcThread) {
+        this.taskRefindHandler = srcThread.taskRefindHandler;
         this.gameHwnd = srcThread.gameHwnd;
         this.gameVersion = srcThread.gameVersion;
         this.properties = srcThread.properties;
@@ -92,7 +94,7 @@ public class DDTankCoreThread extends Thread {
         this.dm = new DMLibrary(LibraryFactory.getActiveXCompnent());
         this.taskRefindHandler = new DDTankCoreTaskRefindHandlerImpl(gameHwnd, dm, getDDTankLog());
         if (task.bind(this.dm)) {
-            log.info("窗口[{}]绑定成功，即将启动脚本", gameHwnd);
+            log.info("守护线程{}绑定成功，即将启动脚本", getName());
             try {
                 // 启动脚本线程
                 coreThread.start();
@@ -107,16 +109,19 @@ public class DDTankCoreThread extends Thread {
                         System.gc();
                         // 后处理
                         dm.unbindWindow();
-                        long hwnd = taskRefindHandler.refindHwnd(gameHwnd);
-                        if (hwnd == 0) {
-                            task.logError("自动重连失败，即将停止运行");
-                            break;
-                        } else {
-                            task.logInfo("自动重连：已重新找到窗口句柄");
-                            rebind(hwnd);
+                        // 蛋3版本才自动重连
+                        if ("10".equals(gameVersion)) {
+                            long hwnd = taskRefindHandler.refindHwnd(gameHwnd);
+                            if (hwnd == 0) {
+                                task.logError("自动重连失败，即将停止运行");
+                                break;
+                            } else {
+                                task.logInfo("自动重连：已重新找到窗口句柄");
+                                rebind(hwnd);
+                            }
                         }
                     }
-                    if (task.getTimes() > 20000) {
+                    if (task.getCallTimes() > 1000000) {
                         task.logInfo(getName() + "已运行达到阈值，即将重启任务");
                         task.needRestart = true;
                         try {
@@ -125,8 +130,7 @@ public class DDTankCoreThread extends Thread {
                             throw new RuntimeException(e);
                         }
                         newTask();
-                        coreThread = new Thread(task);
-                        coreThread.start();
+                        restartTask();
                     }
                     // 执行任务
                     try {
@@ -324,18 +328,19 @@ public class DDTankCoreThread extends Thread {
     }
 
     public long getTimes() {
-        return task.getTimes();
+        return task.getCallTimes();
     }
 
     /**
      * 如果线程未在运行中，那么将新创建一个线程运行脚本任务
+     *
      * @return
      */
     public boolean restartTask() {
         if (coreThread.isAlive()) {
             return false;
         }
-        coreThread = new Thread(task);
+        coreThread = new Thread(task, getName() + "-exec");
         coreThread.start();
         return true;
     }
@@ -360,7 +365,14 @@ public class DDTankCoreThread extends Thread {
     public boolean removeRule(int index) {
         return task.removeLevelSelectRule(index);
     }
+
     public List<LevelRule> getRules() {
         return task.getLevelSelectRules();
+    }
+
+    public boolean setAutoReconnect(String username, String password) {
+        taskRefindHandler.setUsername(username);
+        taskRefindHandler.setPassword(password);
+        return true;
     }
 }
