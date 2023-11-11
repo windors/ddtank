@@ -67,7 +67,7 @@ public class DDTankPic2_3 extends DDTankPic10_4 {
     @Override
     public boolean needClickPrepare() {
         Point point = new Point();
-        if(dm.findPic(891, 454, 981, 545,
+        if (dm.findPic(891, 454, 981, 545,
                 path + "蛋2-准备.bmp", "101010", 0.9, 0, point)) {
             mouse.moveAndClick(point);
             return true;
@@ -123,6 +123,7 @@ public class DDTankPic2_3 extends DDTankPic10_4 {
         Point putInBag = null;
         while ((cardList = dm.findPicEx(88, 59, 904, 571,
                 path + "蛋2-卡牌.bmp", "101010", 0.8, 0)) != null) {
+            // 只要能找到卡牌，那么就循环
             find = true;
             if (!over) {
                 for (int i = 0; i < 10; i++) {
@@ -141,11 +142,18 @@ public class DDTankPic2_3 extends DDTankPic10_4 {
             }
             delay(1000, true);
         }
+        // 如果已经翻过牌或找到了全选进被背包
         if (find || dm.findPic(385, 218, 407, 246, path + "蛋2-全选进背包.bmp", "101010", 0.8, 0, null)) {
             putInBag = new Point();
-            // 找全选按钮
+            int failTimes = 0;
+            // 只要没找到全选按钮，那么就一直找
             while (!dm.findPic(385, 218, 407, 246, path + "蛋2-全选进背包.bmp", "101010", 0.8, 0, putInBag)) {
+                failTimes++;
                 delay(1000, true);
+                if(failTimes > 30) {
+                    // 30秒未找到全选按钮，那么就直接返回
+                    return true;
+                }
             }
             mouse.moveAndClick(putInBag);
         }
@@ -154,6 +162,10 @@ public class DDTankPic2_3 extends DDTankPic10_4 {
 
     @Override
     public boolean needGoingToWharf() {
+        if (dm.findPic(500, 466, 711, 554, path + "蛋2-频道.bmp", "101010", 0.8, 0, null)) {
+            mouse.moveAndClick(608, 171);
+            mouse.moveAndClick(608, 171);
+        }
         mouse.moveTo(558, 531);
         Point point = new Point();
         if (dm.findPic(767, 359, 993, 537, path + "蛋2-大厅.bmp", "101010", 0.8, 0, point)) {
@@ -180,7 +192,7 @@ public class DDTankPic2_3 extends DDTankPic10_4 {
         String color = dm.getAveRGB(properties.getStaticX1(), properties.getStaticY1(), properties.getStaticX2(), properties.getStaticY2());
         // 希望将颜色偏白606060
         color = ColorUtils.add(color, "303030") + "-303030";
-        log.info("计算屏距-颜色：{}", color);
+        log.debug("计算屏距-颜色：{}", color);
         double rectangleWidth = binaryPicProcess.findRectangleWidth(properties.getStaticX1(), properties.getStaticY1(), properties.getStaticX2(), properties.getStaticY2(),
                 color, 1);
         return rectangleWidth / 10;
