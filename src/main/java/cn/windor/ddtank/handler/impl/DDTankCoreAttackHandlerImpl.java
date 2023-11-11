@@ -4,6 +4,7 @@ import cn.windor.ddtank.base.Keyboard;
 import cn.windor.ddtank.base.Point;
 import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.core.*;
+import cn.windor.ddtank.exception.DDTankAngleResolveException;
 import cn.windor.ddtank.handler.DDTankCoreAttackHandler;
 import cn.windor.ddtank.handler.DDTankFindPositionMoveHandler;
 import cn.windor.ddtank.type.TowardEnum;
@@ -32,6 +33,8 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
 
     protected Double strength;
 
+    boolean exit;
+
     // 回合数
     int round;
     // 朝向
@@ -53,11 +56,11 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
     }
 
     @Override
-    public void main() {
+    public long main() {
+        long failTimes = 0;
         DistanceCalculate distanceCalculate = new DistanceCalculate();
-        while (ddtankPic.isEnterLevel()) {
+        while (!exit && ddtankPic.isEnterLevel()) {
             // 计算屏距
-            int failTimes = 0;
             while (!distanceCalculate.calc()) {
                 delay(10, true);
                 if (++failTimes > 3) {
@@ -91,7 +94,16 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
             }
             // 进入副本后延迟为外面的 1/10
             delay(properties.getDelay() / 10, true);
+            ++failTimes;
         }
+        // 下次再调用时仍然能继续调用
+        exit = false;
+        return failTimes;
+    }
+
+    @Override
+    public void suspend() {
+        exit = true;
     }
 
     @Override
@@ -181,19 +193,26 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
             } else {
                 targetToward = TowardEnum.LEFT;
             }
-            if (ddtankOperate.angleAdjust(angle, handlerSelector.getAngleMoveHandler(), targetToward)) {
-                double horizontal = new BigDecimal((enemyPosition.getX() - myPosition.getX()) / distance).setScale(2, RoundingMode.UP).doubleValue();
-                double vertical = new BigDecimal((myPosition.getY() - enemyPosition.getY()) / distance).setScale(2, RoundingMode.UP).doubleValue();
-                log("水平屏距：" + horizontal + ", 垂直屏距：" + vertical);
-                strength = ddtankOperate.getStrength(angle, horizontal, vertical);
-                strength += properties.getOffsetStrength();
-                strength = new BigDecimal(strength).setScale(2, RoundingMode.UP).doubleValue();
-                log("自动攻击：" + angle + "度, " + strength + "力");
-                keyboard.keysPress(properties.getAttackSkill(), 0);
-                ddtankOperate.attack(strength);
-            } else {
-                // TODO 调整角度失败的情况，即调整角度策略失效
-                log("未能调整到指定角度，当前角度：" + ddtankPic.getAngle() + ", 目标角度：" + angle);
+            try {
+                if (ddtankOperate.angleAdjust(angle, handlerSelector.getAngleMoveHandler(), targetToward)) {
+                    double horizontal = new BigDecimal((enemyPosition.getX() - myPosition.getX()) / distance).setScale(2, RoundingMode.UP).doubleValue();
+                    double vertical = new BigDecimal((myPosition.getY() - enemyPosition.getY()) / distance).setScale(2, RoundingMode.UP).doubleValue();
+                    log("水平屏距：" + horizontal + ", 垂直屏距：" + vertical);
+                    strength = ddtankOperate.getStrength(angle, horizontal, vertical);
+                    strength += properties.getOffsetStrength();
+                    strength = new BigDecimal(strength).setScale(2, RoundingMode.UP).doubleValue();
+                    log("自动攻击：" + angle + "度, " + strength + "力");
+                    keyboard.keysPress(properties.getAttackSkill(), 0);
+                    ddtankOperate.attack(strength);
+                } else {
+                    // TODO 调整角度失败的情况，即调整角度策略失效
+                    log("未能调整到指定角度，当前角度：" + ddtankPic.getAngle() + ", 目标角度：" + angle + "执行原地飞操作");
+                    keyboard.keyPress('f');
+                    ddtankOperate.attack(5);
+                }
+            }catch (DDTankAngleResolveException e) {
+                // 角度获取失败，跳过回合
+                keyboard.keyPress('p');
             }
         }
     }
