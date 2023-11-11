@@ -46,7 +46,6 @@ public class DDTankSelectMapHandlerImpl implements DDTankSelectMapHandler {
         }
         log("选择副本：" + properties.getLevelLine() + "行" + properties.getLevelRow() + "列");
         ddtankOperate.chooseMap();
-        delay(1000, true);
     }
 
     @Override
