@@ -56,4 +56,13 @@ public interface Library {
     long getWindowProcessId(long hwnd);
 
     long findWindowByProcessId(long pid, String className, String title);
+
+    boolean sendString(long hwnd, String str);
+
+    /**
+     * 向绑定的窗口发送文本数据，必须配合dx.public.input.ime属性
+     * @param str
+     * @return
+     */
+    boolean sendStringIme(String str);
 }
