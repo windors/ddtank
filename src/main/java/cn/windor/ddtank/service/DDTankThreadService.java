@@ -5,6 +5,7 @@ import cn.windor.ddtank.config.DDTankStartParam;
 import cn.windor.ddtank.core.DDTankCoreThread;
 import cn.windor.ddtank.entity.LevelRule;
 
+import java.util.List;
 import java.util.Map;
 
 public interface DDTankThreadService {
@@ -45,19 +46,21 @@ public interface DDTankThreadService {
     /**
      * 停止指定脚本
      */
-    void stop(long hwnd);
+    int stop(List<Long> hwnds) throws InterruptedException;
 
     /**
      * 更新指定脚本的配置
      */
     boolean updateProperties(long hwnd, DDTankConfigProperties config);
 
+
     /**
      * 重启脚本
-     * @param hwnd
+     * @param hwnds
      * @return
+     * @throws InterruptedException
      */
-    boolean restart(long hwnd);
+    int restart(List<Long> hwnds) throws InterruptedException;
 
     /**
      * 移除脚本
@@ -77,4 +80,6 @@ public interface DDTankThreadService {
     boolean addRule(long hwnd, LevelRule rule);
 
     boolean removeRule(long hwnd, int index);
+
+    boolean setAutoReconnect(long hwnd, String username, String password);
 }

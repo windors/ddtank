@@ -66,7 +66,13 @@ public class UtilController {
             return null;
         }
         String path = DDTankFileConfigProperties.getScreenshotPath();
-        thread.screenshot(path);
+        try {
+            thread.screenshot(path);
+        }catch (IllegalStateException ignore) {
+            return outputStream -> {
+
+            };
+        }
         // 将文件返回给前端
         return outputStream -> {
             FileCopyUtils.copy(Files.newInputStream(new File(path).toPath()), outputStream);
@@ -160,18 +166,14 @@ public class UtilController {
     }
 
     @PostMapping("/restart")
-    public HttpResponse restart(@RequestParam(name = "hwnd") List<Long> hwnds) {
-        for (Long hwnd : hwnds) {
-            threadService.restart(hwnd);
-        }
+    public HttpResponse restart(@RequestParam(name = "hwnd") List<Long> hwnds) throws InterruptedException {
+        threadService.restart(hwnds);
         return HttpResponse.ok();
     }
 
     @PostMapping("/stop")
-    public HttpResponse stop(@RequestParam(name = "hwnd") List<Long> hwnds) {
-        for (Long hwnd : hwnds) {
-            threadService.stop(hwnd);
-        }
+    public HttpResponse stop(@RequestParam(name = "hwnd") List<Long> hwnds) throws InterruptedException {
+        threadService.stop(hwnds);
         return HttpResponse.ok();
     }
 
@@ -217,5 +219,12 @@ public class UtilController {
     public HttpResponse removeTask(@PathVariable long hwnd,
                                    @RequestParam int index) {
         return HttpResponse.auto(threadService.removeRule(hwnd, index));
+    }
+
+    @PostMapping("/run/{hwnd}/reconnect")
+    public HttpResponse autoReconnect(@PathVariable long hwnd,
+                                      @RequestParam String username,
+                                      @RequestParam String password) {
+        return HttpResponse.auto(threadService.setAutoReconnect(hwnd, username, password));
     }
 }

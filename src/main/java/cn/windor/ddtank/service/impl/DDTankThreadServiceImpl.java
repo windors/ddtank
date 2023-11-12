@@ -15,8 +15,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Service
 @Slf4j
@@ -33,6 +39,8 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
 
     public static final int SHORTCUT_START = 1; // 模拟任务开始快捷键
     public static final int SHORTCUT_STOP = 2; // 模拟手动结束任务快捷键
+
+    private static final ExecutorService threadPool = Executors.newCachedThreadPool();
 
     private static final Map<Long, DDTankCoreThread> threadMap = new ConcurrentHashMap<>();
 
@@ -76,6 +84,9 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
         return this.waitStartMap;
     }
 
+    /**
+     * 启动脚本
+     */
     @Override
     public synchronized boolean start(long hwnd, String version, String name, DDTankConfigProperties startProperties) {
         if (threadMap.get(hwnd) != null) {
@@ -129,18 +140,42 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
         return hwnd;
     }
 
+    /**
+     * 停止脚本
+     *
+     * @param hwnds 要停止的脚本列表
+     * @throws InterruptedException 等待脚本停止的过程中发生了中断
+     */
     @Override
-    public void stop(long hwnd) {
-        DDTankCoreThread thread = threadMap.get(hwnd);
-        if (thread == null) {
-            hwnd = dm.getWindow(hwnd, 7);
-            thread = threadMap.get(hwnd);
+    public int stop(List<Long> hwnds) throws InterruptedException {
+        int result = 0;
+        List<Callable<Boolean>> stopThreadList = new ArrayList<>(hwnds.size());
+        for (Long hwnd : hwnds) {
+            DDTankCoreThread thread = threadMap.get(hwnd);
+            if (thread == null) {
+                // 未找到指定脚本，尝试从父窗口中查找（前台模式绑定的是顶层父窗口）
+                hwnd = dm.getWindow(hwnd, 7);
+                thread = threadMap.get(hwnd);
+                if (thread == null) {
+                    log.warn("[脚本停止]：未找到指定脚本{}", hwnd);
+                    continue;
+                }
+            }
+            final DDTankCoreThread finalThread = thread;
+            result++;
+            stopThreadList.add(() -> {
+                finalThread.tryStop();
+                try {
+                    // 等待线程终止
+                    finalThread.join();
+                    return true;
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            });
         }
-        if (thread != null) {
-            thread.tryStop();
-        } else {
-            log.error("当前窗口不在脚本内记录");
-        }
+        threadPool.invokeAll(stopThreadList);
+        return result;
     }
 
 
@@ -154,21 +189,50 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
         return true;
     }
 
+    /**
+     * 重启脚本
+     *
+     * @param hwnds
+     * @return
+     */
     @Override
-    public boolean restart(long hwnd) {
-        DDTankCoreThread thread = threadMap.get(hwnd);
-        if (thread == null) {
-            return false;
+    public int restart(List<Long> hwnds) throws InterruptedException {
+        int result = 0;
+        List<Long> aliveHwnds = new ArrayList<>(hwnds.size());
+        List<Long> legalHwnds = new ArrayList<>(hwnds.size());
+        for (Long hwnd : hwnds) {
+            DDTankCoreThread thread = threadMap.get(hwnd);
+            if (thread == null) {
+                // 未找到指定脚本，尝试从父窗口中查找（前台模式绑定的是顶层父窗口）
+                hwnd = dm.getWindow(hwnd, 7);
+                thread = threadMap.get(hwnd);
+                if (thread == null) {
+                    log.warn("[脚本重启]：未找到指定脚本{}", hwnd);
+                    continue;
+                }
+            }
+            legalHwnds.add(hwnd);
+            // 如果有线程存活，那么将存活的线程记录下来，准备之后停止
+            if(thread.isAlive()) {
+                aliveHwnds.add(hwnd);
+            }else{
+                result++;
+            }
         }
 
-        if (thread.isAlive()) {
-            stop(hwnd);
+        result += stop(aliveHwnds);
+        for (Long hwnd : legalHwnds) {
+            DDTankCoreThread thread = threadMap.get(hwnd);
+            if (thread == null) {
+                // 未找到指定脚本，尝试从父窗口中查找（前台模式绑定的是顶层父窗口）
+                hwnd = dm.getWindow(hwnd, 7);
+                thread = threadMap.get(hwnd);
+            }
+            thread = new DDTankCoreThread(thread);
+            threadMap.put(hwnd, thread);
+            thread.start();
         }
-
-        thread = new DDTankCoreThread(thread);
-        threadMap.put(hwnd, thread);
-        thread.start();
-        return true;
+        return result;
     }
 
     @Override
@@ -186,25 +250,25 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
     @Override
     public boolean rebind(long hwnd, long newHwnd) {
         // 1. 尝试标记 newHwnd
-        if(!DDTankHwndMarkHandler.isLegalHwnd(newHwnd)) {
+        if (!DDTankHwndMarkHandler.isLegalHwnd(newHwnd)) {
             log.error("重绑定失败，检测到窗口{}非法！", newHwnd);
             return false;
         }
 
         long newLegalHwnd = DDTankHwndMarkHandler.getLegalHwnd(newHwnd);
-        
-        if(threadMap.get(newLegalHwnd) != null) {
+
+        if (threadMap.get(newLegalHwnd) != null) {
             log.error("重绑定失败：新窗口已绑定到{}！", threadMap.get(newLegalHwnd).getName());
             return false;
         }
 
         // 2. 获取hwnd所挂脚本的状态, 如果线程未停止则先停止线程
         DDTankCoreThread coreThread = threadMap.get(hwnd);
-        if(coreThread == null) {
+        if (coreThread == null) {
             log.error("重绑定失败，检测到脚本{}已被移除，请重新创建脚本！", hwnd);
             return false;
         }
-        if(coreThread.isAlive()) {
+        if (coreThread.isAlive()) {
             coreThread.rebind(newHwnd);
         }
         // 3. 调用线程的重绑定方法
@@ -221,7 +285,7 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
     @Override
     public boolean addRule(long hwnd, LevelRule rule) {
         DDTankCoreThread coreThread = threadMap.get(hwnd);
-        if(coreThread == null) {
+        if (coreThread == null) {
             return false;
         }
 
@@ -231,10 +295,20 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
     @Override
     public boolean removeRule(long hwnd, int index) {
         DDTankCoreThread coreThread = threadMap.get(hwnd);
-        if(coreThread == null) {
+        if (coreThread == null) {
             return false;
         }
         return coreThread.removeRule(index);
+    }
+
+    @Override
+    public boolean setAutoReconnect(long hwnd, String username, String password) {
+        DDTankCoreThread coreThread = threadMap.get(hwnd);
+        if (coreThread == null) {
+            return false;
+        }
+
+        return coreThread.setAutoReconnect(username, password);
     }
 
     public synchronized static boolean changeBindHwnd(long hwnd, long newHwnd) {
@@ -252,7 +326,12 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
                 }
                 case SHORTCUT_STOP: {
                     long hwnd = dm.getMousePointWindow();
-                    stop(hwnd);
+                    try {
+                        stop(Collections.singletonList(hwnd));
+                    } catch (InterruptedException e) {
+                        log.warn("脚本已在停止");
+                        throw new RuntimeException(e);
+                    }
                     break;
                 }
                 default:
