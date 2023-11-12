@@ -9,4 +9,8 @@ public interface DDTankCoreTaskRefindHandler {
      * @return 新的游戏窗口
      */
     long refindHwnd(long gameHwnd);
+
+    void setUsername(String username);
+
+    void setPassword(String password);
 }
