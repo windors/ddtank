@@ -17,10 +17,10 @@ $("#start-all-form").submit(function () {
     $(".ddtank-start-form input[name='attackSkill']").val(allForm.find("input[name='attackSkill']").val());
     $(".ddtank-start-form select[name='enemyFindMode']").val(allForm.find("select[name='enemyFindMode']").val());
     $(".ddtank-start-form input[name='isHandleCalcDistance']").attr("checked", false);
-    if (allForm.find("input[name='isHandleCalcDistance']").val() === 'true') {
-        $(".ddtank-start-form input[name='isHandleCalcDistance'][value='true']").attr("checked", true);
+    if (allForm.find("input[name='isHandleCalcDistance'][value='true']").prop('checked')) {
+        $(".ddtank-start-form input[name='isHandleCalcDistance'][value='true']").prop("checked", true);
     } else {
-        $(".ddtank-start-form input[name='isHandleCalcDistance'][value='false']").attr("checked", true);
+        $(".ddtank-start-form input[name='isHandleCalcDistance'][value='false']").prop("checked", true);
     }
     $(".ddtank-start-form input[name='handleDistance']").val(allForm.find("input[name='handleDistance']").val());
     $(".ddtank-start-form").submit();
