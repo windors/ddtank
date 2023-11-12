@@ -119,6 +119,8 @@ public class DDTankCoreThread extends Thread {
                                 task.logInfo("自动重连：已重新找到窗口句柄");
                                 rebind(hwnd);
                             }
+                        } else {
+                            break;
                         }
                     }
                     if (task.getCallTimes() > 1000000) {
