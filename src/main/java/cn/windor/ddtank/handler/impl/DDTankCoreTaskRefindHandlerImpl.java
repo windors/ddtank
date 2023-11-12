@@ -8,9 +8,13 @@ import cn.windor.ddtank.base.impl.DMKeyboard;
 import cn.windor.ddtank.base.impl.DMMouse;
 import cn.windor.ddtank.config.DDTankFileConfigProperties;
 import cn.windor.ddtank.core.DDTankLog;
+import cn.windor.ddtank.handler.DDTankAccountSignHandler;
 import cn.windor.ddtank.handler.DDTankCoreTaskRefindHandler;
 import cn.windor.ddtank.handler.DDTankHwndMarkHandler;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.thymeleaf.util.StringUtils;
 
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 
@@ -29,6 +33,16 @@ public class DDTankCoreTaskRefindHandlerImpl implements DDTankCoreTaskRefindHand
 
     private final String path = DDTankFileConfigProperties.getBaseDir();
 
+    private final DDTankAccountSignHandler accountSignHandler;
+
+    @Setter
+    @Getter
+    private String username;
+
+    @Setter
+    @Getter
+    private String password;
+
     public DDTankCoreTaskRefindHandlerImpl(long hwnd, Library dm, DDTankLog ddtLog) {
         this.dm = dm;
         this.ddtLog = ddtLog;
@@ -37,20 +51,22 @@ public class DDTankCoreTaskRefindHandlerImpl implements DDTankCoreTaskRefindHand
         this.keyboard = new DMKeyboard(dm.getSource());
         // 从顶级窗口进行查找
         this.hwnd = dm.getWindow(hwnd, 7);
+        this.accountSignHandler = new DDTankAccountSignHandlerImpl(dm, mouse, keyboard);
     }
 
     /**
      * 关闭弹窗
+     *
      * @return
      */
     private boolean shutdownAlertMessageBox(long topHwnd) {
         // 当前顶级窗口下客户端大小<400, 200的认为是弹窗
         long hwnd = dm.findWindow("#32770", "");
-        if(hwnd == 0) {
+        if (hwnd == 0) {
             return false;
         }
         String title = dm.getWindowTitle(hwnd);
-        if(title.startsWith("JavaScript")) {
+        if (title.startsWith("JavaScript")) {
             dm.setWindowState(hwnd, 0);
             return true;
         }
@@ -69,13 +85,13 @@ public class DDTankCoreTaskRefindHandlerImpl implements DDTankCoreTaskRefindHand
             return 0;
         }
         String className = dm.getWindowClass(hwnd);
-        if("Afx:00400000:8:00010003:00000006:00000000".equals(className)) {
+        if ("Afx:00400000:8:00010003:00000006:00000000".equals(className)) {
             // 糖果浏览器
             return refindHwndTg();
-        }else if("DUIWindow".equals(className)) {
+        } else if ("DUIWindow".equals(className)) {
             // 360游戏大厅
             return refindHwnd360();
-        }else {
+        } else {
             return 0;
         }
     }
@@ -85,9 +101,9 @@ public class DDTankCoreTaskRefindHandlerImpl implements DDTankCoreTaskRefindHand
     }
 
     private long findHwnd(long hwnd, String className) {
-        while(hwnd != 0) {
+        while (hwnd != 0) {
             hwnd = dm.getWindow(hwnd, 1);
-            if(className.equals(dm.getWindowClass(hwnd))) {
+            if (className.equals(dm.getWindowClass(hwnd))) {
                 return hwnd;
             }
         }
@@ -102,20 +118,20 @@ public class DDTankCoreTaskRefindHandlerImpl implements DDTankCoreTaskRefindHand
      * 4458804 | 4458804 | 4458804
      * 987572  | 987572  | 987572 (Internet Explorer_Server)
      * 1051362 | 2363092 | 0      (MacromediaFlashPlayerActiveX)
-     *
      **/
     private long refindHwndTg() {
         long hwnd = findHwnd("Internet Explorer_Server");
         long gameHwnd = 0;
-        if(hwnd == 0) {
+        if (hwnd == 0) {
+            logInfo("未找到Internet Explorer_Server窗口！");
             return 0;
         }
         int failTimes = 0;
-        while(!bindWrapper(hwnd)) {
+        while (!bindWrapper(hwnd)) {
             delay(1000, true);
             failTimes++;
-            if(failTimes % 5 == 0) {
-                // 5次绑定失败，返回0
+            if (failTimes % 5 == 0) {
+                // 5次绑定失败，返回0，一般不会在该步骤出错
                 logError("重绑定失败，尝试绑定窗口失败！");
                 return 0;
             }
@@ -123,46 +139,55 @@ public class DDTankCoreTaskRefindHandlerImpl implements DDTankCoreTaskRefindHand
 
         failTimes = 0;
         // 尝试寻找该窗口下的 MacromediaFlashPlayerActiveX 句柄
-        while((gameHwnd = findHwnd(hwnd, "MacromediaFlashPlayerActiveX")) == 0) {
-            delay(1000, true);
+        while ((gameHwnd = findHwnd(hwnd, "MacromediaFlashPlayerActiveX")) == 0) {
+            delay(100, true);
             failTimes++;
-            if(failTimes++ % 5 == 0) {
-                freshWindowTg();
-                log("重绑定失败，未能找到有效窗口");
+
+            if (!StringUtils.isEmpty(username) && !StringUtils.isEmpty(password)) {
+                // 每失败后等待100ms后尝试一次登录操作
+                accountSignHandler.login(username, password);
+                delay(1000, true);
             }
-            if(failTimes > 18) {
+            if(failTimes % 6 == 3) {
+                // 尝试后退操作
+                mouse.moveAndClick(1, 1);
+                keyboard.keyPressChar("back");
+                // 回车防止弹出确定退出弹窗
+                delay(300, true);
+                keyboard.keyPressChar("enter");
+                delay(1000, true);
+            }
+            if (failTimes % 6 == 0) {
+                mouse.moveAndClick(1, 1);
+                // 尝试前进操作
+                keyboard.keyDownChar("shift");
+                delay(300, true);
+                keyboard.keyPressChar("back");
+                delay(300, true);
+                keyboard.keyUpChar("shift");
+                delay(1000, true);
+
+            }
+            if (failTimes > 18) {
                 logError("未能找到有效的游戏窗口");
+                break;
             }
         }
+
         // 最终解除外部绑定
         dm.unbindWindow();
         return gameHwnd;
     }
 
-    private void freshWindowTg() {
-        // 先后退
-        mouse.moveAndClick(1, 1);
-        keyboard.keyPressChar("back");
-
-        delay(1000, true);
-        // 再前进
-        keyboard.keyDownChar("shift");
-        delay(300, true);
-        keyboard.keyPressChar("back");
-        delay(300, true);
-        keyboard.keyUpChar("shift");
-        delay(1000, true);
-    }
-
     private boolean bindWrapper(long hwnd) {
-        return dm.bindWindowEx(hwnd, "dx2", "dx2", "dx", "dx.public.active.message", 0);
+        return dm.bindWindowEx(hwnd, "dx2", "dx2", "dx", "dx.public.active.message|dx.public.input.ime", 0);
     }
 
     private long refindHwnd360() {
         // 进入循环
         long startTime = System.currentTimeMillis();
         for (int i = 0; ; ) {
-            if (dm.bindWindowEx(hwnd, "dx2", "dx2", "dx", "dx.public.active.message", 0)) {
+            if (dm.bindWindowEx(hwnd, "dx2", "dx2", "dx", "dx.public.active.message|dx.public.input.ime", 0)) {
                 break;
             }
             if (++i > 3) {
@@ -196,7 +221,7 @@ public class DDTankCoreTaskRefindHandlerImpl implements DDTankCoreTaskRefindHand
             }
             Point loginBtn = new Point();
             // 2. 检测登录按钮
-            if(dm.findPic(0, 0, width, height, path+"html-登录.bmp", "101010", 0.8, 0, loginBtn)) {
+            if (dm.findPic(0, 0, width, height, path + "html-登录.bmp", "101010", 0.8, 0, loginBtn)) {
                 log.info("自动重连-点击登录按钮");
                 mouse.moveAndClick(loginBtn);
                 delay(1000, true);
@@ -205,7 +230,7 @@ public class DDTankCoreTaskRefindHandlerImpl implements DDTankCoreTaskRefindHand
             // 4. 尝试获取有效的游戏窗口
             long window = this.hwnd;
             do {
-                if(DDTankHwndMarkHandler.isLegalHwnd(window)) {
+                if (DDTankHwndMarkHandler.isLegalHwnd(window)) {
                     // 找到了合适的句柄
                     dm.unbindWindow();
                     return window;
