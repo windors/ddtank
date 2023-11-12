@@ -147,8 +147,14 @@ public class DDTankCoreTask extends DDTank implements Runnable {
         } else {
             this.ddtankOperate = new DDtankOperate2_3(dm, mouse, keyboard, ddtankPic, properties);
         }
-        ddTankCoreAttackHandler = new DDTankCoreAttackHandlerImpl(properties, keyboard, ddtankPic, ddtankOperate, ddtLog);
-        ddtankSelectMapHandler = new DDTankSelectMapHandlerImpl(properties, ddtankOperate, ddtLog);
+
+        // 复杂对象在非空时创建，非空表示通过复制的方式创建的Task
+        if(ddTankCoreAttackHandler != null) {
+            ddTankCoreAttackHandler = new DDTankCoreAttackHandlerImpl(properties, keyboard, ddtankPic, ddtankOperate, ddtLog);
+        }
+        if(ddtankSelectMapHandler != null) {
+            ddtankSelectMapHandler = new DDTankSelectMapHandlerImpl(properties, ddtankOperate, ddtLog);
+        }
 
         // 矫正坐标
         if (needCorrect && (offsetX != 0 || offsetY != 0)) {

@@ -2,6 +2,7 @@ package cn.windor.ddtank.core.impl;
 
 import cn.windor.ddtank.base.*;
 import cn.windor.ddtank.config.DDTankConfigProperties;
+import cn.windor.ddtank.exception.DDTankAngleResolveException;
 import cn.windor.ddtank.handler.DDTankAngleAdjustMoveHandler;
 import cn.windor.ddtank.core.DDTankOperate;
 import cn.windor.ddtank.core.DDTankPic;
@@ -111,21 +112,25 @@ public class DDtankOperate10_4 implements DDTankOperate {
     public boolean angleAdjust(int targetAngle) {
         int failCount = 0, lastAngle, nowAngle;
         int angleMis = properties.getAngleMis();
-        lastAngle = nowAngle = ddTankPic.getAngle();
-        while (nowAngle < targetAngle - angleMis || nowAngle > targetAngle + angleMis) {
-            if (nowAngle == lastAngle) {
-                failCount++;
-            } else {
-                failCount = 0;
-            }
-            if (failCount > 3) {
-                // TODO 超过3次尝试变更角度不动，说明需要移动
-                return false;
-            }
-            angleAdjust(nowAngle, targetAngle, angleMis);
+        try {
+            lastAngle = nowAngle = ddTankPic.getAngle();
+            while (nowAngle < targetAngle - angleMis || nowAngle > targetAngle + angleMis) {
+                if (nowAngle == lastAngle) {
+                    failCount++;
+                } else {
+                    failCount = 0;
+                }
+                if (failCount > 3) {
+                    // TODO 超过3次尝试变更角度不动，说明需要移动
+                    return false;
+                }
+                angleAdjust(nowAngle, targetAngle, angleMis);
 
-            lastAngle = nowAngle;
-            nowAngle = ddTankPic.getAngle();
+                lastAngle = nowAngle;
+                nowAngle = ddTankPic.getAngle();
+            }
+        } catch (Exception e) {
+            throw new DDTankAngleResolveException();
         }
         return true;
     }
@@ -253,7 +258,7 @@ public class DDtankOperate10_4 implements DDTankOperate {
             log.warn("当前屏距超过20，请更新力度公式。【当前屏距：{}, 垂直屏距：{}】", horizontal, vertical);
             return 100;
         }
-        if(angle > 70) {
+        if (angle > 70) {
             return 100;
         }
         double strength;
