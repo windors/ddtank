@@ -44,6 +44,8 @@ public class IndexControllerRouting {
         map.put("ddtankLog", coreThread.getDDTankLog());
         map.put("config", coreThread.getProperties());
         map.put("rules", coreThread.getRules());
+        map.put("username", coreThread.getTaskRefindHandler().getUsername());
+        map.put("password", coreThread.getTaskRefindHandler().getPassword());
         return "detail";
     }
 
