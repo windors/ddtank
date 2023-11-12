@@ -113,6 +113,15 @@
                 </div>
             </div>
         </div>
+        <form id="form-reconnect" class="form-horizontal">
+            <div class="form-group">
+                <label class="col-md-2 control-label">账号</label>
+                <div class="col-md-3"><input class="form-control" name="username" th:value="${username}"/></div>
+                <label class="col-md-2 control-label">密码</label>
+                <div class="col-md-3"><input class="form-control" name="password" type="password" th:value="${password}"/></div>
+                <div class="col-md-2"><button class="btn btn-success col-xs-12">保存</button></div>
+            </div>
+        </form>
     </div>
     <div id="ddt-logs-wrapper" class="col-md-3">
         <div id="ddt-logs-title">
@@ -189,9 +198,21 @@
 </div><!-- /.modal -->
 </body>
 <script>
+
+    $("#form-reconnect").submit(function () {
+        postAjax('/util/run/[[${hwnd}]]/reconnect', $(this).serialize(), function (data) {
+            windorAlert('提示', '自动重连设置成功！');
+        })
+        return false;
+    })
     // 移除任务
     $("#btn-removeTask").click(function () {
-
+        deleteAjax('/util/run/[[${hwnd}]]/task', {
+            index: $("#select-tasks").prop("selectedIndex")
+        }, function (data) {
+            alert("任务删除成功！");
+            location.reload();
+        })
     })
 
     // 添加任务
