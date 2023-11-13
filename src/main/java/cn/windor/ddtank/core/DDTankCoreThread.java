@@ -94,7 +94,8 @@ public class DDTankCoreThread extends Thread {
         this.dm = new DMLibrary(LibraryFactory.getActiveXCompnent());
         this.taskRefindHandler = new DDTankCoreTaskRefindHandlerImpl(gameHwnd, dm, getDDTankLog());
         if (task.bind(this.dm)) {
-            log.info("守护线程{}绑定成功，即将启动脚本", getName());
+            log.info("[窗口绑定]：守护线程已成功绑定游戏窗口，即将启动脚本线程");
+            task.ddtLog.success("主绑定成功，即将启动脚本");
             try {
                 // 启动脚本线程
                 coreThread.start();
@@ -102,10 +103,9 @@ public class DDTankCoreThread extends Thread {
                 while (!interrupted()) {
                     if (!dm.getWindowState(gameHwnd, 0)) {
                         // 调用dm在出错时往往会弹出窗口，所以需要手动关闭线程
-                        task.logWarn("检测到游戏窗口关闭，即将停止脚本运行");
+                        task.ddtLog.error("检测到游戏窗口关闭，即将停止脚本运行");
                         coreThread.interrupt();
                         coreThread.join();
-                        task.logInfo("脚本已成功停止！");
                         System.gc();
                         // 后处理
                         dm.unbindWindow();
@@ -113,10 +113,10 @@ public class DDTankCoreThread extends Thread {
                         if ("10".equals(gameVersion)) {
                             long hwnd = taskRefindHandler.refindHwnd(gameHwnd);
                             if (hwnd == 0) {
-                                task.logError("自动重连失败，即将停止运行");
+                                task.ddtLog.error("自动重连失败，即将停止运行");
                                 break;
                             } else {
-                                task.logInfo("自动重连：已重新找到窗口句柄");
+                                task.ddtLog.success("自动重连：已重新找到窗口句柄");
                                 rebind(hwnd);
                             }
                         } else {
@@ -124,14 +124,11 @@ public class DDTankCoreThread extends Thread {
                         }
                     }
                     if (task.getCallTimes() > 1000000) {
-                        task.logInfo(getName() + "已运行达到阈值，即将重启任务");
+                        log.info("检测到[{}]已运行达到阈值，执行重启任务以释放内存", coreThread.getName());
                         task.needRestart = true;
-                        try {
-                            coreThread.join();
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                        newTask();
+                        // TODO 新开辟线程等待线程结束运行
+                        coreThread.join();
+                        this.task = new DDTankCoreTask(this.task, true);
                         restartTask();
                     }
                     // 执行任务
@@ -150,9 +147,12 @@ public class DDTankCoreThread extends Thread {
                 // 在调用某些方法的时候发生了中断，直接执行finally即可
             } finally {
                 task.unBind(this.dm);
+                log.info("[窗口绑定]：守护线程已成功解除绑定游戏窗口");
+                task.ddtLog.success("脚本已成功停止，主绑定成功解除");
             }
         } else {
             log.error("窗口[{}]绑定失败，请重新尝试启动脚本，大漠错误码：{}", gameHwnd, dm.getLastError());
+            task.ddtLog.error("主绑定失败：" + dm.getLastError());
         }
     }
 
@@ -172,20 +172,16 @@ public class DDTankCoreThread extends Thread {
             this.gameHwnd = hwnd;
             // 当前线程重绑定
             if (dm.bindWindowEx(hwnd, properties.getBindDisplay(), properties.getBindMouse(), properties.getBindKeypad(), properties.getBindPublic(), properties.getBindMode())) {
-                task.logInfo("自动重连：重绑定成功！");
+                task.ddtLog.success("自动重连：重绑定成功！");
                 delayPersisted(1000, false);
             } else {
-                task.logError("自动重连：重绑定失败！");
+                task.ddtLog.error("自动重连：重绑定失败！");
                 return false;
             }
             // 启动task
             restartTask();
         }
         return true;
-    }
-
-    private synchronized void newTask() {
-        this.task = new DDTankCoreTask(this.task);
     }
 
     public boolean screenshot(String filepath) {
@@ -215,7 +211,8 @@ public class DDTankCoreThread extends Thread {
     }
 
     public void updateProperties(DDTankConfigProperties properties) {
-        task.logInfo("更新了[" + getName() + "]的配置文件");
+        log.info("更新了配置信息");
+        task.ddtLog.info("更新了配置信息");
         task.properties.update(properties);
     }
 
@@ -263,20 +260,24 @@ public class DDTankCoreThread extends Thread {
                     case NOT_STARTED:
                     case WAITING_STOP:
                     case STOP:
-                        task.log("已设定下次启动后暂停");
+                        log.info("已设定脚本启动后暂停");
+                        task.ddtLog.info("已设定脚本启动后暂停");
                         break;
                     case RUN:
                         // 尝试替换状态，若被其他未加task对象锁的代码替换说明这段时间被调用了停止方法
                         if (!task.coreState.compareAndSet(CoreThreadStateEnum.RUN, CoreThreadStateEnum.WAITING_SUSPEND)) {
-                            task.log("已设定下次启动后暂停");
+                            log.info("已设定脚本启动后暂停");
+                            task.ddtLog.info("已设定脚本启动后暂停");
                             break;
                         }
                     case WAITING_START:
                     case WAITING_CONTINUE:
-                        task.log("即将暂停运行");
+                        log.info("即将暂停");
+                        task.ddtLog.info("即将暂停");
                         break;
                 }
-                task.suspend = true;
+                // 由于暂停需要从多个场景中暂停
+                task.suspend();
             }
         }
     }
@@ -288,20 +289,24 @@ public class DDTankCoreThread extends Thread {
                     case NOT_STARTED:
                     case WAITING_STOP:
                     case STOP:
-                        task.log("已取消下次启动后的暂停操作");
+                        log.info("已取消下次启动后的暂停操作");
+                        task.ddtLog.info("已取消下次启动后的暂停操作");
                         break;
                     case SUSPEND:
                         // 尝试替换状态，若被其他未加task对象锁的代码替换说明这段时间被调用了停止方法
                         if (!task.coreState.compareAndSet(CoreThreadStateEnum.SUSPEND, CoreThreadStateEnum.WAITING_CONTINUE)) {
-                            task.log("已取消下次启动后的暂停操作");
+                            log.info("已取消下次启动后的暂停操作");
+                            task.ddtLog.info("已取消下次启动后的暂停操作");
                         } else {
-                            task.log("即将恢复运行");
+                            log.info("即将恢复运行");
+                            task.ddtLog.info("即将恢复运行");
                         }
                         break;
                     case WAITING_SUSPEND:
                         task.coreState.compareAndSet(CoreThreadStateEnum.WAITING_SUSPEND, CoreThreadStateEnum.RUN);
                     case WAITING_START:
-                        task.log("取消暂停操作");
+                        log.info("取消暂停操作");
+                        task.ddtLog.info("取消暂停操作");
                         break;
                 }
                 task.suspend = false;
@@ -322,7 +327,7 @@ public class DDTankCoreThread extends Thread {
     }
 
     public DDTankLog.Log getCurrentLog() {
-        return task.getCurrentLog();
+        return task.ddtLog.newestLog();
     }
 
     public int getPasses() {

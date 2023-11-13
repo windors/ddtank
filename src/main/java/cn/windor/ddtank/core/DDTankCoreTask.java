@@ -21,7 +21,6 @@ import cn.windor.ddtank.type.CoreThreadStateEnum;
 import com.jacob.com.ComThread;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.util.digester.Rule;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -30,7 +29,7 @@ import static cn.windor.ddtank.util.ThreadUtils.delay;
 import static cn.windor.ddtank.util.ThreadUtils.delayPersisted;
 
 @Slf4j
-public class DDTankCoreTask extends DDTank implements Runnable {
+public class DDTankCoreTask implements Runnable {
 
     // 游戏句柄
     long hwnd;
@@ -38,6 +37,7 @@ public class DDTankCoreTask extends DDTank implements Runnable {
     // 游戏版本
     String version;
 
+    protected DDTankLog ddtLog;
 
     @Getter
     // 已通关副本数
@@ -48,7 +48,7 @@ public class DDTankCoreTask extends DDTank implements Runnable {
 
     // runTime是上一次暂停前运行的时间
     private long endTime = -1;
-    private long runTime;
+    private long runTime = 0;
     private long suspendTime;
 
     boolean suspend = false;
@@ -57,7 +57,10 @@ public class DDTankCoreTask extends DDTank implements Runnable {
     private int offsetX;
     private int offsetY;
 
+    // 如果该变量为true，则需要结束本次脚本运行，通过重启的方式释放当前线程占用的资源
     volatile boolean needRestart = false;
+    // 如果该值为true，表示当前脚本是通过现有脚本复制来的，此时例如绑定、矫正等一些操作就不要再次在日志中说明
+    boolean isAutoRestart = false;
 
     AtomicReference<CoreThreadStateEnum> coreState = new AtomicReference<>(CoreThreadStateEnum.NOT_STARTED);
 
@@ -101,7 +104,7 @@ public class DDTankCoreTask extends DDTank implements Runnable {
      * @param task
      */
     public DDTankCoreTask(DDTankCoreTask task) {
-        super(task.ddtLog);
+        this.ddtLog = task.ddtLog;
         this.hwnd = task.hwnd;
         this.version = task.version;
         this.coreState.set(CoreThreadStateEnum.WAITING_START);
@@ -115,6 +118,17 @@ public class DDTankCoreTask extends DDTank implements Runnable {
         this.needCorrect = task.needCorrect;
         this.offsetX = task.offsetX;
         this.offsetY = task.offsetY;
+    }
+
+    /**
+     * 自动重启时调用的构造方法
+     *
+     * @param task
+     * @param isAutoRestart
+     */
+    public DDTankCoreTask(DDTankCoreTask task, boolean isAutoRestart) {
+        this(task);
+        this.isAutoRestart = isAutoRestart;
     }
 
     /**
@@ -149,21 +163,30 @@ public class DDTankCoreTask extends DDTank implements Runnable {
         }
 
         // 复杂对象在非空时创建，非空表示通过复制的方式创建的Task
-        if(ddTankCoreAttackHandler != null) {
+        if (ddTankCoreAttackHandler != null) {
             ddTankCoreAttackHandler = new DDTankCoreAttackHandlerImpl(properties, keyboard, ddtankPic, ddtankOperate, ddtLog);
         }
-        if(ddtankSelectMapHandler != null) {
+        if (ddtankSelectMapHandler != null) {
             ddtankSelectMapHandler = new DDTankSelectMapHandlerImpl(properties, ddtankOperate, ddtLog);
         }
 
-        // 矫正坐标
+        // 首次启动时向控制台说明当前为前台模式启动，重启等操作就不会再重复
+        if (!isAutoRestart && needCorrect) {
+            log.warn("当前窗口无法开启后台模式，可能浏览器使用了极速模式的内核，此时脚本无法获取到游戏窗口截图。即将以前台模式启动。");
+        }
+
+        // 矫正坐标，需要矫正时检测是否已经矫正过（偏移不为0）
         if (needCorrect && (offsetX != 0 || offsetY != 0)) {
-            logInfo("检测到已矫正过坐标，自动使用上一次的矫正坐标，若需要重新矫正请将脚本删除后再启动");
+            // TODO 添加手动矫正
+            if (!isAutoRestart) {
+                log.info("[矫正坐标]：检测到已矫正过坐标，自动使用上一次的矫正坐标，若需要重新矫正请将脚本删除");
+            }
             dm.setFindOffset(offsetX, offsetY);
             mouse.setOffset(offsetX, offsetY);
         } else if (needCorrect) {
             // 矫正坐标
-            logInfo("开始矫正坐标...");
+            log.info("[矫正坐标]：开始矫正坐标，当前版本矫正坐标方式为：检测激活窗口图片（标准值 Point(x=465, y=343)）与矫正标识图片（标准值 Point(x=381, y=572)）");
+            ddtLog.warn("开始矫正坐标");
             int[] size = dm.getClientSize(hwnd);
             int width = size[0];
             int height = size[1];
@@ -171,20 +194,27 @@ public class DDTankCoreTask extends DDTank implements Runnable {
             Point result = new Point();
             long startTime = System.currentTimeMillis();
             while (!offseted) {
+                // 如果超过1秒未成功矫正则退出
                 if (System.currentTimeMillis() - startTime > 1000) {
                     break;
                 }
                 if (dm.findPic(0, 0, width, height, "C:/tmp/需要激活窗口.bmp", "202020", 0.8, 0, result)) {
-                    // 10.4截图标准值：Point(x=465, y=343)
+                    // 10.4截图标准值：
                     offsetX = result.getX() - 465;
                     offsetY = result.getY() - 343;
-                    logInfo("检测到[激活窗口矫正]：" + offsetX + ", " + offsetY);
+                    if (!isAutoRestart) {
+                        log.info("[矫正坐标]：检测到需要激活窗口，已成功矫正坐标，当前校正值 x：{}, y：{}，请勿随意更改游戏窗口大小且确保游戏窗口不被阻挡", offsetX, offsetY);
+                        ddtLog.success("矫正起始点：" + offsetX + ", " + offsetY);
+                    }
                     offseted = true;
                 } else if (dm.findPic(0, 0, width, height, "C:/tmp/矫正标识.bmp", "101010", 0.8, 0, result)) {
                     // 10.4截图标准值：Point(x=381, y=572)
                     offsetX = result.getX() - 381;
                     offsetY = result.getY() - 572;
-                    logInfo("检测到[聊天窗口矫正]：" + offsetX + ", " + offsetY);
+                    if (!isAutoRestart) {
+                        log.info("[矫正坐标]：检测到矫正标识，已成功矫正坐标，当前校正值 x：{}, y：{}，请勿随意更改游戏窗口大小且确保游戏窗口不被阻挡", offsetX, offsetY);
+                        ddtLog.success("矫正起始点：" + offsetX + ", " + offsetY);
+                    }
                     offseted = true;
                 }
             }
@@ -192,7 +222,10 @@ public class DDTankCoreTask extends DDTank implements Runnable {
                 dm.setFindOffset(offsetX, offsetY);
                 mouse.setOffset(offsetX, offsetY);
             } else {
-                logError("当前脚本" + Thread.currentThread().getName() + "(句柄" + hwnd + ")启动方式为前台模式，且矫正失败，请在首页重启该脚本或在详细页手动矫正（当前版本矫正方式为：激活窗口矫正与聊天窗口矫正");
+                if (!isAutoRestart) {
+                    log.warn("[矫正坐标]：自动矫正失败");
+                    ddtLog.warn("自动矫正失败");
+                }
             }
         }
     }
@@ -202,39 +235,42 @@ public class DDTankCoreTask extends DDTank implements Runnable {
     public void run() {
         this.dm = new DMLibrary(LibraryFactory.getActiveXCompnent());
         if (bind(this.dm)) {
-            log(Thread.currentThread().getName() + "已成功绑定游戏窗口！");
+            if(!isAutoRestart) {
+                log.info("[窗口绑定]：已成功绑定游戏窗口");
+                ddtLog.success("副绑定成功");
+            }
             init();
             try {
                 startTime = System.currentTimeMillis();
-                log("脚本已启动！");
+                ddtLog.success("脚本已启动并运行");
                 while (!Thread.interrupted()) {
                     if (needRestart) {
                         break;
                     }
                     if (suspend) {
                         long suspendStartTime;
-                        // 使用compareAndSet而不是直接替换是因为在等待暂停的这段时间里调用了一些方法使状态发生了改变，例如调用了停止方法但仅仅设置了状态值还未来得及中断，使用CompareAndSet可以防止看到错误的状态。下同
-                        coreState.compareAndSet(CoreThreadStateEnum.WAITING_SUSPEND, CoreThreadStateEnum.SUSPEND);
+                        coreState.set(CoreThreadStateEnum.SUSPEND);
                         // 当处于暂停状态并且不需要重启时会一直等待，需要重启则会最终运行到上面的break;
                         while (suspend && !needRestart) {
                             suspendStartTime = System.currentTimeMillis();
                             delay(1000, true);
                             suspendTime += System.currentTimeMillis() - suspendStartTime;
                         }
+                        // 期间可能调用了停止方法，会导致状态变为等待停止，此时就不应该替换为RUN
                         coreState.compareAndSet(CoreThreadStateEnum.WAITING_CONTINUE, CoreThreadStateEnum.RUN);
                     } else {
                         coreState.set(CoreThreadStateEnum.RUN);
                         try {
                             if (ddtankPic.needActiveWindow()) {
-                                log("重新激活窗口");
+                                ddtLog.info("重新激活窗口");
                             }
 
                             if (ddtankPic.needGoingToWharf()) {
-                                log("进入远征码头");
+                                ddtLog.info("进入远征码头");
                             }
 
                             if (ddtankPic.needCreateRoom()) {
-                                log("创建房间");
+                                ddtLog.info("创建房间");
                             }
 
                             if (ddtankPic.needChooseMap()) {
@@ -245,15 +281,15 @@ public class DDTankCoreTask extends DDTank implements Runnable {
                             }
 
                             if (ddtankPic.needCloseTip()) {
-                                log("关闭提示");
+                                ddtLog.info("关闭提示");
                             }
 
                             if (ddtankPic.needClickPrepare()) {
-                                log("点击准备按钮");
+                                ddtLog.info("点击准备按钮");
                             }
 
                             if (ddtankPic.needClickStart()) {
-                                log("点击开始按钮");
+                                ddtLog.info("点击开始按钮");
                                 initEveryTimes();
                             }
 
@@ -264,13 +300,14 @@ public class DDTankCoreTask extends DDTank implements Runnable {
                             if (ddtankPic.needDraw()) {
                                 delay(300, true);
                                 DMLibrary.capture(dm, hwnd, DDTankFileConfigProperties.getDrawDir(Thread.currentThread().getName()) + "/" + passes + ".png");
-                                passes++;
+                                ddtLog.success("第" + ++passes + "次副本已通关");
                             }
                             delay(properties.getDelay(), true);
                         } catch (StopTaskException ignored) {
                         } catch (Exception e) {
                             e.printStackTrace();
-                            logError("脚本运行过程中出现异常：" + e.toString());
+                            log.error("脚本运行过程中出现异常：" + e.toString());
+                            ddtLog.error("脚本运行过程中出现异常：" + e.toString());
                         }
                     }
                 }
@@ -281,10 +318,10 @@ public class DDTankCoreTask extends DDTank implements Runnable {
                 unBind(this.dm);
             }
             endTime = System.currentTimeMillis();
-            logInfo("脚本已停止");
+            log.info("脚本停止运行");
         } else {
-            log("窗口绑定失败，请重新尝试启动脚本");
             log.error("窗口绑定失败，请重新尝试启动脚本，大漠错误码：{}", dm.getLastError());
+            ddtLog.error("窗口绑定失败：" + dm.getLastError());
         }
         coreState.set(CoreThreadStateEnum.STOP);
         System.gc();
@@ -323,9 +360,7 @@ public class DDTankCoreTask extends DDTank implements Runnable {
     }
 
     public void unBind(Library dm) {
-        log(hwnd + "解除绑定" + System.currentTimeMillis());
         delayPersisted(1000, false);
-        log.debug("解除绑定：{}", System.currentTimeMillis());
         dm.unbindWindow();
         ComThread.Release();
     }
@@ -344,9 +379,14 @@ public class DDTankCoreTask extends DDTank implements Runnable {
     }
 
     public long getCallTimes() {
-        if(dm == null) {
+        if (dm == null) {
             return 0;
         }
         return ((DMLibrary) dm).getCallTimes();
+    }
+
+    public void suspend() {
+        this.suspend = true;
+        this.ddTankCoreAttackHandler.suspend();
     }
 }

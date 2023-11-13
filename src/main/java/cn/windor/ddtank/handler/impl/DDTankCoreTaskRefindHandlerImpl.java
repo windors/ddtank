@@ -244,22 +244,22 @@ public class DDTankCoreTaskRefindHandlerImpl implements DDTankCoreTaskRefindHand
     }
 
     public void log(String msg) {
-        ddtLog.log(msg);
+        ddtLog.info(msg);
         log.debug(msg);
     }
 
     public void logInfo(String msg) {
-        ddtLog.log(msg);
+        ddtLog.info(msg);
         log.info(msg);
     }
 
     public void logWarn(String msg) {
-        ddtLog.log(msg);
+        ddtLog.info(msg);
         log.warn(msg);
     }
 
     public void logError(String msg) {
-        ddtLog.log(msg);
+        ddtLog.info(msg);
         log.error(msg);
     }
 }

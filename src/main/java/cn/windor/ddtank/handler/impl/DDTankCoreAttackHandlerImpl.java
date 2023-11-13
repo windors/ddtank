@@ -72,7 +72,8 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
                 round = round + 1;
                 // 获取屏距
                 distance = distanceCalculate.get();
-                log("第" + round + "回合");
+                log.debug("第{}回合", round);
+                ddtLog.info("第" + round + "回合");
                 // TODO 自定义回合技能
                 String skill = properties.getAttackSkill().toLowerCase();
                 if (skill.contains("p")) {
@@ -81,11 +82,13 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
                     angle = properties.getHandleAngle();
                     strength = properties.getHandleStrength();
                     if (ddtankOperate.angleAdjust(angle, handlerSelector.getAngleMoveHandler(), toward)) {
-                        log("手动攻击：" + angle + "度, " + strength + "力");
+                        log.debug("手动攻击：" + angle + "度, " + strength + "力");
+                        ddtLog.info("手动攻击：" + angle + "度, " + strength + "力");
                         keyboard.keysPress(properties.getAttackSkill(), 10);
                         ddtankOperate.attack(strength);
                     } else {
-                        log("未能调整到指定角度，当前角度：" + ddtankPic.getAngle() + ", 目标角度：" + angle);
+                        log.debug("未能调整到指定角度，当前角度：{}, 目标角度：{}", ddtankPic.getAngle(), angle);
+                        ddtLog.warn("未能调整到指定角度，当前角度：" + ddtankPic.getAngle() + ", 目标角度：" + angle);
                     }
                 } else {
                     // 自动攻击
@@ -124,7 +127,8 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
             }
             if (myPosition == null) {
                 tiredTimes++;
-                log("未找到位置，尝试走位。若长时间未找到分析是否是小地图截取太小的问题。");
+                log.debug("未找到位置，尝试走位。若长时间未找到分析是否是小地图截取太小的问题。");
+                ddtLog.warn("未找到位置，尝试走位。若长时间未找到分析是否是小地图截取太小的问题。");
                 DDTankFindPositionMoveHandler positionMoveHandler = handlerSelector.getPositionMoveHandler();
                 if (!positionMoveHandler.move(++tiredTimes)) {
                     break;
@@ -132,7 +136,8 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
             }
         }
         if (myPosition != null) {
-            log("我的坐标：" + myPosition.getX() + ", " + myPosition.getY());
+            log.debug("我的坐标：{}, {}", myPosition.getX(), myPosition.getY());
+            ddtLog.info("我的坐标：" + myPosition.getX() + ", " + myPosition.getY());
             myLastPosition.setX(myPosition.getX());
             myLastPosition.setY(myPosition.getY());
             enemyPosition = ddtankPic.getEnemyPosition();
@@ -156,7 +161,8 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
                     }
                 }
             }
-            log("敌人的坐标：" + enemyPosition.getX() + ", " + enemyPosition.getY());
+            log.debug("敌人的坐标：{}, {}", enemyPosition.getX(), enemyPosition.getY());
+            ddtLog.info("敌人的坐标：" + enemyPosition.getX() + ", " + enemyPosition.getY());
             enemyLastPosition.setX(enemyPosition.getX());
             enemyLastPosition.setY(enemyPosition.getY());
             angle = ddtankOperate.getBestAngle(myPosition, enemyPosition);
@@ -177,11 +183,13 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
                 toward = ddtankPic.getToward();
                 if (toward == TowardEnum.LEFT && enemyPosition.getX() > myPosition.getX()) {
                     keyboard.keyPress('d');
-                    log("检测到当前方向向左，敌人在右，已自动转向");
+                    log.debug("检测到当前方向向左，敌人在右，已自动转向");
+                    ddtLog.info("检测到当前方向向左，敌人在右，已自动转向");
                     delay(100, true);
                 } else if (toward == TowardEnum.RIGHT && enemyPosition.getX() < myPosition.getX()) {
                     keyboard.keyPress('a');
-                    log("检测到当前方向向右，敌人在左，已自动转向");
+                    log.debug("检测到当前方向向右，敌人在左，已自动转向");
+                    ddtLog.info("检测到当前方向向右，敌人在左，已自动转向");
                     delay(100, true);
                 }
             }
@@ -197,16 +205,20 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
                 if (ddtankOperate.angleAdjust(angle, handlerSelector.getAngleMoveHandler(), targetToward)) {
                     double horizontal = new BigDecimal((enemyPosition.getX() - myPosition.getX()) / distance).setScale(2, RoundingMode.UP).doubleValue();
                     double vertical = new BigDecimal((myPosition.getY() - enemyPosition.getY()) / distance).setScale(2, RoundingMode.UP).doubleValue();
-                    log("水平屏距：" + horizontal + ", 垂直屏距：" + vertical);
+                    log.debug("水平屏距：{}, 垂直屏距：{}", horizontal, vertical);
+                    ddtLog.info("水平屏距：" + horizontal + ", 垂直屏距：" + vertical);
+
                     strength = ddtankOperate.getStrength(angle, horizontal, vertical);
                     strength += properties.getOffsetStrength();
                     strength = new BigDecimal(strength).setScale(2, RoundingMode.UP).doubleValue();
-                    log("自动攻击：" + angle + "度, " + strength + "力");
+                    log.debug("自动攻击：{}度, {}力", angle, strength);
+                    ddtLog.info("自动攻击：" + angle + "度, " + strength + "力");
                     keyboard.keysPress(properties.getAttackSkill(), 0);
                     ddtankOperate.attack(strength);
                 } else {
                     // TODO 调整角度失败的情况，即调整角度策略失效
-                    log("未能调整到指定角度，当前角度：" + ddtankPic.getAngle() + ", 目标角度：" + angle + "执行原地飞操作");
+                    log.debug("未能调整到指定角度，当前角度：{}, 目标角度: {}, 执行原地飞操作", ddtankPic.getAngle(), angle);
+                    ddtLog.info("未能调整到指定角度，当前角度：" + ddtankPic.getAngle() + ", 目标角度：" + angle + "执行原地飞操作");
                     keyboard.keyPress('f');
                     ddtankOperate.attack(5);
                 }
@@ -263,7 +275,8 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
         public double get() {
             // 手动屏距直接返回即可
             if (properties.getIsHandleCalcDistance()) {
-                log("手动屏距：" + properties.getHandleDistance());
+                log.debug("手动屏距：{}", properties.getHandleDistance());
+                ddtLog.info("手动屏距：" + properties.getHandleDistance());
                 return properties.getHandleDistance();
             }
 
@@ -276,6 +289,7 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
                 // 未检测到有效屏距
                 stop = false;
                 log.error("未检测到有效屏距");
+                ddtLog.warn("未能检测到有效屏距");
                 return 10.0;
             }
             // 统计
@@ -297,32 +311,10 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
             }
             // 释放内存，之后都不需要用到了
             distanceList = null;
-            log("自动屏距：" + finalDistance);
+            log.debug("自动屏距：{}", finalDistance);
+            ddtLog.info("自动屏距：" + finalDistance);
             // 统计出现次数最多的屏距
             return finalDistance;
         }
-    }
-
-
-
-
-    public void log(String msg) {
-        ddtLog.log(msg);
-        log.debug(msg);
-    }
-
-    public void logInfo(String msg) {
-        ddtLog.log(msg);
-        log.info(msg);
-    }
-
-    public void logWarn(String msg) {
-        ddtLog.log(msg);
-        log.warn(msg);
-    }
-
-    public void logError(String msg) {
-        ddtLog.log(msg);
-        log.error(msg);
     }
 }

@@ -11,8 +11,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import static cn.windor.ddtank.util.ThreadUtils.delay;
-
 @Slf4j
 public class DDTankSelectMapHandlerImpl implements DDTankSelectMapHandler {
 
@@ -67,7 +65,7 @@ public class DDTankSelectMapHandlerImpl implements DDTankSelectMapHandler {
     }
 
     public void log(String msg) {
-        ddtLog.log(msg);
+        ddtLog.info(msg);
         log.debug(msg);
     }
 }

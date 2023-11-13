@@ -3,7 +3,6 @@ package cn.windor.ddtank.core;
 import lombok.Getter;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -32,11 +31,30 @@ public class DDTankLog {
         return logs.get(0);
     }
 
-    public void log(String str) {
+    public void info(String str) {
+        checkSize();
+        logs.add(0, new Log(str));
+    }
+
+    public void success(String str) {
+        checkSize();
+        logs.add(0, new Log(str));
+    }
+
+    public void warn(String str) {
+        checkSize();
+        logs.add(0, new Log(str));
+    }
+
+    public void error(String str) {
+        checkSize();
+        logs.add(0, new Log(str));
+    }
+
+    private void checkSize() {
         if(logs.size() == maxSize) {
             logs.remove(logs.size() - 1);
         }
-        logs.add(0, new Log(str));
     }
 
     static class Log {
