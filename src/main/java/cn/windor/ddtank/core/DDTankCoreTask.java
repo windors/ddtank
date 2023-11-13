@@ -143,7 +143,10 @@ public class DDTankCoreTask implements Runnable {
         } else if (!dm.useDict(0)) {
             log.error("大漠字库使用失败！");
         } else {
-            log.info("大漠字库设置并使用成功！");
+            if(!isAutoRestart) {
+                log.info("大漠字库设置并使用成功！");
+                ddtLog.success("大漠字库设置并使用成功");
+            }
         }
 
         // 设置脚本参数
