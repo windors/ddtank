@@ -90,6 +90,7 @@ public class DDTankCoreTask implements Runnable {
      */
     public DDTankCoreTask(long hwnd, String version, DDTankConfigProperties properties, boolean needCorrect) {
         super();
+        this.ddtLog = new DDTankLog();
         this.hwnd = hwnd;
         this.version = version;
         this.coreState.set(CoreThreadStateEnum.WAITING_START);
@@ -163,10 +164,10 @@ public class DDTankCoreTask implements Runnable {
         }
 
         // 复杂对象在非空时创建，非空表示通过复制的方式创建的Task
-        if (ddTankCoreAttackHandler != null) {
+        if (ddTankCoreAttackHandler == null) {
             ddTankCoreAttackHandler = new DDTankCoreAttackHandlerImpl(properties, keyboard, ddtankPic, ddtankOperate, ddtLog);
         }
-        if (ddtankSelectMapHandler != null) {
+        if (ddtankSelectMapHandler == null) {
             ddtankSelectMapHandler = new DDTankSelectMapHandlerImpl(properties, ddtankOperate, ddtLog);
         }
 

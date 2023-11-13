@@ -264,10 +264,15 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
             if (stop) {
                 return true;
             }
-            double distance = ddtankPic.calcUnitDistance();
-            if (distance > 0) {
-                distanceList.add(distance);
-                return true;
+            try {
+                double distance = ddtankPic.calcUnitDistance();
+                if (distance > 0) {
+                    distanceList.add(distance);
+                    return true;
+                }
+            }catch (Exception e) {
+                log.info("请更新屏距算法，当前调用出现{}异常。（下个版本解决，目前不影响使用）", e.getClass());
+                return false;
             }
             return false;
         }
