@@ -142,13 +142,13 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
             myLastPosition.setY(myPosition.getY());
             enemyPosition = ddtankPic.getEnemyPosition();
             if (enemyPosition == null) {
-                if (enemyLastPosition.getX() != 0 && enemyLastPosition.getY() != 0) {
-                    // 当前记录过敌人的位置，但这回合找不到了
-                    enemyPosition = new Point(enemyLastPosition.getX() + 30, enemyLastPosition.getY());
-                    if (enemyPosition.getX() >= 1000) {
-                        enemyPosition.setX(1000);
-                    }
-                } else {
+//                if (enemyLastPosition.getX() != 0 && enemyLastPosition.getY() != 0) {
+//                    // 当前记录过敌人的位置，但这回合找不到了
+//                    enemyPosition = new Point(enemyLastPosition.getX() + 30, enemyLastPosition.getY());
+//                    if (enemyPosition.getX() >= 1000) {
+//                        enemyPosition.setX(1000);
+//                    }
+//                } else {
                     // 第一回合就找不到boss，尝试不断的走位来获取boss位置
                     while (ddtankPic.isMyRound()) {
                         if ((enemyPosition = ddtankPic.getEnemyPosition()) != null) {
@@ -159,7 +159,7 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
                             break;
                         }
                     }
-                }
+//                }
             }
             log.debug("敌人的坐标：{}, {}", enemyPosition.getX(), enemyPosition.getY());
             ddtLog.info("敌人的坐标：" + enemyPosition.getX() + ", " + enemyPosition.getY());
