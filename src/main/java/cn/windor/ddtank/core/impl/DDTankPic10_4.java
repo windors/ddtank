@@ -26,6 +26,7 @@ public class DDTankPic10_4 implements DDTankPic {
     protected Mouse mouse;
 
     protected BinaryPicProcess binaryPicProcess;
+
     public DDTankPic10_4(Library dm, String path, DDTankConfigProperties properties, Mouse mouse) {
         this.dm = dm;
         this.mouse = mouse;
@@ -150,7 +151,6 @@ public class DDTankPic10_4 implements DDTankPic {
         return false;
     }
 
-    // TODO 完善架构
     @Override
     public boolean needDraw() {
         List<Point> cardList;
@@ -160,10 +160,9 @@ public class DDTankPic10_4 implements DDTankPic {
                 path + "蛋10.4-卡牌.bmp", "101010", 0.8, 0)) != null) {
             find = true;
             if (!over) {
-                for (int i = 0; i < 2; i++) {
+                for (int i = 0; i < 21; i++) {
                     Point point = cardList.get((int) (System.currentTimeMillis() % cardList.size()));
                     mouse.moveAndClick(point);
-                    delay(100, true);
                 }
 
                 if (dm.findPic(590, 185, 750, 290, path + "蛋10.4-翻第三张牌.bmp", "101010", 0.8, 0, null)) {
@@ -174,6 +173,7 @@ public class DDTankPic10_4 implements DDTankPic {
                     }
                 }
             }
+            // TODO 完善翻牌结束后的截图架构（尽快返回）
             delay(1000, true);
         }
         return find;
@@ -242,7 +242,7 @@ public class DDTankPic10_4 implements DDTankPic {
                         result.setOffset(-2, -2);
                         break;
                 }
-            return result;
+                return result;
             }
         }
         return null;
