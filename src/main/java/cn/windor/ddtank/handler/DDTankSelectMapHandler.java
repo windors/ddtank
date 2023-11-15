@@ -1,10 +1,11 @@
 package cn.windor.ddtank.handler;
 
+import cn.windor.ddtank.core.DDTankCoreTaskComplexObject;
 import cn.windor.ddtank.entity.LevelRule;
 
 import java.util.List;
 
-public interface DDTankSelectMapHandler {
+public interface DDTankSelectMapHandler extends DDTankCoreTaskComplexObject {
     /**
      * 选择副本
      * @param passed 已通关次数

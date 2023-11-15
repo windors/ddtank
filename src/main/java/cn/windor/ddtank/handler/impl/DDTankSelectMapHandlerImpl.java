@@ -18,13 +18,26 @@ public class DDTankSelectMapHandlerImpl implements DDTankSelectMapHandler {
     private List<LevelRule> levelRules = new CopyOnWriteArrayList<>();
 
     private final DDTankConfigProperties properties;
-    private final DDTankOperate ddtankOperate;
-    private final DDTankLog ddtLog;
+    private DDTankOperate ddtankOperate;
+    private DDTankLog ddtLog;
 
     public DDTankSelectMapHandlerImpl(DDTankConfigProperties properties, DDTankOperate ddtankOperate, DDTankLog ddtLog) {
         this.properties = properties;
         this.ddtankOperate = ddtankOperate;
         this.ddtLog = ddtLog;
+    }
+
+    @Override
+    public boolean update(Object... complexObject) {
+        boolean success = true;
+        for (Object param : complexObject) {
+            if(param instanceof DDTankOperate) {
+                this.ddtankOperate = (DDTankOperate) param;
+                continue;
+            }
+            success = false;
+        }
+        return success;
     }
 
     @Override

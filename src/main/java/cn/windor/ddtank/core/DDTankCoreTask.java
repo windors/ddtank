@@ -143,7 +143,7 @@ public class DDTankCoreTask implements Runnable {
         } else if (!dm.useDict(0)) {
             log.error("大漠字库使用失败！");
         } else {
-            if(!isAutoRestart) {
+            if (!isAutoRestart) {
                 log.info("大漠字库设置并使用成功！");
                 ddtLog.success("大漠字库设置并使用成功");
             }
@@ -166,12 +166,16 @@ public class DDTankCoreTask implements Runnable {
             this.ddtankOperate = new DDtankOperate2_3(dm, mouse, keyboard, ddtankPic, properties);
         }
 
-        // 复杂对象在非空时创建，非空表示通过复制的方式创建的Task
+        // 复杂对象在非空时创建，非空表示通过复制的方式创建的Task，否则就需要更新复杂对象所依赖的插件对象
         if (ddTankCoreAttackHandler == null) {
             ddTankCoreAttackHandler = new DDTankCoreAttackHandlerImpl(properties, keyboard, ddtankPic, ddtankOperate, ddtLog);
+        } else {
+            ddTankCoreAttackHandler.update(keyboard, ddtankPic, ddtankOperate);
         }
         if (ddtankSelectMapHandler == null) {
             ddtankSelectMapHandler = new DDTankSelectMapHandlerImpl(properties, ddtankOperate, ddtLog);
+        }else {
+            ddtankSelectMapHandler.update(ddtankOperate);
         }
 
         // 首次启动时向控制台说明当前为前台模式启动，重启等操作就不会再重复
@@ -239,7 +243,7 @@ public class DDTankCoreTask implements Runnable {
     public void run() {
         this.dm = new DMLibrary(LibraryFactory.getActiveXCompnent());
         if (bind(this.dm)) {
-            if(!isAutoRestart) {
+            if (!isAutoRestart) {
                 log.info("[窗口绑定]：已成功绑定游戏窗口");
                 ddtLog.success("副绑定成功");
             }
@@ -312,6 +316,7 @@ public class DDTankCoreTask implements Runnable {
                             e.printStackTrace();
                             log.error("脚本运行过程中出现异常：" + e.toString());
                             ddtLog.error("脚本运行过程中出现异常：" + e.toString());
+                            delay(1000, true);
                         }
                     }
                 }

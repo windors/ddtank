@@ -22,8 +22,8 @@ import static cn.windor.ddtank.util.ThreadUtils.delay;
 public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
 
     private final DDTankConfigProperties properties;
-    private final Keyboard keyboard;
-    private final DDTankOperate ddtankOperate;
+    private Keyboard keyboard;
+    private DDTankOperate ddtankOperate;
 
     private DDTankLog ddtLog;
     // 1距的距离
@@ -53,6 +53,34 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
         myLastPosition = new Point();
         enemyLastPosition = new Point();
         handlerSelector = new DDTankCoreHandlerSelector(keyboard, properties);
+    }
+
+    @Override
+    public boolean update(Object... complexObject) {
+        boolean success = true;
+        for (Object param : complexObject) {
+            if (param instanceof Keyboard) {
+                this.keyboard = (Keyboard) param;
+                continue;
+            }
+            if (param instanceof DDTankPic) {
+                this.ddtankPic = (DDTankPic) param;
+                continue;
+            }
+            if (param instanceof DDTankOperate) {
+                this.ddtankOperate = (DDTankOperate) param;
+                continue;
+            }
+            if (param instanceof DDTankLog) {
+                this.ddtLog = (DDTankLog) param;
+                continue;
+            }
+            success = false;
+        }
+        if (success) {
+            handlerSelector = new DDTankCoreHandlerSelector(keyboard, properties);
+        }
+        return success;
     }
 
     @Override
@@ -149,16 +177,16 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
 //                        enemyPosition.setX(1000);
 //                    }
 //                } else {
-                    // 第一回合就找不到boss，尝试不断的走位来获取boss位置
-                    while (ddtankPic.isMyRound()) {
-                        if ((enemyPosition = ddtankPic.getEnemyPosition()) != null) {
-                            break;
-                        }
-                        DDTankFindPositionMoveHandler positionMoveHandler = handlerSelector.getPositionMoveHandler();
-                        if (!positionMoveHandler.move(++tiredTimes)) {
-                            break;
-                        }
+                // 第一回合就找不到boss，尝试不断的走位来获取boss位置
+                while (ddtankPic.isMyRound()) {
+                    if ((enemyPosition = ddtankPic.getEnemyPosition()) != null) {
+                        break;
                     }
+                    DDTankFindPositionMoveHandler positionMoveHandler = handlerSelector.getPositionMoveHandler();
+                    if (!positionMoveHandler.move(++tiredTimes)) {
+                        break;
+                    }
+                }
 //                }
             }
             log.debug("敌人的坐标：{}, {}", enemyPosition.getX(), enemyPosition.getY());
@@ -222,7 +250,7 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
                     keyboard.keyPress('f');
                     ddtankOperate.attack(5);
                 }
-            }catch (DDTankAngleResolveException e) {
+            } catch (DDTankAngleResolveException e) {
                 // 角度获取失败，跳过回合
                 keyboard.keyPress('p');
             }
@@ -270,7 +298,7 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
                     distanceList.add(distance);
                     return true;
                 }
-            }catch (Exception e) {
+            } catch (Exception e) {
                 log.info("请更新屏距算法，当前调用出现{}异常。（下个版本解决，目前不影响使用）", e.getClass());
                 return false;
             }

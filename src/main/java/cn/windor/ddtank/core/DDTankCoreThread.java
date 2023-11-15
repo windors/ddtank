@@ -103,6 +103,7 @@ public class DDTankCoreThread extends Thread {
                 while (!interrupted()) {
                     if (!dm.getWindowState(gameHwnd, 0)) {
                         // 调用dm在出错时往往会弹出窗口，所以需要手动关闭线程
+                        log.info("检测到游戏窗口关闭");
                         task.ddtLog.error("检测到游戏窗口关闭，即将停止脚本运行");
                         coreThread.interrupt();
                         coreThread.join();
@@ -113,9 +114,11 @@ public class DDTankCoreThread extends Thread {
                         if ("10".equals(gameVersion)) {
                             long hwnd = taskRefindHandler.refindHwnd(gameHwnd);
                             if (hwnd == 0) {
+                                log.info("自动重连失败");
                                 task.ddtLog.error("自动重连失败，即将停止运行");
                                 break;
                             } else {
+                                log.info("自动重连成功");
                                 task.ddtLog.success("自动重连：已重新找到窗口句柄");
                                 rebind(hwnd);
                             }

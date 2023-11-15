@@ -1,11 +1,13 @@
 package cn.windor.ddtank.handler;
 
 import cn.windor.ddtank.core.DDTankCoreSceneTask;
+import cn.windor.ddtank.core.DDTankCoreTaskComplexObject;
+import cn.windor.ddtank.handler.impl.DDTankCoreAttackHandlerImpl;
 
 /**
  * 脚本核心攻击处理器接口
  */
-public interface DDTankCoreAttackHandler extends DDTankCoreSceneTask {
+public interface DDTankCoreAttackHandler extends DDTankCoreSceneTask, DDTankCoreTaskComplexObject {
 
     /**
      * 在脚本点击选择地图/开始后会调用该方法
