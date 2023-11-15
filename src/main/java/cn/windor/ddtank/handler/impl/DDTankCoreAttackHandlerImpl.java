@@ -122,6 +122,9 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
                     // 自动攻击
                     attackAuto();
                 }
+            } else {
+                // 预调整角度
+                angleAdjust();
             }
             // 进入副本后延迟为外面的 1/10
             delay(properties.getDelay() / 10, true);
@@ -130,6 +133,25 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
         // 下次再调用时仍然能继续调用
         exit = false;
         return failTimes;
+    }
+
+    private void angleAdjust() {
+        try {
+            if (properties.getIsHandleAttack()) {
+                // 判断是否手动攻击
+                ddtankOperate.angleAdjust(properties.getHandleAngle());
+            } else if (properties.getIsFixedAngle()) {
+                // 判断是否是固定角度攻击
+                ddtankOperate.angleAdjust(properties.getFixedAngle());
+            } else if (properties.getIsClosestAngle()) {
+                // TODO 判断是否是临近角度攻击
+            } else {
+
+                // TODO 通过检测友军和敌人位置调整角度到后面再做，先就固定尝试调整为20度
+                ddtankOperate.angleAdjust(20);
+            }
+        }catch (DDTankAngleResolveException ignore) {
+        }
     }
 
     @Override
