@@ -46,6 +46,7 @@ public class IndexControllerRouting {
         map.put("rules", coreThread.getRules());
         map.put("username", coreThread.getTaskRefindHandler().getUsername());
         map.put("password", coreThread.getTaskRefindHandler().getPassword());
+        map.put("taskAutoComplete", coreThread.getTask().getTaskAutoComplete());
         return "detail";
     }
 

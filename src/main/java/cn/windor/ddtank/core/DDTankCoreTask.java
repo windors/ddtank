@@ -15,11 +15,14 @@ import cn.windor.ddtank.entity.LevelRule;
 import cn.windor.ddtank.exception.StopTaskException;
 import cn.windor.ddtank.handler.DDTankCoreAttackHandler;
 import cn.windor.ddtank.handler.DDTankSelectMapHandler;
+import cn.windor.ddtank.handler.DDTankTaskAutoCompleteHandler;
 import cn.windor.ddtank.handler.impl.DDTankCoreAttackHandlerImpl;
 import cn.windor.ddtank.handler.impl.DDTankSelectMapHandlerImpl;
+import cn.windor.ddtank.handler.impl.DDTankTaskAutoCompleteHandlerImpl;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
 import com.jacob.com.ComThread;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
@@ -58,6 +61,10 @@ public class DDTankCoreTask implements Runnable {
     private int offsetX;
     private int offsetY;
 
+    @Setter
+    @Getter
+    private int taskAutoComplete = -1;
+
     // 如果该变量为true，则需要结束本次脚本运行，通过重启的方式释放当前线程占用的资源
     volatile boolean needRestart = false;
     // 如果该值为true，表示当前脚本是通过现有脚本复制来的，此时例如绑定、矫正等一些操作就不要再次在日志中说明
@@ -79,6 +86,8 @@ public class DDTankCoreTask implements Runnable {
 
     private DDTankCoreAttackHandler ddTankCoreAttackHandler;
     private DDTankSelectMapHandler ddtankSelectMapHandler;
+
+    private DDTankTaskAutoCompleteHandler ddTankTaskAutoCompleteHandler;
 
 
     /**
@@ -113,8 +122,10 @@ public class DDTankCoreTask implements Runnable {
         this.properties = task.properties;
         this.passes = task.passes;
         this.runTime = task.getRunTime();
+        this.taskAutoComplete = task.taskAutoComplete;
         this.ddTankCoreAttackHandler = task.ddTankCoreAttackHandler;
         this.ddtankSelectMapHandler = task.ddtankSelectMapHandler;
+        this.ddTankTaskAutoCompleteHandler = task.ddTankTaskAutoCompleteHandler;
         this.suspend = task.suspend;
         this.needRestart = false;
         this.needCorrect = task.needCorrect;
@@ -178,6 +189,11 @@ public class DDTankCoreTask implements Runnable {
             ddtankSelectMapHandler = new DDTankSelectMapHandlerImpl(properties, ddtankOperate, ddtLog);
         }else {
             ddtankSelectMapHandler.update(ddtankOperate);
+        }
+        if(ddTankTaskAutoCompleteHandler == null) {
+            ddTankTaskAutoCompleteHandler = new DDTankTaskAutoCompleteHandlerImpl(keyboard, mouse);
+        }else {
+            ddTankTaskAutoCompleteHandler.update(keyboard, mouse);
         }
 
         // 首次启动时向控制台说明当前为前台模式启动，重启等操作就不会再重复
@@ -311,6 +327,14 @@ public class DDTankCoreTask implements Runnable {
                                 delay(300, true);
                                 DMLibrary.capture(dm, hwnd, DDTankFileConfigProperties.getDrawDir(Thread.currentThread().getName()) + "/" + passes + ".png");
                                 ddtLog.success("第" + ++passes + "次副本已通关");
+
+                                // 执行自动领任务操作
+                                if(taskAutoComplete > 0 && passes % taskAutoComplete == 0) {
+                                    // 等待翻牌结束后的黑屏时间
+                                    delay(3000, true);
+                                    ddtLog.info("执行自动领取任务");
+                                    ddTankTaskAutoCompleteHandler.completeTask();
+                                }
                             }
                             delay(properties.getDelay(), true);
                         } catch (StopTaskException ignored) {

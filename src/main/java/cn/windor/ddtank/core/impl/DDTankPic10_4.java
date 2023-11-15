@@ -160,7 +160,7 @@ public class DDTankPic10_4 implements DDTankPic {
                 path + "蛋10.4-卡牌.bmp", "101010", 0.8, 0)) != null) {
             find = true;
             if (!over) {
-                for (int i = 0; i < 21; i++) {
+                for (int i = 0; i < 10; i++) {
                     Point point = cardList.get((int) (System.currentTimeMillis() % cardList.size()));
                     mouse.moveAndClick(point);
                 }

@@ -104,6 +104,15 @@
                     </button>
                 </div>
             </div>
+            <div class="form-group">
+                <label class="col-md-2 control-label">自动领取任务</label>
+                <div class="col-md-8">
+                    <input id="i-autoTask" class="form-control" type="number" name="taskAutoComplete" th:value="${taskAutoComplete}"/>
+                </div>
+                <div class="col-md-2">
+                    <button id="btn-autoTask" class="btn btn-primary col-sm-12">设置</button>
+                </div>
+            </div>
         </div>
         <div class="form-horizontal">
             <div class="form-group">
@@ -199,6 +208,16 @@
 </body>
 <script>
 
+    // 设置自动领取任务
+    $("#btn-autoTask").click(function () {
+        postAjax('/detail/[[${hwnd}]]/taskAutoComplete', {
+            taskAutoComplete: $("#i-autoTask").val()
+        }, function (data) {
+            windorAlert('提示', '自动领取任务设置成功！');
+        })
+    })
+
+    // 设置自动重连的用户名和密码
     $("#form-reconnect").submit(function () {
         postAjax('/util/run/[[${hwnd}]]/reconnect', $(this).serialize(), function (data) {
             windorAlert('提示', '自动重连设置成功！');
