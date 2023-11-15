@@ -140,7 +140,7 @@ $(function () {
             windorAlert('提示', '请 <b>选中一些脚本后</b> 再执行本方法')
         }else{
             postAjax('/util/stop', hwnds, function (data) {
-                windorAlert('提示', '已尝试停止选中的脚本');
+                windorAlert('提示', '选中的脚本已停止');
             })
         }
     })
@@ -150,7 +150,7 @@ $(function () {
             windorAlert('提示', '请 <b>选中一些脚本后</b> 再执行本方法')
         }else{
             postAjax('/util/restart', hwnds, function (data) {
-                windorAlert('提示', '已尝试重启指定脚本');
+                windorAlert('提示', '选中的脚本已重启');
             })
         }
     })

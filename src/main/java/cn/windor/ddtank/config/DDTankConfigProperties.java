@@ -71,6 +71,7 @@ public class DDTankConfigProperties implements Serializable, Cloneable {
         this.aftertreatmentSec = properties.aftertreatmentSec;
         this.angleMoveMode = properties.angleMoveMode;
         this.positionMoveMode = properties.positionMoveMode;
+        this.picDir = properties.picDir;
     }
 
     public DDTankConfigProperties(DDTankConfigProperties defaultConfig) {
@@ -78,6 +79,8 @@ public class DDTankConfigProperties implements Serializable, Cloneable {
             update(defaultConfig);
         }
     }
+
+    private volatile String picDir = "/";
 
     private volatile String name = "默认";
 

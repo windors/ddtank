@@ -22,6 +22,7 @@ import com.jacob.com.ComThread;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -152,12 +153,13 @@ public class DDTankCoreTask implements Runnable {
         // 设置脚本参数
         this.mouse = new DMMouse(dm.getSource());
         this.keyboard = new DMKeyboard(dm.getSource());
+        String picDir = new File(DDTankFileConfigProperties.getBaseDir(), properties.getPicDir()).getAbsolutePath() + "/";
         if ("10".equals(version)) {
-            this.ddtankPic = new DDTankPic10_4(dm, "C:/tmp/", properties, mouse);
+            this.ddtankPic = new DDTankPic10_4(dm, picDir, properties, mouse);
         } else if ("2.4".equalsIgnoreCase(version)) {
-            this.ddtankPic = new DDTankPic2_4(dm, "C:/tmp/", properties, mouse);
+            this.ddtankPic = new DDTankPic2_4(dm, picDir, properties, mouse);
         } else {
-            this.ddtankPic = new DDTankPic2_3(dm, "C:/tmp/", properties, mouse);
+            this.ddtankPic = new DDTankPic2_3(dm, picDir, properties, mouse);
         }
 
         if ("10".equals(version)) {
