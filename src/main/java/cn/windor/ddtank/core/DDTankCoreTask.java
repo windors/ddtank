@@ -13,9 +13,11 @@ import cn.windor.ddtank.config.DDTankFileConfigProperties;
 import cn.windor.ddtank.core.impl.*;
 import cn.windor.ddtank.entity.LevelRule;
 import cn.windor.ddtank.exception.StopTaskException;
+import cn.windor.ddtank.handler.DDTankAutoUsePropHandler;
 import cn.windor.ddtank.handler.DDTankCoreAttackHandler;
 import cn.windor.ddtank.handler.DDTankSelectMapHandler;
 import cn.windor.ddtank.handler.DDTankTaskAutoCompleteHandler;
+import cn.windor.ddtank.handler.impl.DDTankAutoUsePropHandlerImpl;
 import cn.windor.ddtank.handler.impl.DDTankCoreAttackHandlerImpl;
 import cn.windor.ddtank.handler.impl.DDTankSelectMapHandlerImpl;
 import cn.windor.ddtank.handler.impl.DDTankTaskAutoCompleteHandlerImpl;
@@ -24,6 +26,7 @@ import com.jacob.com.ComThread;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.parameters.P;
 
 import java.io.File;
 import java.util.List;
@@ -63,7 +66,18 @@ public class DDTankCoreTask implements Runnable {
 
     @Setter
     @Getter
+    // 自动领取任务。负数表示不自动领取，非负数通关数 % 该值 == 0 时会执行任务
     private int taskAutoComplete = -1;
+
+    // 自动领取任务策略
+    private DDTankTaskAutoCompleteHandler ddTankTaskAutoCompleteHandler;
+
+    @Getter
+    @Setter
+    // 自动使用道具
+    private int autoUseProp = -1;
+
+    private DDTankAutoUsePropHandler ddTankAutoUsePropHandler;
 
     // 如果该变量为true，则需要结束本次脚本运行，通过重启的方式释放当前线程占用的资源
     volatile boolean needRestart = false;
@@ -87,7 +101,7 @@ public class DDTankCoreTask implements Runnable {
     private DDTankCoreAttackHandler ddTankCoreAttackHandler;
     private DDTankSelectMapHandler ddtankSelectMapHandler;
 
-    private DDTankTaskAutoCompleteHandler ddTankTaskAutoCompleteHandler;
+
 
 
     /**
@@ -123,9 +137,11 @@ public class DDTankCoreTask implements Runnable {
         this.passes = task.passes;
         this.runTime = task.getRunTime();
         this.taskAutoComplete = task.taskAutoComplete;
+        this.autoUseProp = task.autoUseProp;
         this.ddTankCoreAttackHandler = task.ddTankCoreAttackHandler;
         this.ddtankSelectMapHandler = task.ddtankSelectMapHandler;
         this.ddTankTaskAutoCompleteHandler = task.ddTankTaskAutoCompleteHandler;
+        this.ddTankAutoUsePropHandler = task.ddTankAutoUsePropHandler;
         this.suspend = task.suspend;
         this.needRestart = false;
         this.needCorrect = task.needCorrect;
@@ -194,6 +210,11 @@ public class DDTankCoreTask implements Runnable {
             ddTankTaskAutoCompleteHandler = new DDTankTaskAutoCompleteHandlerImpl(keyboard, mouse);
         }else {
             ddTankTaskAutoCompleteHandler.update(keyboard, mouse);
+        }
+        if(ddTankAutoUsePropHandler == null) {
+            ddTankAutoUsePropHandler = new DDTankAutoUsePropHandlerImpl(mouse, keyboard, dm, ddtLog);
+        }else {
+            ddTankAutoUsePropHandler.update(mouse, keyboard, dm, ddtLog);
         }
 
         // 首次启动时向控制台说明当前为前台模式启动，重启等操作就不会再重复
@@ -332,8 +353,17 @@ public class DDTankCoreTask implements Runnable {
                                 if(taskAutoComplete > 0 && passes % taskAutoComplete == 0) {
                                     // 等待翻牌结束后的黑屏时间
                                     delay(3000, true);
-                                    ddtLog.info("执行自动领取任务");
+                                    ddtLog.primary("执行自动领取任务");
                                     ddTankTaskAutoCompleteHandler.completeTask();
+                                }
+
+                                // 执行自动使用道具
+                                if(autoUseProp > 0 && passes % autoUseProp == 0) {
+                                    // 等待翻牌结束后的黑屏时间
+                                    delay(3000, true);
+                                    ddtLog.primary("执行自动使用道具");
+                                    // TODO 简易版，等待更改为更灵活的插口
+                                    ddTankAutoUsePropHandler.useProp();
                                 }
                             }
                             delay(properties.getDelay(), true);

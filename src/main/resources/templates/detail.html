@@ -113,6 +113,15 @@
                     <button id="btn-autoTask" class="btn btn-primary col-sm-12">设置</button>
                 </div>
             </div>
+            <div class="form-group">
+                <label class="col-md-2 control-label">自动补充活力</label>
+                <div class="col-md-8">
+                    <input id="i-autoUseProp" class="form-control" type="number" name="autoUseProp" th:value="${autoUseProp}"/>
+                </div>
+                <div class="col-md-2">
+                    <button id="btn-autoUseProp" class="btn btn-primary col-sm-12">设置</button>
+                </div>
+            </div>
         </div>
         <div class="form-horizontal">
             <div class="form-group">
@@ -207,6 +216,14 @@
 </div><!-- /.modal -->
 </body>
 <script>
+    // 设置自动使用活力
+    $("#btn-autoUseProp").click(function () {
+        postAjax('/detail/[[${hwnd}]]/autoUseProp', {
+            autoUseProp: $("#i-autoUseProp").val()
+        }, function (data) {
+            windorAlert('提示', '自动补充活力设置成功！');
+        })
+    })
 
     // 设置自动领取任务
     $("#btn-autoTask").click(function () {

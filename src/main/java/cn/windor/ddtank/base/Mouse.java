@@ -18,6 +18,8 @@ public interface Mouse {
 
     void moveAndClick(Point point);
 
+    void moveAndDblClick(Point point);
+
     void leftClick();
 
 

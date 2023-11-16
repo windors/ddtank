@@ -18,4 +18,10 @@ public class DetailController {
                                          @RequestParam int taskAutoComplete) {
         return HttpResponse.auto(ddTankDetailService.setTaskAutoComplete(hwnd, taskAutoComplete));
     }
+
+    @PostMapping("/{hwnd}/autoUseProp")
+    public HttpResponse setAutoUseProp(@PathVariable long hwnd,
+                                       @RequestParam int autoUseProp) {
+        return HttpResponse.auto(ddTankDetailService.setAutoUseProp(hwnd, autoUseProp));
+    }
 }

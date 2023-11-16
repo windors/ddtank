@@ -38,6 +38,12 @@ public class DMMouse implements Mouse {
     }
 
     @Override
+    public void moveAndDblClick(Point point) {
+        moveTo(point);
+        dm.invoke("leftDoubleClick");
+    }
+
+    @Override
     public void leftClick() {
         dm.invoke("leftClick");
     }

@@ -26,6 +26,18 @@ public class DDTankDetailServiceImpl implements DDTankDetailService {
         return true;
     }
 
+    @Override
+    public boolean setAutoUseProp(long hwnd, int autoUseProp) {
+        if(!check(hwnd)) {
+            return false;
+        }
+
+        DDTankCoreThread thread = threadMap.get(hwnd);
+        DDTankCoreTask task = thread.getTask();
+        task.setAutoUseProp(autoUseProp);
+        return true;
+    }
+
     private boolean check(long hwnd) {
         DDTankCoreThread thread = threadMap.get(hwnd);
         if(thread == null) {

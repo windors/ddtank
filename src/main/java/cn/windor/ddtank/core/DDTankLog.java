@@ -36,6 +36,11 @@ public class DDTankLog {
         logs.add(0, new Log(str));
     }
 
+    public void primary(String str) {
+        checkSize();
+        logs.add(0, new Log(str));
+    }
+
     public void success(String str) {
         checkSize();
         logs.add(0, new Log(str));
