@@ -101,7 +101,7 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
                 // 获取屏距
                 distance = distanceCalculate.get();
                 log.debug("第{}回合", round);
-                ddtLog.info("第" + round + "回合");
+                ddtLog.primary("第" + round + "回合");
                 // TODO 自定义回合技能
                 String skill = properties.getAttackSkill().toLowerCase();
                 if (skill.contains("p")) {
@@ -234,12 +234,12 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
                 if (toward == TowardEnum.LEFT && enemyPosition.getX() > myPosition.getX()) {
                     keyboard.keyPress('d');
                     log.debug("检测到当前方向向左，敌人在右，已自动转向");
-                    ddtLog.info("检测到当前方向向左，敌人在右，已自动转向");
+                    ddtLog.primary("检测到当前方向向左，敌人在右，已自动转向");
                     delay(100, true);
                 } else if (toward == TowardEnum.RIGHT && enemyPosition.getX() < myPosition.getX()) {
                     keyboard.keyPress('a');
                     log.debug("检测到当前方向向右，敌人在左，已自动转向");
-                    ddtLog.info("检测到当前方向向右，敌人在左，已自动转向");
+                    ddtLog.primary("检测到当前方向向右，敌人在左，已自动转向");
                     delay(100, true);
                 }
             }

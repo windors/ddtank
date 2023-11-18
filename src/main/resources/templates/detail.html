@@ -149,7 +149,7 @@
             <ul>
                 <li th:each="ddtlog:${ddtankLog.logs}">[[${#numbers.formatInteger(ddtlog.time.hour,
                     2)}]]:[[${#numbers.formatInteger(ddtlog.time.minute,
-                    2)}]]:[[${#numbers.formatInteger(ddtlog.time.second, 2)}]] [[${ddtlog.msg}]]
+                    2)}]]:[[${#numbers.formatInteger(ddtlog.time.second, 2)}]] [(${ddtlog.msg})]
                 </li>
             </ul>
         </div>

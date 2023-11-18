@@ -67,3 +67,17 @@ textarea {
         border-radius: 10px;
     }
 }
+
+/* 日志配色 */
+.log-warn {
+    color: #f0ad4e;
+}
+.log-success {
+    color: #5cb85c;
+}
+.log-error {
+    color: #d9534f;
+}
+.log-primary {
+    color: #337ab7;
+}

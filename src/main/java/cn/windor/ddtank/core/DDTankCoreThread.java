@@ -23,6 +23,7 @@ import static cn.windor.ddtank.util.ThreadUtils.delayPersisted;
 @Slf4j
 public class DDTankCoreThread extends Thread {
 
+    @Getter
     private long gameHwnd;
     private String gameVersion;
     private DDTankConfigProperties properties;

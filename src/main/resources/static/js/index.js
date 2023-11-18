@@ -57,9 +57,10 @@ function stop(hwnd) {
     })
 }
 
-function getCheckedHwndSerialize() {
+function getCheckedHwndSerialize(obj) {
     let hwnds = "";
-    $("#ddt input[type='checkbox'][name='hwnd']").each(function (index, checkbox) {
+    let find = $(obj).parent().parent().find("input[type='checkbox'][name='hwnd']");
+    find.each(function (index, checkbox) {
         if ($(checkbox).prop('checked')) {
             hwnds = hwnds + "hwnd=" + $(checkbox).val() + "&";
         }
@@ -72,6 +73,31 @@ function getCheckedHwndSerialize() {
 
 // 多选框的选择
 $(function () {
+
+    // 状态赋颜色
+    $(".ddt-state").each(function (i, obj) {
+        let tr = $(this).parent();
+        switch ($(this).html()) {
+            case "未启动":
+            case "等待启动":
+                tr.addClass('warning');
+                break;
+            case "运行中":
+                tr.addClass('success')
+                break;
+            case "等待暂停":
+            case "已暂停":
+            case "等待恢复":
+                tr.addClass('info');
+                break;
+            case "等待停止运行":
+            case "已停止运行":
+                tr.addClass('danger');
+                break;
+        }
+    })
+
+    // 毫秒转时间
     $(".time-ms").each(function (i, obj) {
         let ms = $(obj).html();
         ms = Math.floor(ms / 1000);
@@ -90,32 +116,33 @@ $(function () {
         $(obj).html(hour + ":" + minute + ":" + second)
     })
     // 取消继承
-    $("#ddt tr td:first-child input,th:first-child input").each(function (i, input) {
+    $(".ddt tr td:first-child input,th:first-child input").each(function (i, input) {
         $(input).click(function (e) {
             e.stopPropagation();
         });
     });
-    $("#ddt a").each(function (i, a) {
+    $(".ddt a").each(function (i, a) {
         $(a).click(function (e) {
             e.stopPropagation();
         })
     });
 
     // 点击input的上一级的时候就点击input
-    $("#ddt tr td, th").click(function () {
+    $(".ddt tr td, th").click(function () {
         $(this).parent().find("input[type='checkbox']").click();
     })
     // 全选按钮
-    $("#ddt tr th:first-child input").click(function () {
+    $(".ddt tr th:first-child input").click(function () {
         let checked = $(this).prop('checked');
-        $("#ddt tr td:first-child input").each(function (i, checkbox) {
+        let find = $(this).parent().parent().parent().find("tr td:first-child input");
+        find.each(function (i, checkbox) {
             $(checkbox).prop('checked', checked);
-        })
+        });
     })
 
 
-    $("#ddt-suspend").click(function () {
-        let hwnds = getCheckedHwndSerialize();
+    $(".ddt-suspend").click(function () {
+        let hwnds = getCheckedHwndSerialize(this);
         if(hwnds === "") {
             windorAlert('提示', '请 <b>选中一些脚本后</b> 再执行本方法')
         }else{
@@ -124,8 +151,9 @@ $(function () {
             })
         }
     })
-    $("#ddt-continue").click(function () {
-        let hwnds = getCheckedHwndSerialize();
+
+    $(".ddt-continue").click(function () {
+        let hwnds = getCheckedHwndSerialize(this);
         if(hwnds === "") {
             windorAlert('提示', '请 <b>选中一些脚本后</b> 再执行本方法')
         }else{
@@ -134,8 +162,8 @@ $(function () {
             })
         }
     })
-    $("#ddt-stop").click(function () {
-        let hwnds = getCheckedHwndSerialize();
+    $(".ddt-stop").click(function () {
+        let hwnds = getCheckedHwndSerialize(this);
         if(hwnds === "") {
             windorAlert('提示', '请 <b>选中一些脚本后</b> 再执行本方法')
         }else{
@@ -144,8 +172,8 @@ $(function () {
             })
         }
     })
-    $("#ddt-restart").click(function () {
-        let hwnds = getCheckedHwndSerialize();
+    $(".ddt-restart").click(function () {
+        let hwnds = getCheckedHwndSerialize(this);
         if(hwnds === "") {
             windorAlert('提示', '请 <b>选中一些脚本后</b> 再执行本方法')
         }else{
@@ -154,8 +182,8 @@ $(function () {
             })
         }
     })
-    $("#ddt-remove").click(function () {
-        let hwnds = getCheckedHwndSerialize();
+    $(".ddt-remove").click(function () {
+        let hwnds = getCheckedHwndSerialize(this);
         if(hwnds === "") {
             windorAlert('提示', '请 <b>选中一些脚本后</b> 再执行本方法')
         }else{
