@@ -95,6 +95,7 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
                     break;
                 }
             }
+            updateLastEnemyPosition();
 
             if (ddtankPic.isMyRound()) {
                 round = round + 1;
@@ -135,6 +136,13 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
         return failTimes;
     }
 
+    private void updateLastEnemyPosition() {
+        Point enemyPosition = ddtankPic.getEnemyPosition();
+        if (enemyPosition != null) {
+            enemyLastPosition = enemyPosition;
+        }
+    }
+
     private void angleAdjust() {
         try {
             if (properties.getIsHandleAttack()) {
@@ -150,7 +158,7 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
                 // TODO 通过检测友军和敌人位置调整角度到后面再做，先就固定尝试调整为20度
                 ddtankOperate.angleAdjust(20);
             }
-        }catch (DDTankAngleResolveException ignore) {
+        } catch (DDTankAngleResolveException ignore) {
         }
     }
 
@@ -163,6 +171,8 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
     public void reset() {
         round = 0;
         toward = TowardEnum.UNKNOWN;
+        enemyLastPosition = null;
+        myLastPosition = null;
     }
 
     private void attackAuto() {
@@ -178,7 +188,7 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
             if (myPosition == null) {
                 tiredTimes++;
                 log.debug("未找到位置，尝试走位。若长时间未找到分析是否是小地图截取太小的问题。");
-                ddtLog.warn("未找到位置，尝试走位。若长时间未找到分析是否是小地图截取太小的问题。");
+                ddtLog.warn("未找到位置，尝试走位。");
                 DDTankFindPositionMoveHandler positionMoveHandler = handlerSelector.getPositionMoveHandler();
                 if (!positionMoveHandler.move(++tiredTimes)) {
                     break;
@@ -188,8 +198,6 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
         if (myPosition != null) {
             log.debug("我的坐标：{}, {}", myPosition.getX(), myPosition.getY());
             ddtLog.info("我的坐标：" + myPosition.getX() + ", " + myPosition.getY());
-            myLastPosition.setX(myPosition.getX());
-            myLastPosition.setY(myPosition.getY());
             enemyPosition = ddtankPic.getEnemyPosition();
             if (enemyPosition == null) {
 //                if (enemyLastPosition.getX() != 0 && enemyLastPosition.getY() != 0) {
@@ -199,17 +207,22 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
 //                        enemyPosition.setX(1000);
 //                    }
 //                } else {
-                // 第一回合就找不到boss，尝试不断的走位来获取boss位置
-                while (ddtankPic.isMyRound()) {
-                    if ((enemyPosition = ddtankPic.getEnemyPosition()) != null) {
-                        break;
-                    }
-                    DDTankFindPositionMoveHandler positionMoveHandler = handlerSelector.getPositionMoveHandler();
-                    if (!positionMoveHandler.move(++tiredTimes)) {
-                        break;
+
+                if (enemyLastPosition != null) {
+                    ddtLog.warn("未找到敌人，即将使用敌人的最后坐标");
+                    enemyPosition = enemyLastPosition;
+                } else {
+                    // 从开局到最终就找不到boss，尝试不断的走位来获取boss位置
+                    while (ddtankPic.isMyRound()) {
+                        if ((enemyPosition = ddtankPic.getEnemyPosition()) != null) {
+                            break;
+                        }
+                        DDTankFindPositionMoveHandler positionMoveHandler = handlerSelector.getPositionMoveHandler();
+                        if (!positionMoveHandler.move(++tiredTimes)) {
+                            break;
+                        }
                     }
                 }
-//                }
             }
             log.debug("敌人的坐标：{}, {}", enemyPosition.getX(), enemyPosition.getY());
             ddtLog.info("敌人的坐标：" + enemyPosition.getX() + ", " + enemyPosition.getY());
