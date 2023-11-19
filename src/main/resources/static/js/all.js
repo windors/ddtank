@@ -144,3 +144,23 @@ $(function () {
     var marqueeScroll1 = new marqueeScroll("marquee-box", "wave-list-box1", "wave-list-box2", 20);
     var marqueeScroll2 = new marqueeScroll("marquee-box3", "wave-list-box4", "wave-list-box5", 40);
 });
+
+
+// 毫秒转时间
+$(".time-ms").each(function (i, obj) {
+    let ms = $(obj).html();
+    ms = Math.floor(ms / 1000);
+    let hour = Math.floor(ms / 3600);
+    if(hour < 10) {
+        hour = "0" + hour;
+    }
+    let minute = Math.floor(ms % 3600 / 60);
+    if(minute < 10) {
+        minute = "0" + minute;
+    }
+    let second = ms % 60;
+    if(second < 10) {
+        second = "0" + second;
+    }
+    $(obj).html(hour + ":" + minute + ":" + second)
+})
