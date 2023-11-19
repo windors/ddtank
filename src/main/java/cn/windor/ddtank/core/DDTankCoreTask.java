@@ -365,6 +365,9 @@ public class DDTankCoreTask implements Runnable {
                                     // TODO 简易版，等待更改为更灵活的插口
                                     ddTankAutoUsePropHandler.useProp();
                                 }
+
+                                // 执行固定延迟
+                                delay((long) (properties.getLevelEndWaitTime() * 1000), true);
                             }
                             delay(properties.getDelay(), true);
                         } catch (StopTaskException ignored) {
