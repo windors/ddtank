@@ -41,6 +41,10 @@
         .panel-body *{
             max-width: 100%;
         }
+
+        .main-body {
+            min-width: 70%;
+        }
     </style>
 </head>
 <body>
@@ -118,7 +122,7 @@
         <div th:replace="common/alert :: common-alert('alert')"></div>
     </header>
     <div th:replace="*{contentBefore}"></div>
-    <div class="main-body container" style="flex: 1 1 auto;display: flex;flex-direction: column">
+    <div class="main-body container-fluid" style="flex: 1 1 auto;display: flex;flex-direction: column">
         <div class="row page-header" th:if="*{h1 != null}">
             <h1 th:utext="*{h1}"></h1>
         </div>
@@ -128,6 +132,7 @@
         <!--            </div>-->
         <!--        </div>-->
     </div>
+
     <div th:replace="*{contentAfter}"></div>
     <!--底部样式-->
     <footer style="flex: 0 0 auto;">

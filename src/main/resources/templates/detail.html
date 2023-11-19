@@ -9,19 +9,33 @@
     <link rel="stylesheet" th:href="@{/static/css/bg.css}"/>
     <script src="/static/js/jquery.rsSliderLens.js" th:src="@{/static/js/jquery.rsSliderLens.js}"></script>
     <style>
-        .detail-body {
+        .detail-control {
             display: flex;
         }
 
+        #control-panel {
+            border: 1px solid #e3e4e6;
+            border-radius: 4px;
+            margin-right: 16px;
+        }
+
+        #control-panel-body {
+            padding-right: 16px;
+        }
+
+        #control-panel-wrapper {
+            padding-top: 16px;
+        }
+
         #ddt-logs-wrapper {
-            background-color: rgb(241, 242, 243);
+            border: 1px solid #e3e4e6;
             min-height: 454px;
-            border-radius: 10px;
+            border-radius: 4px;
             box-sizing: content-box;
             padding: 0 20px;
         }
 
-        #ddt-logs-title {
+        #control-panel-title, #ddt-logs-title {
             height: 13%;
             display: flex;
             align-items: center;
@@ -29,117 +43,204 @@
         }
 
         #ddt-logs {
-            min-width: 94%;
+            min-width: 90%;
             position: absolute;
             overflow-y: scroll;
             font-size: 13px;
             height: 87%;
             color: #505050;
         }
+
+        .detail-panel-head {
+            padding: 0 16px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+            min-height: 38px;
+        }
+
+        .detail-panel-head-wrapper {
+            display: flex;
+            align-items: center;
+        }
+
+        .detail-panel-head-title {
+            padding-top: 16px;
+            line-height: 24px;
+        }
+
+        .detail-panel-body {
+            padding: 16px;
+        }
+
+        .detail-panel-body-core {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #detail-panel {
+            border: 1px solid #e3e4e6;
+            margin-bottom: 16px;
+            border-radius: 4px;
+        }
+
+        #detail-panel span {
+            font-size: 24px;
+            line-height: 34px;
+            display: block;
+            padding: 4px 0;
+        }
+
+        .detail-panel-col div {
+            font-weight: 700;
+        }
     </style>
 </head>
 <body>
-<div class="detail-body row">
-    <div class="col-md-9" style="margin-bottom: 0">
-        <div class="form-horizontal">
-            <div class="form-group">
-                <label class="col-md-2 control-label">当前句柄</label>
-                <div class="col-md-8">
-                    <input id="i-rebind-hwnd" class="form-control" th:value="${hwnd}"/>
-                </div>
-                <div class="col-md-2">
-                    <button id="ddt-rebind" class="btn btn-primary col-sm-12">重绑定</button>
+<div id="detail-panel" class="detail-body row">
+    <div class="detail-panel-head">
+        <div class="detail-panel-head-wrapper">
+            <div class="detail-panel-head-title">脚本信息</div>
+        </div>
+    </div>
+    <div class="detail-panel-body">
+        <div class="detail-panel-body-core">
+            <div class="detail-panel-col">
+                <div>挂本次数</div>
+                <span th:text="${passes}"></span>
+            </div>
+            <div class="detail-panel-col">
+                <div>当前状态</div>
+                <span th:text="${state.getMsg()}"></span>
+            </div>
+            <div class="detail-panel-col">
+                <div>是否暂停</div>
+                <span th:text="${suspend ? '是' : '否'}"></span>
+            </div>
+            <div class="detail-panel-col">
+                <div>脚本运行时间</div>
+                <span class="time-ms" th:text="${runTime}"></span>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="detail-body row detail-control">
+    <div id="control-panel" class="col-md-9" style="margin-bottom: 0">
+        <div id="control-panel-title">
+            <div class="form-horizontal" style="flex-grow: 1">
+                <div class="form-group">
+                    <label class="col-md-2 control-label">控制面板</label>
                 </div>
             </div>
         </div>
-        <div class="form-horizontal">
-            <div class="form-group">
-                <label class="col-md-2 control-label">当前副本</label>
-                <div class="col-md-2">
-                    <select class="form-control" name="levelLine">
-                        <option value="1" th:selected="${config.levelLine == 1}">1 行</option>
-                        <option value="2" th:selected="${config.levelLine == 2}">2 行</option>
-                        <option value="3" th:selected="${config.levelLine == 3}">3 行</option>
-                        <option value="4" th:selected="${config.levelLine == 4}">4 行</option>
-                        <option value="5" th:selected="${config.levelLine == 5}">5 行</option>
-                        <option value="6" th:selected="${config.levelLine == 6}">6 行</option>
-                        <option value="7" th:selected="${config.levelLine == 7}">7 行</option>
-                        <option value="8" th:selected="${config.levelLine == 8}">8 行</option>
-                        <option value="9" th:selected="${config.levelLine == 9}">9 行</option>
-                        <option value="10" th:selected="${config.levelLine == 10}">10 行</option>
-                    </select>
-                </div>
-                <div class="col-md-2">
-                    <select class="form-control" name="levelRow">
-                        <option value="1" th:selected="${config.levelRow == 1}">1 列</option>
-                        <option value="2" th:selected="${config.levelRow == 2}">2 列</option>
-                        <option value="3" th:selected="${config.levelRow == 3}">3 列</option>
-                        <option value="4" th:selected="${config.levelRow == 4}">4 列</option>
-                    </select>
-                </div>
-                <label class="col-md-1 control-label">难度</label>
-                <div class="col-md-5">
-                    <div class="slider-img" th:attr="slider-default=${config.levelDifficulty}">
-                        <img src="/static/img/副本难度.bmp" style="width: 100%"/>
+        <div id="control-panel-body">
+            <div id="control-panel-wrapper">
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-md-2 control-label">当前句柄</label>
+                        <div class="col-md-8">
+                            <input id="i-rebind-hwnd" class="form-control" th:value="${hwnd}"/>
+                        </div>
+                        <div class="col-md-2">
+                            <button id="ddt-rebind" class="btn btn-primary col-sm-12">重绑定</button>
+                        </div>
                     </div>
-                    <input type="hidden" name="levelDifficulty" th:value="${config.levelDifficulty}"/>
                 </div>
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-md-2 control-label">当前副本</label>
+                        <div class="col-md-2">
+                            <select class="form-control" name="levelLine">
+                                <option value="1" th:selected="${config.levelLine == 1}">1 行</option>
+                                <option value="2" th:selected="${config.levelLine == 2}">2 行</option>
+                                <option value="3" th:selected="${config.levelLine == 3}">3 行</option>
+                                <option value="4" th:selected="${config.levelLine == 4}">4 行</option>
+                                <option value="5" th:selected="${config.levelLine == 5}">5 行</option>
+                                <option value="6" th:selected="${config.levelLine == 6}">6 行</option>
+                                <option value="7" th:selected="${config.levelLine == 7}">7 行</option>
+                                <option value="8" th:selected="${config.levelLine == 8}">8 行</option>
+                                <option value="9" th:selected="${config.levelLine == 9}">9 行</option>
+                                <option value="10" th:selected="${config.levelLine == 10}">10 行</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <select class="form-control" name="levelRow">
+                                <option value="1" th:selected="${config.levelRow == 1}">1 列</option>
+                                <option value="2" th:selected="${config.levelRow == 2}">2 列</option>
+                                <option value="3" th:selected="${config.levelRow == 3}">3 列</option>
+                                <option value="4" th:selected="${config.levelRow == 4}">4 列</option>
+                            </select>
+                        </div>
+                        <label class="col-md-1 control-label">难度</label>
+                        <div class="col-md-5">
+                            <div class="slider-img" th:attr="slider-default=${config.levelDifficulty}">
+                                <img src="/static/img/副本难度.bmp" style="width: 100%"/>
+                            </div>
+                            <input type="hidden" name="levelDifficulty" th:value="${config.levelDifficulty}"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-md-2 control-label">当前任务</label>
+                        <div class="col-md-7">
+                            <select id="select-tasks" class="form-control">
+                                <option class="list-group-item" th:each="rule:${rules}"
+                                        th:text="${'通关' + rule.passed + '次副本后选择[' + rule.levelLine + '-' + rule.levelRow + ']，难度值：[' + rule.levelDifficulty + '%]'}"
+                                        th:value="${rule.passed}">
+                                </option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <button id="btn-removeTask" class="btn btn-danger">删除</button>
+                            <button id="btn-addTask" class="btn btn-primary pull-right" data-toggle="modal"
+                                    data-target="#addTask">添加任务
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-md-2 control-label">自动领取任务</label>
+                        <div class="col-md-8">
+                            <input id="i-autoTask" class="form-control" type="number" name="taskAutoComplete"
+                                   th:value="${taskAutoComplete}"/>
+                        </div>
+                        <div class="col-md-2">
+                            <button id="btn-autoTask" class="btn btn-primary col-sm-12">设置</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="col-md-2 control-label">自动补充活力</label>
+                        <div class="col-md-8">
+                            <input id="i-autoUseProp" class="form-control" type="number" name="autoUseProp"
+                                   th:value="${autoUseProp}"/>
+                        </div>
+                        <div class="col-md-2">
+                            <button id="btn-autoUseProp" class="btn btn-primary col-sm-12">设置</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-md-2 control-label">游戏快照</label>
+                        <div id="game-screen" class="col-md-10">
+                            <img th:src="@{/util/screenshot(hwnd=${hwnd})}"/>
+                        </div>
+                    </div>
+                </div>
+                <form id="form-reconnect" class="form-horizontal">
+                    <div class="form-group">
+                        <label class="col-md-2 control-label">账号</label>
+                        <div class="col-md-3"><input class="form-control" name="username" th:value="${username}"/></div>
+                        <label class="col-md-2 control-label">密码</label>
+                        <div class="col-md-3"><input class="form-control" name="password" type="password"
+                                                     th:value="${password}"/></div>
+                        <div class="col-md-2">
+                            <button class="btn btn-success col-xs-12">保存</button>
+                        </div>
+                    </div>
+                </form>
             </div>
         </div>
-        <div class="form-horizontal">
-            <div class="form-group">
-                <label class="col-md-2 control-label">当前任务</label>
-                <div class="col-md-7">
-                    <select id="select-tasks" class="form-control">
-                        <option class="list-group-item" th:each="rule:${rules}"
-                        th:text="${'通关' + rule.passed + '次副本后选择[' + rule.levelLine + '-' + rule.levelRow + ']，难度值：[' + rule.levelDifficulty + '%]'}"
-                        th:value="${rule.passed}">
-                        </option>
-                    </select>
-                </div>
-                <div class="col-md-3">
-                    <button id="btn-removeTask" class="btn btn-danger">删除</button>
-                    <button id="btn-addTask" class="btn btn-primary pull-right" data-toggle="modal"
-                            data-target="#addTask">添加任务
-                    </button>
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="col-md-2 control-label">自动领取任务</label>
-                <div class="col-md-8">
-                    <input id="i-autoTask" class="form-control" type="number" name="taskAutoComplete" th:value="${taskAutoComplete}"/>
-                </div>
-                <div class="col-md-2">
-                    <button id="btn-autoTask" class="btn btn-primary col-sm-12">设置</button>
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="col-md-2 control-label">自动补充活力</label>
-                <div class="col-md-8">
-                    <input id="i-autoUseProp" class="form-control" type="number" name="autoUseProp" th:value="${autoUseProp}"/>
-                </div>
-                <div class="col-md-2">
-                    <button id="btn-autoUseProp" class="btn btn-primary col-sm-12">设置</button>
-                </div>
-            </div>
-        </div>
-        <div class="form-horizontal">
-            <div class="form-group">
-                <label class="col-md-2 control-label">游戏快照</label>
-                <div id="game-screen" class="col-md-10">
-                    <img th:src="@{/util/screenshot(hwnd=${hwnd})}"/>
-                </div>
-            </div>
-        </div>
-        <form id="form-reconnect" class="form-horizontal">
-            <div class="form-group">
-                <label class="col-md-2 control-label">账号</label>
-                <div class="col-md-3"><input class="form-control" name="username" th:value="${username}"/></div>
-                <label class="col-md-2 control-label">密码</label>
-                <div class="col-md-3"><input class="form-control" name="password" type="password" th:value="${password}"/></div>
-                <div class="col-md-2"><button class="btn btn-success col-xs-12">保存</button></div>
-            </div>
-        </form>
     </div>
     <div id="ddt-logs-wrapper" class="col-md-3">
         <div id="ddt-logs-title">
