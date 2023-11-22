@@ -12,9 +12,11 @@ public class Point {
     private int x;
     private int y;
 
-    public void setOffset(int x, int y) {
+
+    public Point setOffset(int x, int y) {
         this.x += x;
         this.y += y;
+        return this;
     }
 
     public boolean isCloseTo(Point point, int offsetX, int offsetY) {
