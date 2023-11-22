@@ -21,6 +21,20 @@
     </properties>
 
     <dependencies>
+        <!--junit5测试-->
+        <!--junit5测试-->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.3.1</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>6.0.6</version>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>cn.windor</groupId>
             <artifactId>public</artifactId>

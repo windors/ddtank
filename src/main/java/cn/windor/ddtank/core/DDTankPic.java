@@ -53,4 +53,6 @@ public interface DDTankPic {
 
     @Description("获取屏距")
     double calcUnitDistance();
+
+    double getWind();
 }

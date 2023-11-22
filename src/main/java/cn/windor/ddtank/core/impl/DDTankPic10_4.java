@@ -2,6 +2,7 @@ package cn.windor.ddtank.core.impl;
 
 import cn.windor.ddtank.base.*;
 import cn.windor.ddtank.config.DDTankConfigProperties;
+import cn.windor.ddtank.config.DDTankFileConfigProperties;
 import cn.windor.ddtank.core.DDTankPic;
 import cn.windor.ddtank.type.TowardEnum;
 import cn.windor.ddtank.util.BinaryPicProcess;
@@ -279,5 +280,26 @@ public class DDTankPic10_4 implements DDTankPic {
         double rectangleWidth = binaryPicProcess.findRectangleWidth(properties.getStaticX1(), properties.getStaticY1(), properties.getStaticX2(), properties.getStaticY2(),
                 "999999", 1);
         return rectangleWidth / 10;
+    }
+
+    @Override
+    public double getWind() {
+        String windStr = dm.ocr(461, 20, 536, 42, "000000-000000", 0.8);
+        try {
+            double wind = Double.parseDouble(windStr);
+            long startTime = System.currentTimeMillis();
+            while (System.currentTimeMillis() - startTime < 1000) {
+                if (dm.findColor(524, 25, 537, 39, "eaeaea|848484", 1, 0, null)) {
+                    return -wind;
+                } else if (dm.findColor(462, 26, 474, 48, "eaeaea|848484", 1, 0, null)) {
+                    return wind;
+                }
+            }
+        }catch (Exception e) {
+            log.warn("未找到风力");
+            // 保存风力图片
+            dm.capture(461, 20, 536, 42, DDTankFileConfigProperties.getFailDir("wind") + "/" + System.currentTimeMillis() + ".bmp");
+        }
+        return 0;
     }
 }

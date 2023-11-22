@@ -9,8 +9,6 @@ public interface DDTankOperate {
 
     boolean angleAdjust(int targetAngle);
 
-    boolean angleAdjust(int targetAngle, DDTankAngleAdjustMoveHandler angleAdjust, TowardEnum toward);
-
     void attack(double strength);
 
     /**
@@ -19,5 +17,5 @@ public interface DDTankOperate {
      */
     int getBestAngle(Point myPosition, Point enemyPosition);
 
-    double getStrength(int angle, double horizontal, double vertical);
+    double getStrength(int angle,double wind, double horizontal, double vertical);
 }

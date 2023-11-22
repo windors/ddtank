@@ -8,8 +8,10 @@ import cn.windor.ddtank.exception.DDTankAngleResolveException;
 import cn.windor.ddtank.handler.DDTankCoreAttackHandler;
 import cn.windor.ddtank.handler.DDTankFindPositionMoveHandler;
 import cn.windor.ddtank.type.TowardEnum;
+import javafx.geometry.Pos;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.swing.text.Position;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -86,9 +88,10 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
     @Override
     public long main() {
         long failTimes = 0;
+        // 屏距计算器
         DistanceCalculate distanceCalculate = new DistanceCalculate();
         while (!exit && ddtankPic.isEnterLevel()) {
-            // 计算屏距
+            // 计算当前屏距
             while (!distanceCalculate.calc()) {
                 delay(10, true);
                 if (++failTimes > 3) {
@@ -106,8 +109,11 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
                 // TODO 自定义回合技能
                 String skill = properties.getAttackSkill().toLowerCase();
                 if (skill.contains("p")) {
+                    // 如果技能带p，那么直接按技能就ok
                     keyboard.keysPress(skill);
-                } else if (properties.getIsHandleAttack()) {
+                }
+                // 手动攻击，暂停停止
+/*                else if (properties.getIsHandleAttack()) {
                     angle = properties.getHandleAngle();
                     strength = properties.getHandleStrength();
                     if (ddtankOperate.angleAdjust(angle, handlerSelector.getAngleMoveHandler(), toward)) {
@@ -119,13 +125,14 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
                         log.debug("未能调整到指定角度，当前角度：{}, 目标角度：{}", ddtankPic.getAngle(), angle);
                         ddtLog.warn("未能调整到指定角度，当前角度：" + ddtankPic.getAngle() + ", 目标角度：" + angle);
                     }
-                } else {
+                }*/
+                else {
                     // 自动攻击
                     attackAuto();
                 }
             } else {
-                // 预调整角度
-                angleAdjust();
+                // 未到自己回合，预调整角度
+                preAngleAdjust();
             }
             // 进入副本后延迟为外面的 1/10
             delay(properties.getDelay() / 10, true);
@@ -136,6 +143,9 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
         return failTimes;
     }
 
+    /**
+     * 在未到自己回合时会调用该函数以计算敌人位置，用于记录敌人的最后位置
+     */
     private void updateLastEnemyPosition() {
         Point enemyPosition = ddtankPic.getEnemyPosition();
         if (enemyPosition != null) {
@@ -143,7 +153,10 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
         }
     }
 
-    private void angleAdjust() {
+    /**
+     * 在未到自己回合时会调用该函数以提前调整角度，便于快速出手
+     */
+    private void preAngleAdjust() {
         try {
             if (properties.getIsHandleAttack()) {
                 // 判断是否手动攻击
@@ -154,9 +167,11 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
             } else if (properties.getIsClosestAngle()) {
                 // TODO 判断是否是临近角度攻击
             } else {
-
-                // TODO 通过检测友军和敌人位置调整角度到后面再做，先就固定尝试调整为20度
-                ddtankOperate.angleAdjust(20);
+                if (angle != null) {
+                    ddtankOperate.angleAdjust(angle);
+                } else {
+                    ddtankOperate.angleAdjust(20);
+                }
             }
         } catch (DDTankAngleResolveException ignore) {
         }
@@ -169,132 +184,160 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
 
     @Override
     public void reset() {
+        angle = null;
         round = 0;
         toward = TowardEnum.UNKNOWN;
-        enemyLastPosition = null;
-        myLastPosition = null;
+        enemyPosition = new Point();
+        enemyLastPosition = new Point();
+        myPosition = new Point();
+        myLastPosition = new Point();
+    }
+
+    /**
+     * 判断点是否为空点
+     */
+    private boolean isEmpty(Point point) {
+        return point != null && point.getX() == 0 && point.getY() == 0;
     }
 
     private void attackAuto() {
-        int tiredTimes = 0;
-        boolean needFind = true;
-        while (needFind && ddtankPic.isMyRound()) {
-            for (int i = 0; i < 10; i++) {
-                if ((myPosition = ddtankPic.getMyPosition()) != null) {
-                    needFind = false;
-                    break;
-                }
-            }
-            if (myPosition == null) {
-                tiredTimes++;
-                log.debug("未找到位置，尝试走位。若长时间未找到分析是否是小地图截取太小的问题。");
-                ddtLog.warn("未找到位置，尝试走位。");
-                DDTankFindPositionMoveHandler positionMoveHandler = handlerSelector.getPositionMoveHandler();
-                if (!positionMoveHandler.move(++tiredTimes)) {
-                    break;
-                }
-            }
+        findMyPosition(handlerSelector.getPositionMoveHandler());
+        findEnemyPosition(handlerSelector.getPositionMoveHandler());
+        towardCheck();
+
+        // 调整角度
+        angle = ddtankOperate.getBestAngle(myPosition, enemyPosition);
+        angleAdjust(angle);
+
+        double horizontal = new BigDecimal((enemyPosition.getX() - myPosition.getX()) / distance).setScale(2, RoundingMode.UP).doubleValue();
+        double vertical = new BigDecimal((myPosition.getY() - enemyPosition.getY()) / distance).setScale(2, RoundingMode.UP).doubleValue();
+        double wind = ddtankPic.getWind();
+        log.debug("水平屏距：{}, 垂直屏距：{}, 风力：{}", horizontal, vertical, wind);
+        ddtLog.info("水平屏距：" + horizontal + ", 垂直屏距：" + vertical);
+        ddtLog.info("风力：" + wind);
+        // 预先按下空格
+        keyboard.keyDown(' ');
+        strength = ddtankOperate.getStrength(angle, 0, horizontal, vertical);
+        strength += properties.getOffsetStrength();
+        strength = new BigDecimal(strength).setScale(2, RoundingMode.UP).doubleValue();
+        log.debug("自动攻击：{}度, {}力", angle, strength);
+        ddtLog.info("自动攻击：" + angle + "度, " + strength + "力");
+        keyboard.keysPress(properties.getAttackSkill(), 0);
+        ddtankOperate.attack(strength);
+    }
+
+    /**
+     * @param angle
+     * @return 角度是否调整成功
+     */
+    private boolean angleAdjust(int angle) {
+        TowardEnum targetToward;
+        if (myPosition.getX() < enemyPosition.getX()) {
+            targetToward = TowardEnum.RIGHT;
+        } else {
+            targetToward = TowardEnum.LEFT;
         }
-        if (myPosition != null) {
-            log.debug("我的坐标：{}, {}", myPosition.getX(), myPosition.getY());
-            ddtLog.info("我的坐标：" + myPosition.getX() + ", " + myPosition.getY());
-            enemyPosition = ddtankPic.getEnemyPosition();
-            if (enemyPosition == null) {
-//                if (enemyLastPosition.getX() != 0 && enemyLastPosition.getY() != 0) {
-//                    // 当前记录过敌人的位置，但这回合找不到了
-//                    enemyPosition = new Point(enemyLastPosition.getX() + 30, enemyLastPosition.getY());
-//                    if (enemyPosition.getX() >= 1000) {
-//                        enemyPosition.setX(1000);
-//                    }
-//                } else {
-
-                if (enemyLastPosition != null) {
-                    ddtLog.warn("未找到敌人，即将使用敌人的最后坐标");
-                    enemyPosition = enemyLastPosition;
-                } else {
-                    // 从开局到最终就找不到boss，尝试不断的走位来获取boss位置
-                    while (ddtankPic.isMyRound()) {
-                        if ((enemyPosition = ddtankPic.getEnemyPosition()) != null) {
-                            break;
-                        }
-                        DDTankFindPositionMoveHandler positionMoveHandler = handlerSelector.getPositionMoveHandler();
-                        if (!positionMoveHandler.move(++tiredTimes)) {
-                            break;
-                        }
-                    }
-                }
-            }
-            log.debug("敌人的坐标：{}, {}", enemyPosition.getX(), enemyPosition.getY());
-            ddtLog.info("敌人的坐标：" + enemyPosition.getX() + ", " + enemyPosition.getY());
-            enemyLastPosition.setX(enemyPosition.getX());
-            enemyLastPosition.setY(enemyPosition.getY());
-            angle = ddtankOperate.getBestAngle(myPosition, enemyPosition);
-            if (properties.getAttackTurn()) {
-                // 开启了攻击转向
-                if (enemyPosition.getX() > myPosition.getX()) {
-                    // 敌人在右
-                    keyboard.keyPress('a');
-                    keyboard.keyPress('d');
-                    toward = TowardEnum.RIGHT;
-                } else {
-                    keyboard.keyPress('d');
-                    keyboard.keyPress('a');
-                    toward = TowardEnum.LEFT;
-                }
-                delay(300, true);
-            } else {
-                toward = ddtankPic.getToward();
-                if (toward == TowardEnum.LEFT && enemyPosition.getX() > myPosition.getX()) {
-                    keyboard.keyPress('d');
-                    log.debug("检测到当前方向向左，敌人在右，已自动转向");
-                    ddtLog.primary("检测到当前方向向左，敌人在右，已自动转向");
-                    delay(100, true);
-                } else if (toward == TowardEnum.RIGHT && enemyPosition.getX() < myPosition.getX()) {
-                    keyboard.keyPress('a');
-                    log.debug("检测到当前方向向右，敌人在左，已自动转向");
-                    ddtLog.primary("检测到当前方向向右，敌人在左，已自动转向");
-                    delay(100, true);
-                }
-            }
-
-            // 走位并调整角度
-            TowardEnum targetToward;
-            if (myPosition.getX() < enemyPosition.getX()) {
-                targetToward = TowardEnum.RIGHT;
-            } else {
-                targetToward = TowardEnum.LEFT;
-            }
-            try {
-                if (ddtankOperate.angleAdjust(angle, handlerSelector.getAngleMoveHandler(), targetToward)) {
-                    double horizontal = new BigDecimal((enemyPosition.getX() - myPosition.getX()) / distance).setScale(2, RoundingMode.UP).doubleValue();
-                    double vertical = new BigDecimal((myPosition.getY() - enemyPosition.getY()) / distance).setScale(2, RoundingMode.UP).doubleValue();
-                    log.debug("水平屏距：{}, 垂直屏距：{}", horizontal, vertical);
-                    ddtLog.info("水平屏距：" + horizontal + ", 垂直屏距：" + vertical);
-
-                    strength = ddtankOperate.getStrength(angle, horizontal, vertical);
-                    strength += properties.getOffsetStrength();
-                    strength = new BigDecimal(strength).setScale(2, RoundingMode.UP).doubleValue();
-                    log.debug("自动攻击：{}度, {}力", angle, strength);
-                    ddtLog.info("自动攻击：" + angle + "度, " + strength + "力");
-                    keyboard.keysPress(properties.getAttackSkill(), 0);
-                    ddtankOperate.attack(strength);
-                } else {
+        try {
+            int tried = 1;
+            while (!ddtankOperate.angleAdjust(angle) && handlerSelector.getAngleMoveHandler().move(targetToward, angle, tried++)) {
+                if (tried++ % 3 == 0 && !ddtankPic.isMyRound()) {
                     // TODO 调整角度失败的情况，即调整角度策略失效
                     log.debug("未能调整到指定角度，当前角度：{}, 目标角度: {}, 执行原地飞操作", ddtankPic.getAngle(), angle);
                     ddtLog.info("未能调整到指定角度，当前角度：" + ddtankPic.getAngle() + ", 目标角度：" + angle + "执行原地飞操作");
                     keyboard.keyPress('f');
                     ddtankOperate.attack(5);
+                    return false;
                 }
-            } catch (DDTankAngleResolveException e) {
-                // 角度获取失败，跳过回合
-                keyboard.keyPress('p');
+            }
+            if (tried > 1) {
+                // 需要重新获取我的位置
+                ddtLog.primary("重新获取我的位置");
+                findMyPosition(null);
+            }
+        } catch (DDTankAngleResolveException e) {
+            // 角度获取失败，跳过回合
+            ddtLog.error("角度获取失败，跳过此回合");
+            keyboard.keyPress('p');
+            return false;
+        }
+        return true;
+    }
+
+    private void towardCheck() {
+        if (properties.getAttackTurn()) {
+            // 开启了攻击转向
+            if (enemyPosition.getX() > myPosition.getX()) {
+                // 敌人在右
+                keyboard.keyPress('a');
+                keyboard.keyPress('d');
+                toward = TowardEnum.RIGHT;
+            } else {
+                keyboard.keyPress('d');
+                keyboard.keyPress('a');
+                toward = TowardEnum.LEFT;
+            }
+            delay(300, true);
+        } else {
+            toward = ddtankPic.getToward();
+            if (toward == TowardEnum.LEFT && enemyPosition.getX() > myPosition.getX()) {
+                keyboard.keyPress('d');
+                log.debug("检测到当前方向向左，敌人在右，已自动转向");
+                ddtLog.primary("检测到当前方向向左，敌人在右，已自动转向");
+                delay(100, true);
+            } else if (toward == TowardEnum.RIGHT && enemyPosition.getX() < myPosition.getX()) {
+                keyboard.keyPress('a');
+                log.debug("检测到当前方向向右，敌人在左，已自动转向");
+                ddtLog.primary("检测到当前方向向右，敌人在左，已自动转向");
+                delay(100, true);
             }
         }
     }
 
-    private boolean getMyPosition() {
+    /**
+     * 寻找敌人位置，并将敌人位置保存在enemyPosition成员变量中
+     *
+     * @param positionMoveHandler 当找不到敌人时应该如何操作
+     * @return
+     */
+    private boolean findEnemyPosition(DDTankFindPositionMoveHandler positionMoveHandler) {
+        enemyPosition = ddtankPic.getEnemyPosition();
+        if (isEmpty(enemyPosition)) {
+            if (enemyLastPosition != null) {
+                ddtLog.warn("未找到敌人，即将使用敌人的最后坐标");
+                enemyPosition = enemyLastPosition;
+            } else {
+                // 从开局到最终就找不到boss，尝试不断的走位来获取boss位置
+                int tiredTimes = 0;
+                while (ddtankPic.isMyRound()) {
+                    if ((enemyPosition = ddtankPic.getEnemyPosition()) != null) {
+                        break;
+                    }
+                    ++tiredTimes;
+                    if (positionMoveHandler != null) {
+                        if (!positionMoveHandler.move(tiredTimes)) {
+                            break;
+                        }
+                    } else {
+                        if (tiredTimes > 100) {
+                            ddtLog.error("未找到敌人位置");
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+        // 如果找到了敌人位置，则更新敌人最后坐标
+        enemyLastPosition.setX(enemyPosition.getX());
+        enemyLastPosition.setY(enemyPosition.getY());
+        log.debug("敌人的坐标：{}, {}", enemyPosition.getX(), enemyPosition.getY());
+        ddtLog.info("敌人的坐标：" + enemyPosition.getX() + ", " + enemyPosition.getY());
+        return true;
+    }
+
+    private boolean findMyPosition(DDTankFindPositionMoveHandler positionMoveHandler) {
         int tiredTimes = 0;
         boolean needFind = true;
+        Point myPosition = null;
         while (needFind && ddtankPic.isMyRound()) {
             for (int i = 0; i < 10; i++) {
                 if ((myPosition = ddtankPic.getMyPosition()) != null) {
@@ -304,14 +347,24 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
             }
             if (myPosition == null) {
                 tiredTimes++;
-                log.info("未找到位置，尝试走位。若长时间未找到分析是否是小地图截取太小的问题。");
-                DDTankFindPositionMoveHandler positionMoveHandler = handlerSelector.getPositionMoveHandler();
-                if (!positionMoveHandler.move(++tiredTimes)) {
-                    break;
+                ddtLog.warn("未找到位置，尝试走位。");
+                if (positionMoveHandler != null) {
+                    if (!positionMoveHandler.move(tiredTimes)) {
+                        break;
+                    }
+                } else {
+                    if (tiredTimes > 100) {
+                        ddtLog.error("未找到走位后的位置");
+                        return false;
+                    }
                 }
             }
         }
-
+        if (myPosition != null) {
+            this.myPosition = myPosition;
+            log.debug("我的坐标：{}, {}", myPosition.getX(), myPosition.getY());
+            ddtLog.info("我的坐标：" + myPosition.getX() + ", " + myPosition.getY());
+        }
         return true;
     }
 

@@ -3,25 +3,23 @@ package cn.windor.ddtank.core.impl;
 import cn.windor.ddtank.base.*;
 import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.exception.DDTankAngleResolveException;
+import cn.windor.ddtank.exception.DDTankStrengthResolveException;
 import cn.windor.ddtank.handler.DDTankAngleAdjustMoveHandler;
 import cn.windor.ddtank.core.DDTankOperate;
 import cn.windor.ddtank.core.DDTankPic;
 import cn.windor.ddtank.type.TowardEnum;
+import cn.windor.ddtank.util.ColorUtils;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.*;
+import java.util.function.Function;
+
 import static cn.windor.ddtank.util.ThreadUtils.delay;
+import static java.lang.Math.PI;
 
 @Slf4j
 public class DDtankOperate10_4 implements DDTankOperate {
-    private static final double[] strengthTable20 = {10, 19, 25, 30, 36, 40, 44, 48, 51, 54, 57, 60, 63, 66, 69, 72, 74, 76, 78, 80};
-    private static final double[] strengthTable30 = {14, 20, 24, 28, 32, 35, 38, 41, 44, 47, 50, 52, 55, 57, 60, 62, 65, 67, 69, 72};
-    private static final double[] strengthTable35 = {10, 16, 22, 26, 30, 33, 37, 40, 43, 45, 49, 51, 53, 55, 57, 59, 61, 63, 65, 67};
-    private static final double[] strengthTable40 = {12, 16, 20, 25, 30, 33, 35, 40, 43, 45, 48, 50, 53, 55, 58, 60, 62, 64, 67, 70};
-    private static final double[] strengthTable45 = {13, 16, 20, 25, 30, 33, 35, 38, 41, 45, 48, 51, 53, 55, 57, 59, 60, 63, 66, 68};
-    private static final double[] strengthTable50 = {14, 20, 24, 28, 32, 35, 38, 42, 44, 48, 50, 53, 55, 58, 60, 63, 65, 68, 70, 72};
-    private static final double[] strengthTable65 = {13, 20, 26, 31, 37, 41, 44, 48, 53, 56, 58, 61, 64, 67, 70, 73, 76, 79, 82, 85};
-    private static final double[] strengthTable70 = {18.5, 26.4, 32.6, 37.9, 42.7, 47.2, 51.3, 55.3, 59.1, 62.8, 66.3, 69.8, 73.1, 76.5, 79.7, 82.9, 86.1, 89.2, 92.3, 95.3};
-    private static final double[] upOffset = {3, 2.5, 2, 1.55, 1.9, 1.15, 0.58, 0.24};
+
     protected Mouse mouse;
 
     protected Keyboard keyboard;
@@ -152,19 +150,8 @@ public class DDtankOperate10_4 implements DDTankOperate {
         }
     }
 
-    @Override
-    public boolean angleAdjust(int targetAngle, DDTankAngleAdjustMoveHandler angleAdjust, TowardEnum toward) {
-        int tried = 1;
-        while (!angleAdjust(targetAngle) && angleAdjust.move(toward, targetAngle, tried++)) {
-            if (tried++ % 3 == 0 && !ddTankPic.isMyRound()) {
-                return false;
-            }
-        }
-        return true;
-    }
 
-    @Override
-    public void attack(double strength) {
+    public void attack2(double strength) {
         int tired = 0;
         double strengthUnit = (double) (properties.getStrengthEndX() - properties.getStrengthStartX()) / 100;
         if (strength < 3) {
@@ -215,6 +202,45 @@ public class DDtankOperate10_4 implements DDTankOperate {
     }
 
     @Override
+    public void attack(double strength) {
+        int tired = 0;
+        double strengthUnit = (double) (properties.getStrengthEndX() - properties.getStrengthStartX()) / 100;
+        int x = (int) (properties.getStrengthStartX() + strengthUnit * strength - 1);
+        String nowColor = dm.getAveRGB(x, 574, x + 1, 590).toLowerCase();
+        while(true) {
+            String color = dm.getAveRGB(x, 574, x + 1, 590).toLowerCase();
+            if(!ColorUtils.isSimColor(nowColor, color + "-202020")) {
+                keyboard.keyUp(' ');
+                // 当颜色不变时，说明当前回合还未结束
+                while(ColorUtils.isSimColor(nowColor, color+"-202020")) {
+                    color = dm.getAveRGB(x, 574, x + 1, 590).toLowerCase();
+                    if (properties.getAftertreatment()) {
+                        // 后处理
+                        for (int i = 0; i < properties.getAftertreatmentSec(); i++) {
+                            keyboard.keyPress(properties.getAftertreatmentStr().charAt(0));
+                            delay(1000 / properties.getAftertreatmentSec(), true);
+                        }
+                    } else {
+                        delay(10, true);
+                    }
+                }
+                return;
+            }
+            tired = tired + 1;
+            if(tired % 1000 == 0) {
+                if (!ddTankPic.isMyRound()) {
+                    keyboard.keyUp(' ');
+                    return;
+                }
+            }
+            delay(properties.getStrengthCheckDelay(), true);
+        }
+    }
+
+    public static void main(String[] args) {
+    }
+
+    @Override
     public int getBestAngle(Point myPosition, Point enemyPosition) {
         if (properties.getIsHandleAttack()) {
             // 手动及固定角度优先
@@ -247,60 +273,43 @@ public class DDtankOperate10_4 implements DDTankOperate {
         if (angle == 70) {
             angle = (int) theta - 5;
         }
+        if(properties.getIsClosestAngle()) {
+            // 临近角度
+            Integer nowAngle = ddTankPic.getAngle();
+            if(nowAngle > angle) {
+                // 只有在当前角度比自动角度高时才能临近，否则根本都打不到boss
+                if(nowAngle < 20) {
+                    angle = 20;
+                }else if(nowAngle < 30) {
+                    angle = 30;
+                }else if(nowAngle < 40) {
+                    angle = 40;
+                }else if(nowAngle < 45) {
+                    angle = 45;
+                }else if(nowAngle < 50) {
+                    angle = 50;
+                }else if(nowAngle < 65) {
+                    angle = 65;
+                }else if(nowAngle < 70) {
+                    angle = 70;
+                }
+            }
+        }
         log.debug("敌我夹角：{}, 最佳角度: {}", theta, angle);
         return angle + properties.getOffsetAngle();
     }
 
     @Override
-    public double getStrength(int angle, double horizontal, double vertical) {
+    public double getStrength(int angle, double wind, double horizontal, double vertical) {
         horizontal = Math.abs(horizontal);
-        if (horizontal >= 20) {
-            log.warn("当前屏距超过20，请更新力度公式。【当前屏距：{}, 垂直屏距：{}】", horizontal, vertical);
-            return 100;
+        ProcessBuilder processBuilder = new ProcessBuilder("C:\\tmp\\getStrength.exe", angle + "", "" + wind, "" + horizontal, "" + vertical);
+        try {
+            Process process = processBuilder.start();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+            return Double.parseDouble(reader.readLine());
+        } catch (Exception e) {
+            throw new DDTankStrengthResolveException(e.getMessage());
         }
-        if (angle > 70) {
-            return 100;
-        }
-        double strength;
-        if (angle <= 20) {
-            strength = strengthTable20[(int) horizontal] + (strengthTable20[(int) horizontal] - strengthTable20[(int) horizontal + 1]) * (horizontal - (int) horizontal);
-        } else if (angle <= 30) {
-            strength = strengthTable30[(int) horizontal] + (strengthTable30[(int) horizontal] - strengthTable30[(int) horizontal + 1]) * (horizontal - (int) horizontal);
-        } else if (angle <= 35) {
-            strength = strengthTable35[(int) horizontal] + (strengthTable35[(int) horizontal] - strengthTable35[(int) horizontal + 1]) * (horizontal - (int) horizontal);
-        } else if (angle <= 40) {
-            strength = strengthTable40[(int) horizontal] + (strengthTable40[(int) horizontal] - strengthTable40[(int) horizontal + 1]) * (horizontal - (int) horizontal);
-        } else if (angle <= 45) {
-            strength = strengthTable45[(int) horizontal] + (strengthTable45[(int) horizontal] - strengthTable45[(int) horizontal + 1]) * (horizontal - (int) horizontal);
-        } else if (angle <= 50) {
-            strength = strengthTable50[(int) horizontal] + (strengthTable50[(int) horizontal] - strengthTable50[(int) horizontal + 1]) * (horizontal - (int) horizontal);
-        } else if (angle <= 65) {
-            strength = strengthTable65[(int) horizontal] + (strengthTable65[(int) horizontal] - strengthTable65[(int) horizontal + 1]) * (horizontal - (int) horizontal);
-        } else {
-            strength = strengthTable70[(int) horizontal] + (strengthTable70[(int) horizontal] - strengthTable70[(int) horizontal + 1]) * (horizontal - (int) horizontal);
-        }
-
-        if (vertical > 0.3) {
-            double close = 1 / (horizontal / 100) / 10;
-            close = close * close + 1;
-            if (angle <= 20) {
-                strength += upOffset[0] * vertical * close;
-            } else if (angle <= 30) {
-                strength += upOffset[1] * vertical * close;
-            } else if (angle <= 35) {
-                strength += upOffset[2] * vertical * close;
-            } else if (angle <= 40) {
-                strength += upOffset[3] * vertical * close;
-            } else if (angle <= 45) {
-                strength += upOffset[4] * vertical * close;
-            } else if (angle <= 50) {
-                strength += upOffset[5] * vertical * close;
-            } else if (angle <= 65) {
-                strength += upOffset[6] * vertical * close;
-            } else {
-                strength += upOffset[7] * vertical * close;
-            }
-        }
-        return strength;
     }
+
 }
