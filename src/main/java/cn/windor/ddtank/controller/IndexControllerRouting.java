@@ -60,6 +60,10 @@ public class IndexControllerRouting {
         map.put("password", coreThread.getTaskRefindHandler().getPassword());
         map.put("taskAutoComplete", coreThread.getTask().getTaskAutoComplete());
         map.put("autoUseProp", coreThread.getTask().getAutoUseProp());
+        map.put("passes", coreThread.getPasses());
+        map.put("state", coreThread.getCoreState());
+        map.put("runTime", coreThread.getRunTime());
+        map.put("suspend", coreThread.isSuspend());
         return "detail";
     }
 

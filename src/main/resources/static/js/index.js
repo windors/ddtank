@@ -97,24 +97,6 @@ $(function () {
         }
     })
 
-    // 毫秒转时间
-    $(".time-ms").each(function (i, obj) {
-        let ms = $(obj).html();
-        ms = Math.floor(ms / 1000);
-        let hour = Math.floor(ms / 3600);
-        if(hour < 10) {
-            hour = "0" + hour;
-        }
-        let minute = Math.floor(ms % 3600 / 60);
-        if(minute < 10) {
-            minute = "0" + minute;
-        }
-        let second = ms % 60;
-        if(second < 10) {
-            second = "0" + second;
-        }
-        $(obj).html(hour + ":" + minute + ":" + second)
-    })
     // 取消继承
     $(".ddt tr td:first-child input,th:first-child input").each(function (i, input) {
         $(input).click(function (e) {
