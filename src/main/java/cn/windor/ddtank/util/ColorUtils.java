@@ -39,6 +39,13 @@ public class ColorUtils {
         return false;
     }
 
+    public static boolean isSimColor(String color1, String color2) {
+        int r = Integer.parseInt(color1.substring(0, 2), 16);
+        int g = Integer.parseInt(color1.substring(2, 4), 16);
+        int b = Integer.parseInt(color1.substring(4, 6), 16);
+        return isSimColor(r, g, b, color2);
+    }
+
     private static String getColor(int r, int g, int b) {
         if (r > 255) {
             r = 255;
