@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.parameters.P;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -180,6 +181,10 @@ public class DDTankCoreTask implements Runnable {
         // 设置脚本参数
         this.mouse = new DMMouse(dm.getSource());
         this.keyboard = new DMKeyboard(dm.getSource());
+
+        // 跳过过场动画
+        mouse.moveAndClick(21, 519);
+
         String picDir = new File(DDTankFileConfigProperties.getBaseDir(), properties.getPicDir()).getAbsolutePath() + "/";
         if ("10".equals(version)) {
             this.ddtankPic = new DDTankPic10_4(dm, picDir, properties, mouse);
@@ -404,6 +409,9 @@ public class DDTankCoreTask implements Runnable {
     }
 
     public List<LevelRule> getLevelSelectRules() {
+        if(ddtankSelectMapHandler == null) {
+            return Collections.emptyList();
+        }
         return ddtankSelectMapHandler.getRules();
     }
 

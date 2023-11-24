@@ -49,6 +49,8 @@ public interface Library {
      */
     long getWindow(long hwnd, int flag);
 
+    List<Long> enumWindow(long parent, String title, String className, int filter);
+
     long findWindow(String className, String title);
 
     String getWindowTitle(long hwnd);
@@ -65,4 +67,8 @@ public interface Library {
      * @return
      */
     boolean sendStringIme(String str);
+
+    List<Long> enumWindowByProcess(String prcessName, String title, String className, int filter);
+
+    Long findWindowEx(Long hwnd, String className, String title);
 }

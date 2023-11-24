@@ -62,7 +62,7 @@ public class DDTankLog {
         }
     }
 
-    static class Log {
+    public static class Log {
         @Getter
         private final LocalDateTime time;
 

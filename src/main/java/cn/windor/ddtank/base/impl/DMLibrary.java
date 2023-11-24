@@ -6,6 +6,8 @@ import com.jacob.activeX.ActiveXComponent;
 import com.jacob.com.Variant;
 import lombok.extern.slf4j.Slf4j;
 import com.jacob.com.Dispatch;
+import org.thymeleaf.util.StringUtils;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -385,6 +387,21 @@ public class DMLibrary implements Library {
     }
 
     @Override
+    public List<Long> enumWindow(long parent, String title, String className, int filter) {
+        String returnHwnds = Dispatch.call(dm, "enumWindow", getParam(parent), getParam(title), getParam(className), getParam(filter)).getString();
+        // 转换为java对象
+        List<Long> resultList = new ArrayList<>();
+        if(StringUtils.isEmpty(returnHwnds)) {
+            return resultList;
+        }
+        String[] hwnds = returnHwnds.split(",");
+        for (String hwnd : hwnds) {
+            resultList.add(Long.parseLong(hwnd));
+        }
+        return resultList;
+    }
+
+    @Override
     public long findWindow(String className, String title) {
         return Dispatch.call(dm, "findWindow", getParam(className), getParam(title)).getInt();
     }
@@ -414,15 +431,28 @@ public class DMLibrary implements Library {
         return Dispatch.call(dm, "sendStringIme", getParam(str)).getInt() == 1;
     }
 
+    @Override
+    public List<Long> enumWindowByProcess(String processName, String title, String className, int filter) {
+        String hwndsStr = Dispatch.call(dm, "enumWindowByProcess", getParam(processName), getParam(title), getParam(className), getParam(filter)).getString();
+        List<Long> result = new ArrayList<>();
+        if(StringUtils.isEmpty(hwndsStr)) {
+            return result;
+        }
+        String[] hwnds = hwndsStr.split(",");
+        for (String hwnd : hwnds) {
+            result.add(Long.parseLong(hwnd));
+        }
+        return result;
+    }
+
+    @Override
+    public Long findWindowEx(Long hwnd, String className, String title) {
+        return (long) Dispatch.call(dm, "findWindowEx", getParam(hwnd), getParam(className), getParam(title)).getInt();
+    }
+
     public static void main(String[] args) throws IOException {
         Library dm = new DMLibrary(LibraryFactory.getActiveXCompnent());
-        long window = 657734;
-        while(window != 0) {
-            window = dm.getWindow(window, 1);
-            if("Internet Explorer_Server".equals(dm.getWindowClass(window))) {
-
-            }
-            System.out.println(window);
-        }
+        Long hwnd = dm.findWindowEx(986392l, "AfxWnd80su", "PageLabelBar");
+        System.out.println(hwnd);
     }
 }

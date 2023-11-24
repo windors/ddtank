@@ -74,7 +74,10 @@ public class DDTankAutoUsePropHandlerImpl implements DDTankAutoUsePropHandler {
             return;
         }
         // 使用道具
-        mouse.moveAndDblClick(prop);
+        mouse.moveAndClick(prop.setOffset(20, 20));
+        delay(500, true);
+        mouse.moveTo(prop.setOffset(20, 10));
+        mouse.leftClick();
         delay(1000, true);
 
         // 关闭背包

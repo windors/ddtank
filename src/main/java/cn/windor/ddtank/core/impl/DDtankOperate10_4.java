@@ -206,13 +206,14 @@ public class DDtankOperate10_4 implements DDTankOperate {
         int tired = 0;
         double strengthUnit = (double) (properties.getStrengthEndX() - properties.getStrengthStartX()) / 100;
         int x = (int) (properties.getStrengthStartX() + strengthUnit * strength - 1);
-        String nowColor = dm.getAveRGB(x, 574, x + 1, 590).toLowerCase();
+        String nowColor = dm.getAveRGB(x - 1, 574, x + 1, 590).toLowerCase();
+        keyboard.keyDown(' ');
         while(true) {
-            String color = dm.getAveRGB(x, 574, x + 1, 590).toLowerCase();
-            if(!ColorUtils.isSimColor(nowColor, color + "-202020")) {
+            String color = dm.getAveRGB(x - 1, 574, x + 1, 590).toLowerCase();
+            if(!ColorUtils.isSimColor(nowColor, color + "-101010")) {
                 keyboard.keyUp(' ');
                 // 当颜色不变时，说明当前回合还未结束
-                while(ColorUtils.isSimColor(nowColor, color+"-202020")) {
+                while(ColorUtils.isSimColor(nowColor, color+"-101010")) {
                     color = dm.getAveRGB(x, 574, x + 1, 590).toLowerCase();
                     if (properties.getAftertreatment()) {
                         // 后处理

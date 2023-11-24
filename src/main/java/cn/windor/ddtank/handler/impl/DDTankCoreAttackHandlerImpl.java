@@ -197,17 +197,25 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
      * 判断点是否为空点
      */
     private boolean isEmpty(Point point) {
-        return point != null && point.getX() == 0 && point.getY() == 0;
+        return point == null || point.getX() == 0 || point.getY() == 0;
     }
 
     private void attackAuto() {
-        findMyPosition(handlerSelector.getPositionMoveHandler());
-        findEnemyPosition(handlerSelector.getPositionMoveHandler());
+        if(!findMyPosition(handlerSelector.getPositionMoveHandler()) || !findEnemyPosition(handlerSelector.getPositionMoveHandler())){
+            // 一开始就未找到位置则退出回合
+            return;
+        }
         towardCheck();
 
         // 调整角度
         angle = ddtankOperate.getBestAngle(myPosition, enemyPosition);
-        angleAdjust(angle);
+        if(!angleAdjust(angle)) {
+            // 角度调整失败，则退出回合
+            // 角度获取失败，跳过回合
+            ddtLog.error("角度获取失败，跳过此回合");
+            keyboard.keyPress('p');
+            return;
+        }
 
         double horizontal = new BigDecimal((enemyPosition.getX() - myPosition.getX()) / distance).setScale(2, RoundingMode.UP).doubleValue();
         double vertical = new BigDecimal((myPosition.getY() - enemyPosition.getY()) / distance).setScale(2, RoundingMode.UP).doubleValue();
@@ -255,9 +263,6 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
                 findMyPosition(null);
             }
         } catch (DDTankAngleResolveException e) {
-            // 角度获取失败，跳过回合
-            ddtLog.error("角度获取失败，跳过此回合");
-            keyboard.keyPress('p');
             return false;
         }
         return true;
@@ -300,11 +305,12 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
      * @return
      */
     private boolean findEnemyPosition(DDTankFindPositionMoveHandler positionMoveHandler) {
-        enemyPosition = ddtankPic.getEnemyPosition();
+        Point enemyPosition = ddtankPic.getEnemyPosition();
         if (isEmpty(enemyPosition)) {
-            if (enemyLastPosition != null) {
+            if (!isEmpty(enemyLastPosition)) {
                 ddtLog.warn("未找到敌人，即将使用敌人的最后坐标");
-                enemyPosition = enemyLastPosition;
+                this.enemyPosition = enemyLastPosition;
+                return true;
             } else {
                 // 从开局到最终就找不到boss，尝试不断的走位来获取boss位置
                 int tiredTimes = 0;
@@ -327,11 +333,16 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
             }
         }
         // 如果找到了敌人位置，则更新敌人最后坐标
-        enemyLastPosition.setX(enemyPosition.getX());
-        enemyLastPosition.setY(enemyPosition.getY());
-        log.debug("敌人的坐标：{}, {}", enemyPosition.getX(), enemyPosition.getY());
-        ddtLog.info("敌人的坐标：" + enemyPosition.getX() + ", " + enemyPosition.getY());
-        return true;
+        if (!isEmpty(enemyPosition)) {
+            this.enemyPosition = enemyPosition;
+            enemyLastPosition.setX(enemyPosition.getX());
+            enemyLastPosition.setY(enemyPosition.getY());
+            log.debug("敌人的坐标：{}, {}", enemyPosition.getX(), enemyPosition.getY());
+            ddtLog.info("敌人的坐标：" + enemyPosition.getX() + ", " + enemyPosition.getY());
+            return true;
+        }
+        ddtLog.warn("未找到敌人位置");
+        return false;
     }
 
     private boolean findMyPosition(DDTankFindPositionMoveHandler positionMoveHandler) {
@@ -341,13 +352,15 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
         while (needFind && ddtankPic.isMyRound()) {
             for (int i = 0; i < 10; i++) {
                 if ((myPosition = ddtankPic.getMyPosition()) != null) {
+                    // 如果找到了位置则退出循环
                     needFind = false;
                     break;
                 }
             }
+            // 如果10次仍然没有找到位置
             if (myPosition == null) {
                 tiredTimes++;
-                ddtLog.warn("未找到位置，尝试走位。");
+//                ddtLog.warn("未找到位置，尝试走位。");
                 if (positionMoveHandler != null) {
                     if (!positionMoveHandler.move(tiredTimes)) {
                         break;
@@ -364,8 +377,10 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
             this.myPosition = myPosition;
             log.debug("我的坐标：{}, {}", myPosition.getX(), myPosition.getY());
             ddtLog.info("我的坐标：" + myPosition.getX() + ", " + myPosition.getY());
+            return true;
         }
-        return true;
+        log.warn("未找到我的位置");
+        return false;
     }
 
     class DistanceCalculate {

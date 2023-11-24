@@ -1,6 +1,7 @@
 package cn.windor.ddtank.config;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +14,7 @@ import java.lang.reflect.Field;
 @Getter
 @Setter
 @ToString
+@NoArgsConstructor
 public class DDTankConfigProperties implements Serializable, Cloneable {
 
     private static final long serialVersionUID = 1L;
@@ -72,6 +74,7 @@ public class DDTankConfigProperties implements Serializable, Cloneable {
         this.angleMoveMode = properties.angleMoveMode;
         this.positionMoveMode = properties.positionMoveMode;
         this.picDir = properties.picDir;
+        this.website = properties.website;
     }
 
     public DDTankConfigProperties(DDTankConfigProperties defaultConfig) {
@@ -176,4 +179,5 @@ public class DDTankConfigProperties implements Serializable, Cloneable {
 
     private volatile Integer angleMoveMode = 0;
     private volatile Integer positionMoveMode = 0;
+    private volatile String website = "";
 }

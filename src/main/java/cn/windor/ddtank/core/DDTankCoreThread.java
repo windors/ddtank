@@ -1,12 +1,18 @@
 package cn.windor.ddtank.core;
 
 import cn.windor.ddtank.base.Library;
+import cn.windor.ddtank.base.impl.DMKeyboard;
 import cn.windor.ddtank.base.impl.DMLibrary;
+import cn.windor.ddtank.base.impl.DMMouse;
 import cn.windor.ddtank.base.impl.LibraryFactory;
 import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.config.DDTankStartParam;
 import cn.windor.ddtank.entity.LevelRule;
-import cn.windor.ddtank.handler.impl.DDTankCoreTaskRefindHandlerImpl;
+import cn.windor.ddtank.handler.DDTankCoreTaskRefindHandler;
+import cn.windor.ddtank.handler.DDTankStuckCheckDetectionHandler;
+import cn.windor.ddtank.handler.impl.DDTankCoreTaskRefindByNewWindow;
+import cn.windor.ddtank.handler.impl.DDTankCoreTaskRefindByOldWindow;
+import cn.windor.ddtank.handler.impl.DDTankStuckCheckDetectionByLog;
 import cn.windor.ddtank.service.impl.DDTankThreadServiceImpl;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
 import lombok.Getter;
@@ -40,7 +46,9 @@ public class DDTankCoreThread extends Thread {
     private final LinkedBlockingQueue<FutureTask<?>> daemonTaskQueue = new LinkedBlockingQueue<>();
 
     @Getter
-    private DDTankCoreTaskRefindHandlerImpl taskRefindHandler;
+    private DDTankCoreTaskRefindHandler taskRefindHandler;
+
+    private DDTankStuckCheckDetectionHandler stuckCheckDetectionHandler;
 
 
     /**
@@ -58,6 +66,7 @@ public class DDTankCoreThread extends Thread {
         this.setName(startParam.getName());
         this.needCorrect = startParam.isNeedCorrect();
         this.task = new DDTankCoreTask(gameHwnd, gameVersion, properties, needCorrect);
+        this.stuckCheckDetectionHandler = new DDTankStuckCheckDetectionByLog(task.ddtLog);
         this.coreThread = new Thread(task, getName() + "-exec");
     }
 
@@ -74,6 +83,7 @@ public class DDTankCoreThread extends Thread {
         this.setName(srcThread.getName());
         this.needCorrect = srcThread.needCorrect;
         this.task = new DDTankCoreTask(srcThread.task);
+        this.stuckCheckDetectionHandler = new DDTankStuckCheckDetectionByLog(task.ddtLog);
         this.coreThread = new Thread(task, getName() + "-exec");
     }
 
@@ -93,7 +103,8 @@ public class DDTankCoreThread extends Thread {
     @Override
     public void run() {
         this.dm = new DMLibrary(LibraryFactory.getActiveXCompnent());
-        this.taskRefindHandler = new DDTankCoreTaskRefindHandlerImpl(gameHwnd, dm, getDDTankLog());
+//        this.taskRefindHandler = new DDTankCoreTaskRefindByOldWindow(gameHwnd, dm, getDDTankLog());
+        this.taskRefindHandler = new DDTankCoreTaskRefindByNewWindow(dm, new DMKeyboard(dm.getSource()), new DMMouse(dm.getSource()), task.properties);
         if (task.bind(this.dm)) {
             log.info("[窗口绑定]：守护线程已成功绑定游戏窗口，即将启动脚本线程");
             task.ddtLog.success("主绑定成功，即将启动脚本");
@@ -102,31 +113,10 @@ public class DDTankCoreThread extends Thread {
                 coreThread.start();
 
                 while (!interrupted()) {
-                    if (!dm.getWindowState(gameHwnd, 0)) {
-                        // 调用dm在出错时往往会弹出窗口，所以需要手动关闭线程
-                        log.info("检测到游戏窗口关闭");
-                        task.ddtLog.error("检测到游戏窗口关闭，即将停止脚本运行");
-                        coreThread.interrupt();
-                        coreThread.join();
-                        System.gc();
-                        // 后处理
-                        dm.unbindWindow();
-                        // 蛋3版本才自动重连
-                        if ("10".equals(gameVersion)) {
-                            long hwnd = taskRefindHandler.refindHwnd(gameHwnd);
-                            if (hwnd == 0) {
-                                log.info("自动重连失败");
-                                task.ddtLog.error("自动重连失败，即将停止运行");
-                                break;
-                            } else {
-                                log.info("自动重连成功");
-                                task.ddtLog.success("自动重连：已重新找到窗口句柄");
-                                rebind(hwnd);
-                            }
-                        } else {
-                            break;
-                        }
+                    if(!needRefindCheck()) {
+                        break;
                     }
+
                     if (task.getCallTimes() > 1000000) {
                         log.info("检测到[{}]已运行达到阈值，执行重启任务以释放内存", coreThread.getName());
                         task.needRestart = true;
@@ -158,6 +148,42 @@ public class DDTankCoreThread extends Thread {
             log.error("窗口[{}]绑定失败，请重新尝试启动脚本，大漠错误码：{}", gameHwnd, dm.getLastError());
             task.ddtLog.error("主绑定失败：" + dm.getLastError());
         }
+    }
+
+    private boolean needRefindCheck() throws InterruptedException {
+        boolean needRefindWindow = false;
+        if (!dm.getWindowState(gameHwnd, 0)) {
+            // 调用dm在出错时往往会弹出窗口，所以需要手动关闭线程
+            log.info("检测到游戏窗口关闭");
+            task.ddtLog.error("检测到游戏窗口关闭，即将停止脚本运行");
+            needRefindWindow = true;
+        }else if(task.coreState.get() != CoreThreadStateEnum.SUSPEND && stuckCheckDetectionHandler.isStuck()) {
+            log.info("检测到游戏卡住");
+            task.ddtLog.error("检测到游戏卡住，即将重新启动");
+            needRefindWindow = true;
+        }
+        if(needRefindWindow) {
+            coreThread.interrupt();
+            coreThread.join();
+            System.gc();
+            // 后处理
+            dm.unbindWindow();
+            // 自动重连
+            long hwnd = taskRefindHandler.refindHwnd(gameHwnd);
+            while(hwnd == 0) {
+                hwnd = taskRefindHandler.refindHwnd(gameHwnd);
+            }
+            if (hwnd == 0) {
+                log.info("自动重连失败");
+                task.ddtLog.error("自动重连失败，即将停止运行");
+                return false;
+            } else {
+                log.info("自动重连成功");
+                task.ddtLog.success("自动重连：已重新找到窗口句柄");
+                rebind(hwnd);
+            }
+        }
+        return true;
     }
 
 

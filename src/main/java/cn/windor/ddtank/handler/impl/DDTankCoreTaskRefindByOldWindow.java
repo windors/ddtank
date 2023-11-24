@@ -1,5 +1,6 @@
 package cn.windor.ddtank.handler.impl;
 
+import cn.windor.ddtank.account.impl.SimpleDDTankAccountSignHandlerImpl;
 import cn.windor.ddtank.base.Keyboard;
 import cn.windor.ddtank.base.Library;
 import cn.windor.ddtank.base.Mouse;
@@ -8,7 +9,7 @@ import cn.windor.ddtank.base.impl.DMKeyboard;
 import cn.windor.ddtank.base.impl.DMMouse;
 import cn.windor.ddtank.config.DDTankFileConfigProperties;
 import cn.windor.ddtank.core.DDTankLog;
-import cn.windor.ddtank.handler.DDTankAccountSignHandler;
+import cn.windor.ddtank.account.DDTankAccountSignHandler;
 import cn.windor.ddtank.handler.DDTankCoreTaskRefindHandler;
 import cn.windor.ddtank.handler.DDTankHwndMarkHandler;
 import lombok.Getter;
@@ -19,7 +20,7 @@ import org.thymeleaf.util.StringUtils;
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 
 @Slf4j
-public class DDTankCoreTaskRefindHandlerImpl implements DDTankCoreTaskRefindHandler {
+public class DDTankCoreTaskRefindByOldWindow implements DDTankCoreTaskRefindHandler {
     private DDTankHwndMarkHandler DDTankHwndMarkHandler;
     private long hwnd;
 
@@ -43,7 +44,7 @@ public class DDTankCoreTaskRefindHandlerImpl implements DDTankCoreTaskRefindHand
     @Getter
     private String password;
 
-    public DDTankCoreTaskRefindHandlerImpl(long hwnd, Library dm, DDTankLog ddtLog) {
+    public DDTankCoreTaskRefindByOldWindow(long hwnd, Library dm, DDTankLog ddtLog) {
         this.dm = dm;
         this.ddtLog = ddtLog;
         this.DDTankHwndMarkHandler = new DDTankHwndMarkHandlerImpl(dm);
@@ -51,7 +52,7 @@ public class DDTankCoreTaskRefindHandlerImpl implements DDTankCoreTaskRefindHand
         this.keyboard = new DMKeyboard(dm.getSource());
         // 从顶级窗口进行查找
         this.hwnd = dm.getWindow(hwnd, 7);
-        this.accountSignHandler = new DDTankAccountSignHandlerImpl(dm, mouse, keyboard);
+        this.accountSignHandler = new SimpleDDTankAccountSignHandlerImpl(dm, mouse, keyboard);
     }
 
     /**

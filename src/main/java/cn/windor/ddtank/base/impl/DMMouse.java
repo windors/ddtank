@@ -59,6 +59,11 @@ public class DMMouse implements Mouse {
     }
 
     @Override
+    public void rightClick() {
+        dm.invoke("rightClick");
+    }
+
+    @Override
     public void setOffset(int x, int y) {
         this.offsetX = x;
         this.offsetY = y;

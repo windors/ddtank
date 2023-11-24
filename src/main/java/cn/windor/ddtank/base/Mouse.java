@@ -28,5 +28,7 @@ public interface Mouse {
 
     void leftUp();
 
+    void rightClick();
+
     void setOffset(int x, int y);
 }
