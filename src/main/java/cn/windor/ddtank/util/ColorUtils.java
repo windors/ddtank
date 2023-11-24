@@ -40,6 +40,9 @@ public class ColorUtils {
     }
 
     public static boolean isSimColor(String color1, String color2) {
+        if(color1 == null || color2 == null) {
+            return false;
+        }
         int r = Integer.parseInt(color1.substring(0, 2), 16);
         int g = Integer.parseInt(color1.substring(2, 4), 16);
         int b = Integer.parseInt(color1.substring(4, 6), 16);
