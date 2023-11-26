@@ -337,6 +337,7 @@ public class DDTankCoreTask implements Runnable {
 
                             if (ddtankPic.needClickPrepare()) {
                                 ddtLog.info("点击准备按钮");
+                                initEveryTimes();
                             }
 
                             if (ddtankPic.needClickStart()) {
