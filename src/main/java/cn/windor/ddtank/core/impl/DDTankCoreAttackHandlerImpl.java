@@ -1,17 +1,15 @@
-package cn.windor.ddtank.handler.impl;
+package cn.windor.ddtank.core.impl;
 
 import cn.windor.ddtank.base.Keyboard;
 import cn.windor.ddtank.base.Point;
 import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.core.*;
 import cn.windor.ddtank.exception.DDTankAngleResolveException;
-import cn.windor.ddtank.handler.DDTankCoreAttackHandler;
+import cn.windor.ddtank.core.DDTankCoreAttackHandler;
 import cn.windor.ddtank.handler.DDTankFindPositionMoveHandler;
 import cn.windor.ddtank.type.TowardEnum;
-import javafx.geometry.Pos;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.swing.text.Position;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
@@ -201,7 +199,7 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
     }
 
     private void attackAuto() {
-        if(!findMyPosition(handlerSelector.getPositionMoveHandler()) || !findEnemyPosition(handlerSelector.getPositionMoveHandler())){
+        if (!findMyPosition(handlerSelector.getPositionMoveHandler()) || !findEnemyPosition(handlerSelector.getPositionMoveHandler())) {
             // 一开始就未找到位置则退出回合
             return;
         }
@@ -209,7 +207,7 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
 
         // 调整角度
         angle = ddtankOperate.getBestAngle(myPosition, enemyPosition);
-        if(!angleAdjust(angle)) {
+        if (!angleAdjust(angle)) {
             // 角度调整失败，则退出回合
             // 角度获取失败，跳过回合
             ddtLog.error("角度获取失败，跳过此回合");
@@ -220,6 +218,10 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
         double horizontal = new BigDecimal((enemyPosition.getX() - myPosition.getX()) / distance).setScale(2, RoundingMode.UP).doubleValue();
         double vertical = new BigDecimal((myPosition.getY() - enemyPosition.getY()) / distance).setScale(2, RoundingMode.UP).doubleValue();
         double wind = ddtankPic.getWind();
+        if (toward == TowardEnum.LEFT) {
+            // 当前头朝左，此时风向需要取反
+            wind = -wind;
+        }
         log.debug("水平屏距：{}, 垂直屏距：{}, 风力：{}", horizontal, vertical, wind);
         ddtLog.info("水平屏距：" + horizontal + ", 垂直屏距：" + vertical);
         ddtLog.info("风力：" + wind);

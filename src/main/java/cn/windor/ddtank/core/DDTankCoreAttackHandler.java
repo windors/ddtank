@@ -1,8 +1,4 @@
-package cn.windor.ddtank.handler;
-
-import cn.windor.ddtank.core.DDTankCoreSceneTask;
-import cn.windor.ddtank.core.DDTankCoreTaskComplexObject;
-import cn.windor.ddtank.handler.impl.DDTankCoreAttackHandlerImpl;
+package cn.windor.ddtank.core;
 
 /**
  * 脚本核心攻击处理器接口
