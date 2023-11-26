@@ -157,7 +157,7 @@ public class DDTankPic10_4 implements DDTankPic {
         List<Point> cardList;
         boolean over = false;
         boolean find = false;
-        while ((cardList = dm.findPicEx(88, 59, 904, 571,
+        while ((cardList = dm.findPicEx(0, 0, 1000, 600,
                 path + "蛋10.4-卡牌.bmp", "101010", 0.8, 0)) != null) {
             find = true;
             if (!over) {

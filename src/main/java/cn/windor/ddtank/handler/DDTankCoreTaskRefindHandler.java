@@ -1,8 +1,9 @@
 package cn.windor.ddtank.handler;
 
 import cn.windor.ddtank.base.Library;
+import cn.windor.ddtank.core.DDTankCoreTaskComplexObject;
 
-public interface DDTankCoreTaskRefindHandler {
+public interface DDTankCoreTaskRefindHandler extends DDTankCoreTaskComplexObject {
     /**
      * 重新打开新的游戏窗口
      * @param gameHwnd 当前记录的游戏窗口，用于确定打开的是新窗口

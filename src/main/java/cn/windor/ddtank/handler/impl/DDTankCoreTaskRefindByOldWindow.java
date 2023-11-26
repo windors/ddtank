@@ -55,6 +55,13 @@ public class DDTankCoreTaskRefindByOldWindow implements DDTankCoreTaskRefindHand
         this.accountSignHandler = new SimpleDDTankAccountSignHandlerImpl(dm, mouse, keyboard);
     }
 
+    // TODO 更新复杂对象
+
+    @Override
+    public boolean update(Object... complexObject) {
+        return false;
+    }
+
     /**
      * 关闭弹窗
      *

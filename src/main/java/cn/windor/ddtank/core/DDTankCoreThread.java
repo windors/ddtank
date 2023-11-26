@@ -102,51 +102,75 @@ public class DDTankCoreThread extends Thread {
 
     @Override
     public void run() {
+        boolean autoLogin = false;
         this.dm = new DMLibrary(LibraryFactory.getActiveXCompnent());
 //        this.taskRefindHandler = new DDTankCoreTaskRefindByOldWindow(gameHwnd, dm, getDDTankLog());
-        this.taskRefindHandler = new DDTankCoreTaskRefindByNewWindow(dm, new DMKeyboard(dm.getSource()), new DMMouse(dm.getSource()), task.properties);
-        if (task.bind(this.dm)) {
-            log.info("[窗口绑定]：守护线程已成功绑定游戏窗口，即将启动脚本线程");
-            task.ddtLog.success("主绑定成功，即将启动脚本");
-            try {
-                // 启动脚本线程
-                coreThread.start();
-
-                while (!interrupted()) {
-                    if(!needRefindCheck()) {
-                        break;
-                    }
-
-                    if (task.getCallTimes() > 1000000) {
-                        log.info("检测到[{}]已运行达到阈值，执行重启任务以释放内存", coreThread.getName());
-                        task.needRestart = true;
-                        // TODO 新开辟线程等待线程结束运行
-                        coreThread.join();
-                        this.task = new DDTankCoreTask(this.task, true);
-                        restartTask();
-                    }
-                    // 执行任务
-                    try {
-                        FutureTask<?> task = daemonTaskQueue.poll(10, TimeUnit.SECONDS);
-                        if (task != null) {
-                            task.run();
-                        }
-                    } catch (InterruptedException e) {
-                        interrupt();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            } catch (InterruptedException ignored) {
-                // 在调用某些方法的时候发生了中断，直接执行finally即可
-            } finally {
-                task.unBind(this.dm);
-                log.info("[窗口绑定]：守护线程已成功解除绑定游戏窗口");
-                task.ddtLog.success("脚本已成功停止，主绑定成功解除");
-            }
+        if (taskRefindHandler != null) {
+            taskRefindHandler.update(dm);
         } else {
+            this.taskRefindHandler = new DDTankCoreTaskRefindByNewWindow(dm, task.ddtLog, task.properties);
+        }
+        if (!dm.getWindowState(gameHwnd, 0)) {
+            // 窗口不存在
+            log.info("检测到窗口已失效，即将自动登录");
+            try {
+                if (!needRefindCheck()) {
+                    // 自动重绑定窗口失败
+                    log.warn("自动重绑定窗口失败");
+                    return;
+                }
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            autoLogin = true;
+        }
+
+        // 没有自动重连才尝试绑定游戏窗口
+        if (!autoLogin && !task.bind(this.dm)) {
             log.error("窗口[{}]绑定失败，请重新尝试启动脚本，大漠错误码：{}", gameHwnd, dm.getLastError());
             task.ddtLog.error("主绑定失败：" + dm.getLastError());
+            return;
+        }
+
+        // 启动脚本线程
+        if (!autoLogin) {
+            log.info("[窗口绑定]：守护线程已成功绑定游戏窗口，即将启动脚本线程");
+            log.info("脚本已启动");
+            coreThread.start();
+        } else {
+            task.ddtLog.success("[窗口绑定]：守护线程已成功绑定游戏窗口，脚本已启动");
+        }
+        try {
+            while (!interrupted()) {
+                if (!needRefindCheck()) {
+                    break;
+                }
+
+                if (task.getCallTimes() > 1000000) {
+                    log.info("检测到[{}]已运行达到阈值，执行重启任务以释放内存", coreThread.getName());
+                    task.needRestart = true;
+                    // TODO 新开辟线程等待线程结束运行
+                    coreThread.join();
+                    restartTask();
+                }
+                // 执行任务
+                try {
+                    FutureTask<?> task = daemonTaskQueue.poll(10, TimeUnit.SECONDS);
+                    if (task != null) {
+                        task.run();
+                    }
+                } catch (InterruptedException e) {
+                    interrupt();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (InterruptedException ignored) {
+            // 在调用某些方法的时候发生了中断，直接执行finally即可
+        } finally {
+            task.unBind(this.dm);
+            log.info("[窗口绑定]：守护线程已成功解除绑定游戏窗口");
+            task.ddtLog.success("脚本已成功停止，主绑定成功解除");
         }
     }
 
@@ -155,14 +179,15 @@ public class DDTankCoreThread extends Thread {
         if (!dm.getWindowState(gameHwnd, 0)) {
             // 调用dm在出错时往往会弹出窗口，所以需要手动关闭线程
             log.info("检测到游戏窗口关闭");
-            task.ddtLog.error("检测到游戏窗口关闭，即将停止脚本运行");
+            task.ddtLog.error("检测到游戏窗口关闭，即将重新启动");
             needRefindWindow = true;
-        }else if(task.coreState.get() != CoreThreadStateEnum.SUSPEND && stuckCheckDetectionHandler.isStuck()) {
+        } else if (task.coreState.get() != CoreThreadStateEnum.SUSPEND && stuckCheckDetectionHandler.isStuck()) {
             log.info("检测到游戏卡住");
             task.ddtLog.error("检测到游戏卡住，即将重新启动");
             needRefindWindow = true;
         }
-        if(needRefindWindow) {
+        if (needRefindWindow) {
+            // 先打断当前的脚本线程
             coreThread.interrupt();
             coreThread.join();
             System.gc();
@@ -170,7 +195,7 @@ public class DDTankCoreThread extends Thread {
             dm.unbindWindow();
             // 自动重连
             long hwnd = taskRefindHandler.refindHwnd(gameHwnd);
-            while(hwnd == 0) {
+            while (hwnd == 0) {
                 hwnd = taskRefindHandler.refindHwnd(gameHwnd);
             }
             if (hwnd == 0) {
@@ -200,12 +225,12 @@ public class DDTankCoreThread extends Thread {
             DDTankThreadServiceImpl.changeBindHwnd(gameHwnd, hwnd);
             task.hwnd = hwnd;
             this.gameHwnd = hwnd;
-            // 当前线程重绑定
+            // 当前线程先对窗口进行重绑定，确保游戏窗口首个绑定的是守护线程
             if (dm.bindWindowEx(hwnd, properties.getBindDisplay(), properties.getBindMouse(), properties.getBindKeypad(), properties.getBindPublic(), properties.getBindMode())) {
-                task.ddtLog.success("自动重连：重绑定成功！");
+                task.ddtLog.success("重绑定成功！");
                 delayPersisted(1000, false);
             } else {
-                task.ddtLog.error("自动重连：重绑定失败！");
+                task.ddtLog.error("重绑定失败！");
                 return false;
             }
             // 启动task
@@ -377,6 +402,7 @@ public class DDTankCoreThread extends Thread {
         if (coreThread.isAlive()) {
             return false;
         }
+        this.task = new DDTankCoreTask(task);
         coreThread = new Thread(task, getName() + "-exec");
         coreThread.start();
         return true;

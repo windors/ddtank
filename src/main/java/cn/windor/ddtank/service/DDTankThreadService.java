@@ -70,7 +70,7 @@ public interface DDTankThreadService {
     boolean remove(long hwnd);
 
     /**
-     * 重绑定
+     * 手动重绑定
      * @param hwnd
      * @param newHwnd
      * @return

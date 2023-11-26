@@ -31,15 +31,10 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
     @Autowired
     private Library dm;
 
-    @Autowired
-    private DDTankConfigProperties properties;
-
-    @Autowired
-    private DDTankConfigService configService;
-
     public static final int SHORTCUT_START = 1; // 模拟任务开始快捷键
     public static final int SHORTCUT_STOP = 2; // 模拟手动结束任务快捷键
 
+    // 用来批量执行停止任务
     private static final ExecutorService threadPool = Executors.newCachedThreadPool();
 
     private static final Map<Long, DDTankCoreThread> threadMap = new ConcurrentHashMap<>();
@@ -196,7 +191,7 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
      * @return
      */
     @Override
-    public int restart(List<Long> hwnds) throws InterruptedException {
+    public synchronized int restart(List<Long> hwnds) throws InterruptedException {
         int result = 0;
         List<Long> aliveHwnds = new ArrayList<>(hwnds.size());
         List<Long> legalHwnds = new ArrayList<>(hwnds.size());
@@ -213,14 +208,16 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
             }
             legalHwnds.add(hwnd);
             // 如果有线程存活，那么将存活的线程记录下来，准备之后停止
-            if(thread.isAlive()) {
+            if (thread.isAlive()) {
                 aliveHwnds.add(hwnd);
-            }else{
+            } else {
                 result++;
             }
         }
 
+        // 停止所有活动的线程
         result += stop(aliveHwnds);
+
         for (Long hwnd : legalHwnds) {
             DDTankCoreThread thread = threadMap.get(hwnd);
             if (thread == null) {
@@ -248,7 +245,7 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
     }
 
     @Override
-    public boolean rebind(long hwnd, long newHwnd) {
+    public synchronized boolean rebind(long hwnd, long newHwnd) {
         // 1. 尝试标记 newHwnd
         if (!DDTankHwndMarkHandler.isLegalHwnd(newHwnd)) {
             log.error("重绑定失败，检测到窗口{}非法！", newHwnd);
@@ -269,16 +266,16 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
             return false;
         }
         if (coreThread.isAlive()) {
-            coreThread.rebind(newHwnd);
+            return coreThread.rebind(newHwnd);
+        } else {
+            // 3. 调用线程的重绑定方法
+            coreThread = new DDTankCoreThread(coreThread, newLegalHwnd, newLegalHwnd != newHwnd);
+            coreThread.start();
+            // 4. 重绑定成功，移除标记中的该窗口句柄
+            waitStartMap.remove(newHwnd);
+            threadMap.remove(hwnd);
+            threadMap.put(newHwnd, coreThread);
         }
-        // 3. 调用线程的重绑定方法
-        coreThread = new DDTankCoreThread(coreThread, newLegalHwnd, newLegalHwnd != newHwnd);
-        coreThread.start();
-
-        // 4. 重绑定成功，移除标记中的该窗口句柄
-        waitStartMap.remove(newHwnd);
-        threadMap.remove(hwnd);
-        threadMap.put(newHwnd, coreThread);
         return true;
     }
 

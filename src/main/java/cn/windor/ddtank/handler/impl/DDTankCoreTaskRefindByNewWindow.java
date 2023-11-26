@@ -6,6 +6,7 @@ import cn.windor.ddtank.base.Library;
 import cn.windor.ddtank.account.DDTankAccountSignHandler;
 import cn.windor.ddtank.base.Mouse;
 import cn.windor.ddtank.base.Point;
+import cn.windor.ddtank.base.impl.DMKeyboard;
 import cn.windor.ddtank.base.impl.DMLibrary;
 import cn.windor.ddtank.base.impl.DMMouse;
 import cn.windor.ddtank.base.impl.LibraryFactory;
@@ -24,8 +25,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 import static cn.windor.ddtank.util.ThreadUtils.delayPersisted;
@@ -36,6 +36,8 @@ public class DDTankCoreTaskRefindByNewWindow implements DDTankCoreTaskRefindHand
     // 解决多线程下创建新窗口时的归属问题
     private static final List<Long> usedHwnds = Collections.synchronizedList(new ArrayList<>());
 
+
+    private DDTankLog ddTankLog;
 
     @Setter
     @Getter
@@ -51,16 +53,37 @@ public class DDTankCoreTaskRefindByNewWindow implements DDTankCoreTaskRefindHand
 
     private Library dm;
 
-    public DDTankCoreTaskRefindByNewWindow(Library dm, Keyboard keyboard, Mouse mouse, DDTankConfigProperties properties) {
+    public DDTankCoreTaskRefindByNewWindow(Library dm, DDTankLog ddTankLog, DDTankConfigProperties properties) {
         this.dm = dm;
+        this.ddTankLog = ddTankLog;
         this.properties = properties;
-        this.accountSignHandler = new SimpleDDTankAccountSignHandlerImpl(dm, mouse, keyboard);
+        this.accountSignHandler = new SimpleDDTankAccountSignHandlerImpl(dm, new DMMouse(dm.getSource()), new DMKeyboard(dm.getSource()));
+    }
+
+    @Override
+    public boolean update(Object... complexObject) {
+        boolean success = true;
+        for (Object param : complexObject) {
+            if(param instanceof DDTankConfigProperties) {
+                this.properties = (DDTankConfigProperties) param;
+                continue;
+            }
+            if(param instanceof Library) {
+                this.dm = (Library) param;
+                this.accountSignHandler = new SimpleDDTankAccountSignHandlerImpl(dm, new DMMouse(dm.getSource()), new DMKeyboard(dm.getSource()));
+                continue;
+            }
+            success = false;
+        }
+
+        return success;
     }
 
     @Override
     public long refindHwnd(long gameHwnd) {
         if(StringUtils.isEmpty(properties.getWebsite()) || StringUtils.isEmpty(username) || StringUtils.isEmpty(password)) {
             log.error("未设置该端的网址或未设置账号密码，自动重连失败，请将网址设置到配置中。");
+            delay(100, true);
             // 停止当前线程
             Thread.currentThread().interrupt();
             return 0;
@@ -76,9 +99,15 @@ public class DDTankCoreTaskRefindByNewWindow implements DDTankCoreTaskRefindHand
 
         // 创建一个新窗口并找出多出的那个新的窗口，作为当前游戏窗口的顶层父窗口
         long hwnd = findNewHwnd(hwndClassName);
+        // 处理糖果强制关闭窗口后的小尾巴、进行加速等操作
+        TangoGcHandler.gc();
+
         if (hwnd == 0) {
             log.error("[自动重连]：未找到新打开的窗口");
+            ddTankLog.error("[自动重连]：未找到新打开的窗口");
             return 0;
+        }else {
+            ddTankLog.success("[自动重连]：已打开新的浏览器窗口");
         }
 
         // 找到可以操作网页的窗口
@@ -91,6 +120,7 @@ public class DDTankCoreTaskRefindByNewWindow implements DDTankCoreTaskRefindHand
 
         if (!bindWindow(htmlHwnd)) {
             log.error("[自动重连]：重绑定失败，尝试绑定窗口失败！");
+            ddTankLog.error("[自动重连]：重绑定失败，尝试绑定窗口失败！");
             shutdown(hwnd);
             return 0;
         }
@@ -102,6 +132,7 @@ public class DDTankCoreTaskRefindByNewWindow implements DDTankCoreTaskRefindHand
         if (gameHwnd == 0) {
             shutdown(hwnd);
             log.error("[自动重连]：调用登录接口后未找到游戏窗口，请考虑登录接口是否和当前游戏端相匹配。");
+            ddTankLog.error("[自动重连]：调用登录接口后未找到游戏窗口");
         }
         dm.unbindWindow();
         return gameHwnd;
@@ -112,10 +143,9 @@ public class DDTankCoreTaskRefindByNewWindow implements DDTankCoreTaskRefindHand
         long pid = dm.getWindowProcessId(hwnd);
         try {
             Runtime.getRuntime().exec("taskkill /F /PID " + pid);
-            // 处理糖果强制关闭窗口后的小尾巴
-            TangoGcHandler.gc();
         } catch (IOException e) {
-            log.error("尝试关闭旧窗口失败!");
+            log.error("[自动重连]：尝试关闭旧窗口失败!");
+            ddTankLog.error("[自动重连]：尝试关闭旧窗口失败!");
         }
     }
 
@@ -146,6 +176,7 @@ public class DDTankCoreTaskRefindByNewWindow implements DDTankCoreTaskRefindHand
             Runtime.getRuntime().exec("\"C:\\Program Files (x86)\\TGGame\\Tango3.exe\" " + properties.getWebsite());
         } catch (IOException e) {
             log.error("尝试创建窗口失败");
+            ddTankLog.error("[自动重连]：尝试创建窗口失败!");
             throw new RuntimeException(e);
         }
     }
@@ -175,6 +206,8 @@ public class DDTankCoreTaskRefindByNewWindow implements DDTankCoreTaskRefindHand
                         if (newHwnds.size() == 0) {
                             // 理论上来说不会出现这个错误日志，除非能够在很短的时间内
                             log.error("[自动重连]：已打开的窗口不足以分配给现有的游戏窗口！");
+                            ddTankLog.error("[自动重连]：已打开的窗口不足以分配给现有的游戏窗口！");
+                            return 0;
                         }
                         hwnd = newHwnds.remove(0);
                     }
@@ -190,7 +223,7 @@ public class DDTankCoreTaskRefindByNewWindow implements DDTankCoreTaskRefindHand
     /**
      * 查找游戏窗口
      *
-     * @param htmlHwnd 指定的上层窗口
+     * @param htmlHwnd 指定的上层窗口我
      * @return 如果找到则返回游戏窗口，否则返回0
      */
     private long findGameHwnd(long htmlHwnd) {
@@ -204,6 +237,7 @@ public class DDTankCoreTaskRefindByNewWindow implements DDTankCoreTaskRefindHand
 
         if(hwnd != 0) {
             // 找到游戏窗口后不着急返回，先进行一段时间的延迟，好让第七大道的过场动画跳过，然后在脚本启动后点击屏幕就可以直接跳过过场动画了。
+            ddTankLog.success("[自动重连]：已成功找到新的游戏窗口!");
             delay(10000, true);
         }
         return hwnd;
@@ -235,9 +269,11 @@ public class DDTankCoreTaskRefindByNewWindow implements DDTankCoreTaskRefindHand
      */
     static class TangoGcHandler {
         /**
-         * 多线程环境下，串行执行任务。
+         * 多线程环境下，串行执行任务，当队列满了的时候，放弃队列中的任务
          */
-        private static final ExecutorService executorService = Executors.newSingleThreadExecutor();
+        private static final ExecutorService executorService = new ThreadPoolExecutor(1, 1,
+                0L, TimeUnit.MILLISECONDS,
+                new ArrayBlockingQueue<>(1), new ThreadPoolExecutor.DiscardOldestPolicy());
 
 
         public static void gc() {
@@ -248,6 +284,17 @@ public class DDTankCoreTaskRefindByNewWindow implements DDTankCoreTaskRefindHand
                 List<Long> hwnds = dm.enumWindow(0, "", "Tango3", 2);
                 Mouse mouse = new DMMouse(compnent);
                 for (Long hwnd : hwnds) {
+
+                    // 尝试变更速度
+                    long toolHwnd = dm.findWindowEx(hwnd, "AfxWnd80su", "BrowserBar");
+                    if(dm.bindWindowEx(toolHwnd, "dx2", "dx2", "dx", "dx.public.active.message", 0)) {
+                        delayPersisted(500, false);
+                        mouse.moveAndClick(dm.getClientSize(toolHwnd)[0] -60, 17);
+                        dm.unbindWindow();
+                        delayPersisted(500, false);
+                    }
+
+                    // 将没用的图标删除
                     hwnd = dm.findWindowEx(hwnd, "AfxWnd80su", "PageLabelBar");
                     if (hwnd == 0) {
                         continue;

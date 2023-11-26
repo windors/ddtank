@@ -32,6 +32,9 @@ public class DDTankStuckCheckDetectionByLog implements DDTankStuckCheckDetection
         Map<String, Integer> msgMap = new HashMap<>();
         int size = 0;
         for (DDTankLog.Log log : ddTankLog.getLogs()) {
+            if(log.getMsg().contains("自动重连")) {
+                continue;
+            }
             if (log.getTime().isAfter(begin)) {
                 String key = log.getMsg();
                 msgMap.merge(key, 1, Integer::sum);

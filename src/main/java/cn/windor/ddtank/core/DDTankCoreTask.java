@@ -54,8 +54,8 @@ public class DDTankCoreTask implements Runnable {
     // 脚本开始时间
     private long startTime = -1;
 
-    // runTime是上一次暂停前运行的时间
     private long endTime = -1;
+    // runTime是上一次暂停前运行的时间
     private long runTime = 0;
     private long suspendTime;
 
@@ -151,8 +151,7 @@ public class DDTankCoreTask implements Runnable {
     }
 
     /**
-     * 自动重启时调用的构造方法
-     *
+     * 自动重启时调用的构造方法，主要是日志输出
      * @param task
      * @param isAutoRestart
      */
@@ -450,6 +449,7 @@ public class DDTankCoreTask implements Runnable {
             // 脚本未停止
             return runTime + System.currentTimeMillis() - startTime - suspendTime;
         } else {
+            // 脚本已停止运行
             return runTime + endTime - startTime - suspendTime;
         }
     }
