@@ -75,6 +75,7 @@ public class DDTankConfigProperties implements Serializable, Cloneable {
         this.positionMoveMode = properties.positionMoveMode;
         this.picDir = properties.picDir;
         this.website = properties.website;
+        this.attackDelay = properties.attackDelay;
     }
 
     public DDTankConfigProperties(DDTankConfigProperties defaultConfig) {
@@ -180,4 +181,6 @@ public class DDTankConfigProperties implements Serializable, Cloneable {
     private volatile Integer angleMoveMode = 0;
     private volatile Integer positionMoveMode = 0;
     private volatile String website = "";
+
+    private volatile Double attackDelay = 0.0;
 }

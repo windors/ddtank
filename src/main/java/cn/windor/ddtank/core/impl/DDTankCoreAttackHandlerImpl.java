@@ -12,9 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.*;
 
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 
@@ -41,6 +40,8 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
     TowardEnum toward;
     protected DDTankPic ddtankPic;
     DDTankCoreHandlerSelector handlerSelector;
+
+    private final static ExecutorService calcStrengthExecutors = Executors.newCachedThreadPool();
 
     public DDTankCoreAttackHandlerImpl(DDTankConfigProperties properties, Keyboard keyboard, DDTankPic ddtankPic, DDTankOperate ddtankOperate, DDTankLog ddtLog) {
         this.properties = properties;
@@ -225,11 +226,33 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
         log.debug("水平屏距：{}, 垂直屏距：{}, 风力：{}", horizontal, vertical, wind);
         ddtLog.info("水平屏距：" + horizontal + ", 垂直屏距：" + vertical);
         ddtLog.info("风力：" + wind);
+        // 开辟线程去异步计算力度（大约要花1.5s）
+        Future<Double> calcStrengthTask = calcStrengthExecutors.submit(new CalcStrengthTask(angle, wind, horizontal, vertical));
+
         // 预先按下空格
+        boolean get = false;
+        try {
+            // 等待指定时间，若指定时间内执行完毕，则会直接向下运行，跳过等待
+            strength = calcStrengthTask.get((long) (properties.getAttackDelay() * 1000), TimeUnit.MILLISECONDS);
+            get = true;
+        } catch (InterruptedException | ExecutionException e) {
+            throw new RuntimeException(e);
+        } catch (TimeoutException ignore) {
+        }
         keyboard.keyDown(' ');
-        strength = ddtankOperate.getStrength(angle, 0, horizontal, vertical);
+
+        // 如果指定时间内未获取到力度，则继续等待力度计算，如果已经获取到了力度则会跳过
+        if (!get) {
+            try {
+                strength = calcStrengthTask.get();
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        }
         strength += properties.getOffsetStrength();
         strength = new BigDecimal(strength).setScale(2, RoundingMode.UP).doubleValue();
+
+
         log.debug("自动攻击：{}度, {}力", angle, strength);
         ddtLog.info("自动攻击：" + angle + "度, " + strength + "力");
         keyboard.keysPress(properties.getAttackSkill(), 0);
@@ -453,6 +476,39 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
             ddtLog.info("自动屏距：" + finalDistance);
             // 统计出现次数最多的屏距
             return finalDistance;
+        }
+    }
+
+    class CalcStrengthTask implements Callable<Double> {
+
+        private final double horizontal;
+
+        private final double vertical;
+
+        private final int angle;
+
+        private final double wind;
+
+        private final Map<String, Double> calcedMap = new ConcurrentHashMap<>();
+
+
+
+        public CalcStrengthTask(int angle, double wind, double horizontal, double vertical) {
+            this.angle = angle;
+            this.wind = wind;
+            this.horizontal = horizontal;
+            this.vertical = vertical;
+        }
+
+        @Override
+        public Double call() throws Exception {
+            String key = String.valueOf(angle) + wind + horizontal + vertical;
+            if (calcedMap.get(key) == null) {
+                double strength = ddtankOperate.getStrength(angle, wind, horizontal, vertical);
+                calcedMap.put(key, strength);
+                return strength;
+            }
+            return calcedMap.get(key);
         }
     }
 }

@@ -328,6 +328,12 @@
                 </div>
             </div>
             <div class="form-group">
+                <label class="col-md-2 control-label">出手延迟</label>
+                <div class="col-md-10">
+                    <input class="form-control" name="attackDelay" th:value="${config.attackDelay}"/>
+                </div>
+            </div>
+            <div class="form-group">
                 <label class="col-md-2 control-label">检测停止颜色</label>
                 <div class="col-md-4">
                     <input class="form-control" name="strengthCheckColor" th:value="${config.strengthCheckColor}"/>
