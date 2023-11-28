@@ -32,6 +32,9 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
 
     protected Double strength;
 
+    // 攻击缓存
+    private static final Map<String, Double> calcedMap = new ConcurrentHashMap<>();
+
     boolean exit;
 
     // 回合数
@@ -489,9 +492,6 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
 
         private final double wind;
 
-        private final Map<String, Double> calcedMap = new ConcurrentHashMap<>();
-
-
 
         public CalcStrengthTask(int angle, double wind, double horizontal, double vertical) {
             this.angle = angle;
@@ -502,10 +502,11 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
 
         @Override
         public Double call() throws Exception {
-            String key = String.valueOf(angle) + wind + horizontal + vertical;
+            String key = angle + "|" + wind + "|" + horizontal + "|" + vertical;
             if (calcedMap.get(key) == null) {
                 double strength = ddtankOperate.getStrength(angle, wind, horizontal, vertical);
                 calcedMap.put(key, strength);
+                log.info("缓存{}, {}", key, strength);
                 return strength;
             }
             return calcedMap.get(key);
