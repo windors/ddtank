@@ -119,7 +119,7 @@ public class DDTankCoreTaskRefindByNewWindow implements DDTankCoreTaskRefindHand
         }
 
         if (!bindWindow(htmlHwnd)) {
-            log.error("[自动重连]：重绑定失败，尝试绑定窗口失败！");
+            log.error("[自动重连]：重绑定失败，尝试绑定窗口失败！错误代码：{}", dm.getLastError());
             ddTankLog.error("[自动重连]：重绑定失败，尝试绑定窗口失败！");
             shutdown(hwnd);
             return 0;
