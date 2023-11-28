@@ -61,7 +61,7 @@ public class DDtankOperate10_4 implements DDTankOperate {
 
         // 对于需要翻页的副本将那些的操作，该端的翻页逻辑是点两下滑块，再点一下按钮
         if (line > 2) {
-            for (int i = 0; i < (line / 2); i++) {
+            for (int i = 0; i < ((line - 1) / 2); i++) {
                 for (int j = 0; j < 2; j++) {
                     mouse.moveTo(775, 300);
                     mouse.leftDown();
