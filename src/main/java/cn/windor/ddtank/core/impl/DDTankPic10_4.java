@@ -284,7 +284,7 @@ public class DDTankPic10_4 implements DDTankPic {
 
     @Override
     public double getWind() {
-        String windStr = dm.ocr(461, 20, 536, 42, "000000-000000|ff0000-000000", 0.8);
+        String windStr = dm.ocr(461, 20, 536, 42, "000000-000000|ff0000-000000", 1);
         try {
             double wind = Double.parseDouble(windStr);
             long startTime = System.currentTimeMillis();
