@@ -194,6 +194,8 @@ public class DDtankOperate10_4 implements DDTankOperate {
                     if (!ddTankPic.isMyRound()) {
                         keyboard.keyUp(' ');
                         return;
+                    }else {
+                        keyboard.keyDown(' ');
                     }
                 }
                 delay(properties.getStrengthCheckDelay(), true);
@@ -228,10 +230,12 @@ public class DDtankOperate10_4 implements DDTankOperate {
                 return;
             }
             tired = tired + 1;
-            if(tired % 1000 == 0) {
+            if(tired % 10 == 0) {
                 if (!ddTankPic.isMyRound()) {
                     keyboard.keyUp(' ');
                     return;
+                } else {
+                    keyboard.keyDown(' ');
                 }
             }
             delay(properties.getStrengthCheckDelay(), true);
