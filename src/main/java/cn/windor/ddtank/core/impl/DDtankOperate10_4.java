@@ -209,7 +209,6 @@ public class DDtankOperate10_4 implements DDTankOperate {
         double strengthUnit = (double) (properties.getStrengthEndX() - properties.getStrengthStartX()) / 100;
         int x = (int) (properties.getStrengthStartX() + strengthUnit * strength - 1);
         String nowColor = dm.getAveRGB(x - 1, 574, x + 1, 590).toLowerCase();
-        keyboard.keyDown(' ');
         while(true) {
             String color = dm.getAveRGB(x - 1, 574, x + 1, 590).toLowerCase();
             if(!ColorUtils.isSimColor(nowColor, color + "-101010")) {
@@ -230,7 +229,7 @@ public class DDtankOperate10_4 implements DDTankOperate {
                 return;
             }
             tired = tired + 1;
-            if(tired % 10 == 0) {
+            if(tired % 500 == 0) {
                 if (!ddTankPic.isMyRound()) {
                     keyboard.keyUp(' ');
                     return;
