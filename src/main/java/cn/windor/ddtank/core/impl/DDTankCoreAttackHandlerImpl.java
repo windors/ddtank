@@ -8,6 +8,8 @@ import cn.windor.ddtank.exception.DDTankAngleResolveException;
 import cn.windor.ddtank.core.DDTankCoreAttackHandler;
 import cn.windor.ddtank.handler.DDTankFindPositionMoveHandler;
 import cn.windor.ddtank.type.TowardEnum;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
@@ -33,7 +35,9 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
     protected Double strength;
 
     // 攻击缓存
-    private static final Map<String, Double> calcedMap = new ConcurrentHashMap<>();
+    @Getter
+    @Setter
+    private static Map<String, Double> calcedMap = new ConcurrentHashMap<>();
 
     boolean exit;
 
@@ -243,6 +247,7 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
         } catch (TimeoutException ignore) {
         }
         keyboard.keyDown(' ');
+        long start = System.currentTimeMillis();
 
         // 如果指定时间内未获取到力度，则继续等待力度计算，如果已经获取到了力度则会跳过
         if (!get) {
@@ -259,6 +264,10 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
         log.debug("自动攻击：{}度, {}力", angle, strength);
         ddtLog.info("自动攻击：" + angle + "度, " + strength + "力");
         keyboard.keysPress(properties.getAttackSkill(), 0);
+        if(System.currentTimeMillis() - start < 200) {
+            // 按下空格后延迟一小段时间
+            delay(200 - (System.currentTimeMillis() - start), true);
+        }
         ddtankOperate.attack(strength);
     }
 

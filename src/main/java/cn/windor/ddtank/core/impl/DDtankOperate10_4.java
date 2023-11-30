@@ -211,7 +211,7 @@ public class DDtankOperate10_4 implements DDTankOperate {
         String nowColor = dm.getAveRGB(x - 1, 574, x + 1, 590).toLowerCase();
         while(true) {
             String color = dm.getAveRGB(x - 1, 574, x + 1, 590).toLowerCase();
-            if(!ColorUtils.isSimColor(nowColor, color + "-101010")) {
+            if(!ColorUtils.isSimColor(nowColor, color + "-303030")) {
                 keyboard.keyUp(' ');
                 // 当颜色不变时，说明当前回合还未结束
                 while(ColorUtils.isSimColor(nowColor, color+"-101010")) {

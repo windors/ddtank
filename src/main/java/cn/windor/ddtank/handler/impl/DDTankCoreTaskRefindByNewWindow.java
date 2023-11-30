@@ -207,7 +207,9 @@ public class DDTankCoreTaskRefindByNewWindow implements DDTankCoreTaskRefindHand
                             // 理论上来说不会出现这个错误日志，除非能够在很短的时间内
                             log.error("[自动重连]：已打开的窗口不足以分配给现有的游戏窗口！");
                             ddTankLog.error("[自动重连]：已打开的窗口不足以分配给现有的游戏窗口！");
-                            return 0;
+                            hwnd = 0;
+                            // 继续去外部找新打开的窗口
+                            break;
                         }
                         hwnd = newHwnds.remove(0);
                     }
@@ -289,7 +291,9 @@ public class DDTankCoreTaskRefindByNewWindow implements DDTankCoreTaskRefindHand
                     long toolHwnd = dm.findWindowEx(hwnd, "AfxWnd80su", "BrowserBar");
                     if(dm.bindWindowEx(toolHwnd, "dx2", "dx2", "dx", "dx.public.active.message", 0)) {
                         delayPersisted(500, false);
-                        mouse.moveAndClick(dm.getClientSize(toolHwnd)[0] -60, 17);
+                        for (int i = 0; i < 10; i++) {
+                            mouse.moveAndClick(dm.getClientSize(toolHwnd)[0] -16, 16);
+                        }
                         dm.unbindWindow();
                         delayPersisted(500, false);
                     }
