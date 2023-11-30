@@ -2,6 +2,7 @@ package cn.windor.ddtank.mapper;
 
 import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.util.FileUtils;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -21,6 +22,8 @@ public class DDTankConfigMapper {
 
     private static final File DDTankConfigPropertiesListFile = new File(SerializeDir, "dDTankConfigPropertiesList");
 
+    @Getter
+    private static final File DDTankStrengthFile = new File(SerializeDir, "strengthTable");
     private static List<DDTankConfigProperties> list;
 
     static {
