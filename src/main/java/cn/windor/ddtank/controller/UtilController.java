@@ -5,10 +5,13 @@ import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.config.DDTankFileConfigProperties;
 import cn.windor.ddtank.core.DDTankPic;
 import cn.windor.ddtank.core.DDTankCoreThread;
+import cn.windor.ddtank.core.impl.DDTankCoreAttackHandlerImpl;
 import cn.windor.ddtank.entity.LevelRule;
+import cn.windor.ddtank.mapper.DDTankConfigMapper;
 import cn.windor.ddtank.service.DDTankConfigService;
 import cn.windor.ddtank.service.DDTankThreadService;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
+import cn.windor.ddtank.util.FileUtils;
 import cn.windor.dto.HttpDataResponse;
 import cn.windor.dto.HttpResponse;
 import cn.windor.type.HttpResponseEnum;
@@ -18,12 +21,14 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/util")
@@ -226,5 +231,23 @@ public class UtilController {
                                       @RequestParam String username,
                                       @RequestParam String password) {
         return HttpResponse.auto(threadService.setAutoReconnect(hwnd, username, password));
+    }
+
+    @PostMapping("/strength")
+    public HttpResponse saveStrength() {
+        Map<String, Double> calcedMap = DDTankCoreAttackHandlerImpl.getCalcedMap();
+        FileUtils.writeObject(calcedMap, DDTankConfigMapper.getDDTankStrengthFile());
+        return HttpResponse.ok();
+    }
+
+    @PostMapping("/strength/load")
+    public HttpResponse loadStrength() throws IOException, ClassNotFoundException {
+        File file = DDTankConfigMapper.getDDTankStrengthFile();
+        if(!file.exists()) {
+            return HttpResponse.auto(false);
+        }
+        Map<String, Double> calcedMap = (Map<String, Double>) FileUtils.readSeriaizedObject(file);
+        DDTankCoreAttackHandlerImpl.setCalcedMap(calcedMap);
+        return HttpResponse.ok();
     }
 }

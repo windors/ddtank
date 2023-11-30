@@ -44,4 +44,10 @@ public class UtilControllerRouting {
         map.put("startedThreadMap", threadService.getAllStartedThreadMap());
         return "util/test";
     }
+
+    @GetMapping("/strength")
+    public String strength(Map<String, Object> map) {
+
+        return "util/strength";
+    }
 }

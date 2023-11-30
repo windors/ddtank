@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" th:replace="~{base/main :: main (title=~{::title}?:_, content=~{::body}, link=~{::link}?:~{}, script=~{::script}?:~{}, style=~{::style}?:~{}, contentBefore=~{}, contentAfter=~{},
+      h1='标题')}">
+<head>
+    <meta charset="UTF-8">
+    <title>life track</title>
+</head>
+<body>
+<button id="save">保存</button>
+<button id="load">加载</button>
+</body>
+<script>
+    $("#save").click(function () {
+        postAjax("/util/strength", {}, function (data) {
+            windorAlert('提示', '保存成功！')
+        })
+    })
+
+    $("#load").click(function () {
+        postAjax("/util/strength/load", {}, function (data) {
+            windorAlert('提示', '加载成功！')
+        })
+    })
+</script>
+</html>
