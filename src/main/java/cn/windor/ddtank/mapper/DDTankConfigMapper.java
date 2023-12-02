@@ -14,9 +14,7 @@ import java.util.List;
 
 @Repository
 @Slf4j
-public class DDTankConfigMapper {
-
-    private static final File SerializeDir = new File("serializeDir");
+public class DDTankConfigMapper extends BaseMapper {
 
     private static final File DefaultDDTankConfigPropertiesFile = new File(SerializeDir, "defaultDDTankConfigProperties");
 
@@ -27,12 +25,6 @@ public class DDTankConfigMapper {
     private static List<DDTankConfigProperties> list;
 
     static {
-        if (!SerializeDir.exists()) {
-            if (!SerializeDir.mkdir()) {
-                log.error("文件夹创建失败，请手动创建文件夹[{}]或使用管理员模式启动本程序", SerializeDir.getAbsolutePath());
-            }
-        }
-
         try {
             list = (List<DDTankConfigProperties>) FileUtils.readSeriaizedObject(DDTankConfigPropertiesListFile);
         } catch (Exception e) {

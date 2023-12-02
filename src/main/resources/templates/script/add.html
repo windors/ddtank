@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" th:replace="~{base/main :: main (title=~{::title}?:_, content=~{::body}, link=~{::link}?:~{}, script=~{::script}?:~{}, style=~{::style}?:~{}, contentBefore=~{}, contentAfter=~{},
+      h1='添加脚本')}">
+<head>
+    <meta charset="UTF-8">
+    <title>life track</title>
+</head>
+<body>
+<div class="row">
+    <form id="form-script-add" class="form form-horizontal">
+        <div class="form-group">
+            <label class="control-label col-md-2">游戏句柄</label>
+            <div class="col-md-10">
+                <input class="form-control" name="hwnd"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label col-md-2">脚本名称</label>
+            <div class="col-md-10">
+                <input class="form-control" name="name"/>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label col-md-2">版本配置</label>
+            <div class="col-md-10">
+                <select class="form-control" name="version">
+                    <option value="10">10.4</option>
+                    <option value="2">2.3</option>
+                    <option value="2.4">2.4（可爱弹弹堂）</option>
+                    <option value="2">自定义2（待添加）</option>
+                    <option value="2">自定义3（待添加）</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label col-md-2">整体配置</label>
+            <div class="col-md-10">
+                <select class="form-control" name="propertiesMode">
+                    <option value="0">* 默认配置</option>
+                    <option th:value="${n.count}" th:each="config, n:${configList}">[[${config.name}]]
+                    </option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-offset-10 col-md-2 ">
+                <button class="col-sm-12 btn btn-primary">添加</button>
+            </div>
+        </div>
+    </form>
+</div>
+</body>
+<script>
+    $("#form-script-add").submit(function () {
+        postAjax('/util/start', $(this).serialize(), function (data) {
+            windorAlert('提示', '添加成功!');
+        })
+        return false;
+    })
+</script>
+</html>
