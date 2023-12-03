@@ -15,12 +15,14 @@ import cn.windor.ddtank.entity.LevelRule;
 import cn.windor.ddtank.exception.StopTaskException;
 import cn.windor.ddtank.handler.DDTankAutoUsePropHandler;
 import cn.windor.ddtank.handler.DDTankSelectMapHandler;
-import cn.windor.ddtank.handler.DDTankTaskAutoCompleteHandler;
+import cn.windor.ddtank.handler.DDTankAutoCompleteHandler;
 import cn.windor.ddtank.handler.impl.DDTankAutoUsePropHandlerImpl;
 import cn.windor.ddtank.core.impl.DDTankCoreAttackHandlerImpl;
 import cn.windor.ddtank.handler.impl.DDTankSelectMapHandlerImpl;
-import cn.windor.ddtank.handler.impl.DDTankTaskAutoCompleteHandlerImpl;
+import cn.windor.ddtank.handler.impl.DDTankAutoCompleteHandlerImpl;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
+import cn.windor.ddtank.util.ActiveXComponentUtils;
+import cn.windor.ddtank.util.VariantUtils;
 import com.jacob.com.ComThread;
 import lombok.Getter;
 import lombok.Setter;
@@ -40,7 +42,7 @@ public class DDTankCoreTask implements Runnable {
     // 游戏句柄
     long hwnd;
 
-    // 游戏版本
+    // 游戏版本，脚本在运行后会根据该字符串去创建相关检测和操作类
     String version;
 
     protected DDTankLog ddtLog;
@@ -48,6 +50,10 @@ public class DDTankCoreTask implements Runnable {
     @Getter
     // 已通关副本数
     private int passes;
+
+    @Getter
+    // 整体设置
+    protected DDTankConfigProperties properties;
 
     // 脚本开始时间
     private long startTime = -1;
@@ -68,22 +74,18 @@ public class DDTankCoreTask implements Runnable {
     // 自动领取任务。负数表示不自动领取，非负数通关数 % 该值 == 0 时会执行任务
     private int taskAutoComplete = -1;
 
-    // 自动领取任务策略
-    private DDTankTaskAutoCompleteHandler ddTankTaskAutoCompleteHandler;
-
     @Getter
     @Setter
     // 自动使用道具
     private int autoUseProp = -1;
 
-    private DDTankAutoUsePropHandler ddTankAutoUsePropHandler;
 
     // 如果该变量为true，则需要结束本次脚本运行，通过重启的方式释放当前线程占用的资源
     volatile boolean needRestart = false;
     // 如果该值为true，表示当前脚本是通过现有脚本复制来的，此时例如绑定、矫正等一些操作就不要再次在日志中说明
     boolean isAutoRestart = false;
 
-    AtomicReference<CoreThreadStateEnum> coreState = new AtomicReference<>(CoreThreadStateEnum.NOT_STARTED);
+    transient AtomicReference<CoreThreadStateEnum> coreState = new AtomicReference<>(CoreThreadStateEnum.NOT_STARTED);
 
     protected Library dm;
 
@@ -94,13 +96,16 @@ public class DDTankCoreTask implements Runnable {
     protected Keyboard keyboard;
     protected Mouse mouse;
 
-    @Getter
-    protected DDTankConfigProperties properties;
 
+    // 攻击处理器，用于处理进入副本内的操作
     private DDTankCoreAttackHandler ddTankCoreAttackHandler;
+
+    // 选择地图处理器，用于选择地图
     private DDTankSelectMapHandler ddtankSelectMapHandler;
 
-
+    // 自动领取任务策略
+    private DDTankAutoCompleteHandler ddTankTaskAutoCompleteHandler;
+    private DDTankAutoUsePropHandler ddTankAutoUsePropHandler;
 
 
     /**
@@ -146,6 +151,8 @@ public class DDTankCoreTask implements Runnable {
         this.needCorrect = task.needCorrect;
         this.offsetX = task.offsetX;
         this.offsetY = task.offsetY;
+        this.ddtankPic = task.ddtankPic;
+        this.ddtankOperate = task.ddtankOperate;
     }
 
     /**
@@ -183,41 +190,42 @@ public class DDTankCoreTask implements Runnable {
         mouse.moveAndClick(21, 519);
 
         String picDir = new File(DDTankFileConfigProperties.getBaseDir(), properties.getPicDir()).getAbsolutePath() + "/";
-        if ("10".equals(version)) {
-            this.ddtankPic = new DDTankPic10_4(dm, picDir, properties, mouse);
-        } else if ("2.4".equalsIgnoreCase(version)) {
-            this.ddtankPic = new DDTankPic2_4(dm, picDir, properties, mouse);
+        if(ddtankPic == null) {
+            if ("10".equals(version)) {
+                this.ddtankPic = new DDTankPic10_4(dm, picDir, properties, mouse);
+            } else if ("2.4".equalsIgnoreCase(version)) {
+                this.ddtankPic = new DDTankPic2_4(dm, picDir, properties, mouse);
+            } else {
+                this.ddtankPic = new DDTankPic2_3(dm, picDir, properties, mouse);
+            }
         } else {
-            this.ddtankPic = new DDTankPic2_3(dm, picDir, properties, mouse);
+            log.info("使用之前创建的Pic");
         }
-
-        if ("10".equals(version)) {
-            this.ddtankOperate = new DDtankOperate10_4(dm, mouse, keyboard, ddtankPic, properties);
-        } else {
-            this.ddtankOperate = new DDtankOperate2_3(dm, mouse, keyboard, ddtankPic, properties);
+        if(ddtankOperate == null) {
+            if ("10".equals(version)) {
+                this.ddtankOperate = new DDtankOperate10_4(dm, mouse, keyboard, ddtankPic, properties);
+            } else {
+                this.ddtankOperate = new DDtankOperate2_3(dm, mouse, keyboard, ddtankPic, properties);
+            }
+        }else {
+            log.info("使用之前创建的Operate");
         }
 
         // 复杂对象在非空时创建，非空表示通过复制的方式创建的Task，否则就需要更新复杂对象所依赖的插件对象
         if (ddTankCoreAttackHandler == null) {
             ddTankCoreAttackHandler = new DDTankCoreAttackHandlerImpl(properties, keyboard, ddtankPic, ddtankOperate, ddtLog);
-        } else {
-            ddTankCoreAttackHandler.update(keyboard, ddtankPic, ddtankOperate);
         }
         if (ddtankSelectMapHandler == null) {
             ddtankSelectMapHandler = new DDTankSelectMapHandlerImpl(properties, ddtankOperate, ddtLog);
-        }else {
-            ddtankSelectMapHandler.update(ddtankOperate);
         }
         if(ddTankTaskAutoCompleteHandler == null) {
-            ddTankTaskAutoCompleteHandler = new DDTankTaskAutoCompleteHandlerImpl(keyboard, mouse);
-        }else {
-            ddTankTaskAutoCompleteHandler.update(keyboard, mouse);
+            ddTankTaskAutoCompleteHandler = new DDTankAutoCompleteHandlerImpl(keyboard, mouse);
         }
         if(ddTankAutoUsePropHandler == null) {
             ddTankAutoUsePropHandler = new DDTankAutoUsePropHandlerImpl(mouse, keyboard, dm, ddtLog);
-        }else {
-            ddTankAutoUsePropHandler.update(mouse, keyboard, dm, ddtLog);
         }
+
+        ActiveXComponentUtils.update(this, () -> dm.getSource());
 
         // 首次启动时向控制台说明当前为前台模式启动，重启等操作就不会再重复
         if (!isAutoRestart && needCorrect) {
@@ -387,6 +395,7 @@ public class DDTankCoreTask implements Runnable {
             } finally {
                 // 副绑定不用管
                 unBind(this.dm);
+                VariantUtils.remove();
             }
             endTime = System.currentTimeMillis();
             log.info("脚本停止运行");

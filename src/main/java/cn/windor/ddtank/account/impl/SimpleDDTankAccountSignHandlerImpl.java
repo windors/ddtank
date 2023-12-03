@@ -4,15 +4,25 @@ import cn.windor.ddtank.base.Keyboard;
 import cn.windor.ddtank.base.Library;
 import cn.windor.ddtank.base.Mouse;
 import cn.windor.ddtank.account.DDTankAccountSignHandler;
+import lombok.Getter;
+import lombok.Setter;
 
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 
 public class SimpleDDTankAccountSignHandlerImpl implements DDTankAccountSignHandler {
-    private Mouse mouse;
+    transient private Mouse mouse;
 
-    private Keyboard keyboard;
+    transient private Keyboard keyboard;
 
-    private Library dm;
+    transient private Library dm;
+
+    @Setter
+    @Getter
+    private String username;
+
+    @Setter
+    @Getter
+    private String password;
 
     public SimpleDDTankAccountSignHandlerImpl(Library dm, Mouse mouse, Keyboard keyboard) {
         this.dm = dm;
@@ -21,7 +31,7 @@ public class SimpleDDTankAccountSignHandlerImpl implements DDTankAccountSignHand
     }
 
     @Override
-    public void login(String username, String password) {
+    public void login() {
         // 先等待网页响应
         delay(3000, true);
 

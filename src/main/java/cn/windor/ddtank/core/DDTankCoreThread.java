@@ -1,5 +1,7 @@
 package cn.windor.ddtank.core;
 
+import cn.windor.ddtank.account.DDTankAccountSignHandler;
+import cn.windor.ddtank.account.impl.SimpleDDTankAccountSignHandlerImpl;
 import cn.windor.ddtank.base.Library;
 import cn.windor.ddtank.base.impl.DMKeyboard;
 import cn.windor.ddtank.base.impl.DMLibrary;
@@ -8,16 +10,18 @@ import cn.windor.ddtank.base.impl.LibraryFactory;
 import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.config.DDTankStartParam;
 import cn.windor.ddtank.entity.LevelRule;
-import cn.windor.ddtank.handler.DDTankCoreTaskRefindHandler;
+import cn.windor.ddtank.handler.DDTankCoreRefindHandler;
 import cn.windor.ddtank.handler.DDTankStuckCheckDetectionHandler;
-import cn.windor.ddtank.handler.impl.DDTankCoreTaskRefindByNewWindow;
-import cn.windor.ddtank.handler.impl.DDTankCoreTaskRefindByOldWindow;
+import cn.windor.ddtank.handler.impl.DDTankRefindByNewWindow;
 import cn.windor.ddtank.handler.impl.DDTankStuckCheckDetectionByLog;
 import cn.windor.ddtank.service.impl.DDTankThreadServiceImpl;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
+import cn.windor.ddtank.util.ActiveXComponentUtils;
+import cn.windor.ddtank.util.VariantUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.concurrent.*;
 
@@ -27,27 +31,31 @@ import static cn.windor.ddtank.util.ThreadUtils.delayPersisted;
  * 守护线程的任务是通过日志勘察脚本线程是否出现问题，同时调用一些其他操作
  */
 @Slf4j
-public class DDTankCoreThread extends Thread {
+public class DDTankCoreThread extends Thread implements Serializable {
 
     @Getter
-    private long gameHwnd;
+    transient private long gameHwnd;
     private String gameVersion;
     private DDTankConfigProperties properties;
 
     private boolean needCorrect;
 
-    protected Library dm;
+    transient protected Library dm;
 
     @Getter
     private DDTankCoreTask task;
 
-    private Thread coreThread;
+    transient private Thread coreThread;
 
-    private final LinkedBlockingQueue<FutureTask<?>> daemonTaskQueue = new LinkedBlockingQueue<>();
+    /**
+     * 任务列表，用来测试功能
+     */
+    transient private final LinkedBlockingQueue<FutureTask<?>> daemonTaskQueue = new LinkedBlockingQueue<>();
+
+    private DDTankCoreRefindHandler taskRefindHandler;
 
     @Getter
-    private DDTankCoreTaskRefindHandler taskRefindHandler;
-
+    private DDTankAccountSignHandler accountSignHandler;
     private DDTankStuckCheckDetectionHandler stuckCheckDetectionHandler;
 
 
@@ -77,6 +85,7 @@ public class DDTankCoreThread extends Thread {
      */
     public DDTankCoreThread(DDTankCoreThread srcThread) {
         this.taskRefindHandler = srcThread.taskRefindHandler;
+        this.accountSignHandler = srcThread.accountSignHandler;
         this.gameHwnd = srcThread.gameHwnd;
         this.gameVersion = srcThread.gameVersion;
         this.properties = srcThread.properties;
@@ -100,16 +109,19 @@ public class DDTankCoreThread extends Thread {
         this.task.hwnd = newHwnd;
     }
 
-    @Override
-    public void run() {
-        boolean autoLogin = false;
+    private void init() {
         this.dm = new DMLibrary(LibraryFactory.getActiveXCompnent());
 //        this.taskRefindHandler = new DDTankCoreTaskRefindByOldWindow(gameHwnd, dm, getDDTankLog());
-        if (taskRefindHandler != null) {
-            taskRefindHandler.update(dm);
-        } else {
-            this.taskRefindHandler = new DDTankCoreTaskRefindByNewWindow(dm, task.ddtLog, task.properties);
+        if (taskRefindHandler == null) {
+            this.taskRefindHandler = new DDTankRefindByNewWindow(dm, task.ddtLog, new SimpleDDTankAccountSignHandlerImpl(dm, new DMMouse(dm.getSource()), new DMKeyboard(dm.getSource())), task.properties);
         }
+        if(accountSignHandler == null) {
+            accountSignHandler = new SimpleDDTankAccountSignHandlerImpl(dm, new DMMouse(dm.getSource()), new DMKeyboard(dm.getSource()));
+        }
+
+        ActiveXComponentUtils.update(this, () -> dm.getSource());
+
+        boolean autoLogin = false;
         if (!dm.getWindowState(gameHwnd, 0)) {
             // 窗口不存在
             log.info("检测到窗口已失效，即将自动登录");
@@ -140,6 +152,11 @@ public class DDTankCoreThread extends Thread {
         } else {
             task.ddtLog.success("[窗口绑定]：守护线程已成功绑定游戏窗口，脚本已启动");
         }
+    }
+
+    @Override
+    public void run() {
+        init();
         try {
             while (!interrupted()) {
                 if (!needRefindCheck()) {
@@ -171,9 +188,15 @@ public class DDTankCoreThread extends Thread {
             task.unBind(this.dm);
             log.info("[窗口绑定]：守护线程已成功解除绑定游戏窗口");
             task.ddtLog.success("脚本已成功停止，主绑定成功解除");
+            VariantUtils.remove();
         }
     }
 
+    /**
+     * 检查是否需要进行重连
+     * @return
+     * @throws InterruptedException
+     */
     private boolean needRefindCheck() throws InterruptedException {
         boolean needRefindWindow = false;
         if (!dm.getWindowState(gameHwnd, 0)) {
@@ -434,8 +457,8 @@ public class DDTankCoreThread extends Thread {
     }
 
     public boolean setAutoReconnect(String username, String password) {
-        taskRefindHandler.setUsername(username);
-        taskRefindHandler.setPassword(password);
+        accountSignHandler.setUsername(username);
+        accountSignHandler.setPassword(password);
         return true;
     }
 }

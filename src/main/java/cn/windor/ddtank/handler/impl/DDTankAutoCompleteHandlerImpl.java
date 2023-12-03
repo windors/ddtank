@@ -2,36 +2,19 @@ package cn.windor.ddtank.handler.impl;
 
 import cn.windor.ddtank.base.Keyboard;
 import cn.windor.ddtank.base.Mouse;
-import cn.windor.ddtank.core.DDTankPic;
-import cn.windor.ddtank.handler.DDTankTaskAutoCompleteHandler;
+import cn.windor.ddtank.handler.DDTankAutoCompleteHandler;
 
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 
-public class DDTankTaskAutoCompleteHandlerImpl implements DDTankTaskAutoCompleteHandler {
+public class DDTankAutoCompleteHandlerImpl implements DDTankAutoCompleteHandler {
 
     private Keyboard keyboard;
 
     private Mouse mouse;
 
-    public DDTankTaskAutoCompleteHandlerImpl(Keyboard keyboard, Mouse mouse) {
+    public DDTankAutoCompleteHandlerImpl(Keyboard keyboard, Mouse mouse) {
         this.keyboard = keyboard;
         this.mouse = mouse;
-    }
-    @Override
-    public boolean update(Object... complexObject) {
-        boolean success = true;
-        for (Object param : complexObject) {
-            if(param instanceof Keyboard) {
-                this.keyboard = (Keyboard) param;
-                continue;
-            }
-            if(param instanceof Mouse) {
-                this.mouse = (Mouse) param;
-                continue;
-            }
-            success = false;
-        }
-        return success;
     }
 
     @Override

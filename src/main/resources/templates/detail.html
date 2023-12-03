@@ -248,7 +248,7 @@
         </div>
         <div id="ddt-logs">
             <ul>
-                <li th:each="ddtlog:${ddtankLog.logs}">[[${#numbers.formatInteger(ddtlog.time.hour,
+                <li th:each="ddtlog, n:${ddtankLog.logs}" th:if="${n.count < 32}">[[${#numbers.formatInteger(ddtlog.time.hour,
                     2)}]]:[[${#numbers.formatInteger(ddtlog.time.minute,
                     2)}]]:[[${#numbers.formatInteger(ddtlog.time.second, 2)}]] [(${ddtlog.msg})]
                 </li>

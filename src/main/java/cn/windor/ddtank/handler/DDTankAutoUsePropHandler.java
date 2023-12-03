@@ -1,7 +1,5 @@
 package cn.windor.ddtank.handler;
 
-import cn.windor.ddtank.core.DDTankCoreTaskComplexObject;
-
-public interface DDTankAutoUsePropHandler extends DDTankCoreTaskComplexObject {
+public interface DDTankAutoUsePropHandler {
     void useProp();
 }

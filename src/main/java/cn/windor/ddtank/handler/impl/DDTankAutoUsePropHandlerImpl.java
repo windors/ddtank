@@ -30,31 +30,6 @@ public class DDTankAutoUsePropHandlerImpl implements DDTankAutoUsePropHandler {
     }
 
     @Override
-    public boolean update(Object... complexObject) {
-        boolean success = true;
-        for (Object param : complexObject) {
-            if (param instanceof Mouse) {
-                this.mouse = (Mouse) param;
-                continue;
-            }
-            if (param instanceof Keyboard) {
-                this.keyboard = (Keyboard) param;
-                continue;
-            }
-            if (param instanceof Library) {
-                this.library = (Library) param;
-                continue;
-            }
-            if(param instanceof DDTankLog) {
-                this.ddTankLog = (DDTankLog) param;
-                continue;
-            }
-            success = false;
-        }
-        return success;
-    }
-
-    @Override
     public void useProp() {
         // 点击聊天框上方按钮，将鼠标从聊天框中取消激活
         mouse.moveAndClick(21, 519);

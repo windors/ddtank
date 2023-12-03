@@ -10,7 +10,6 @@ import cn.windor.ddtank.base.impl.DMMouse;
 import cn.windor.ddtank.config.DDTankFileConfigProperties;
 import cn.windor.ddtank.core.DDTankLog;
 import cn.windor.ddtank.account.DDTankAccountSignHandler;
-import cn.windor.ddtank.handler.DDTankCoreTaskRefindHandler;
 import cn.windor.ddtank.handler.DDTankHwndMarkHandler;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,7 +19,7 @@ import org.thymeleaf.util.StringUtils;
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 
 @Slf4j
-public class DDTankCoreTaskRefindByOldWindow implements DDTankCoreTaskRefindHandler {
+public class DDTankCoreTaskRefindByOldWindow {
     private DDTankHwndMarkHandler DDTankHwndMarkHandler;
     private long hwnd;
 
@@ -57,7 +56,6 @@ public class DDTankCoreTaskRefindByOldWindow implements DDTankCoreTaskRefindHand
 
     // TODO 更新复杂对象
 
-    @Override
     public boolean update(Object... complexObject) {
         return false;
     }
@@ -81,7 +79,6 @@ public class DDTankCoreTaskRefindByOldWindow implements DDTankCoreTaskRefindHand
         return false;
     }
 
-    @Override
     public long refindHwnd(long gameHwnd) {
         // 1. 获取gameHwnd的顶级窗口，查看和记录的顶级窗口是否一致，若不一致使用gameHwnd的顶级窗口（说明有过窗口分离操作）
         long topHwnd = dm.getWindow(hwnd, 7);
@@ -153,7 +150,7 @@ public class DDTankCoreTaskRefindByOldWindow implements DDTankCoreTaskRefindHand
 
             if (!StringUtils.isEmpty(username) && !StringUtils.isEmpty(password)) {
                 // 每失败后等待100ms后尝试一次登录操作
-                accountSignHandler.login(username, password);
+                accountSignHandler.login();
                 delay(1000, true);
             }
             if(failTimes % 6 == 3) {

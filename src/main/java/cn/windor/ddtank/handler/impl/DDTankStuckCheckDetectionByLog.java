@@ -3,13 +3,15 @@ package cn.windor.ddtank.handler.impl;
 import cn.windor.ddtank.core.DDTankLog;
 import cn.windor.ddtank.handler.DDTankStuckCheckDetectionHandler;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class DDTankStuckCheckDetectionByLog implements DDTankStuckCheckDetectionHandler {
+public class DDTankStuckCheckDetectionByLog implements DDTankStuckCheckDetectionHandler, Serializable {
+    private static final long serialVersionUID = 1L;
 
     private DDTankLog ddTankLog;
 

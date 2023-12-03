@@ -1,27 +1,23 @@
 package cn.windor.ddtank.handler.impl;
 
-import cn.windor.ddtank.account.impl.SimpleDDTankAccountSignHandlerImpl;
-import cn.windor.ddtank.base.Keyboard;
 import cn.windor.ddtank.base.Library;
 import cn.windor.ddtank.account.DDTankAccountSignHandler;
 import cn.windor.ddtank.base.Mouse;
 import cn.windor.ddtank.base.Point;
-import cn.windor.ddtank.base.impl.DMKeyboard;
 import cn.windor.ddtank.base.impl.DMLibrary;
 import cn.windor.ddtank.base.impl.DMMouse;
 import cn.windor.ddtank.base.impl.LibraryFactory;
 import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.config.DDTankFileConfigProperties;
 import cn.windor.ddtank.core.DDTankLog;
-import cn.windor.ddtank.handler.DDTankCoreTaskRefindHandler;
+import cn.windor.ddtank.handler.DDTankCoreRefindHandler;
 import com.jacob.activeX.ActiveXComponent;
 import com.jacob.com.ComThread;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.thymeleaf.util.StringUtils;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -31,21 +27,13 @@ import static cn.windor.ddtank.util.ThreadUtils.delay;
 import static cn.windor.ddtank.util.ThreadUtils.delayPersisted;
 
 @Slf4j
-public class DDTankCoreTaskRefindByNewWindow implements DDTankCoreTaskRefindHandler {
+public class DDTankRefindByNewWindow implements DDTankCoreRefindHandler, Serializable {
+    private static final long serialVersionUID = 1L;
 
     // 解决多线程下创建新窗口时的归属问题
     private static final List<Long> usedHwnds = Collections.synchronizedList(new ArrayList<>());
 
-
     private DDTankLog ddTankLog;
-
-    @Setter
-    @Getter
-    private String username;
-
-    @Setter
-    @Getter
-    private String password;
 
     private DDTankConfigProperties properties;
 
@@ -53,36 +41,17 @@ public class DDTankCoreTaskRefindByNewWindow implements DDTankCoreTaskRefindHand
 
     private Library dm;
 
-    public DDTankCoreTaskRefindByNewWindow(Library dm, DDTankLog ddTankLog, DDTankConfigProperties properties) {
+    public DDTankRefindByNewWindow(Library dm, DDTankLog ddTankLog, DDTankAccountSignHandler accountSignHandler, DDTankConfigProperties properties) {
         this.dm = dm;
         this.ddTankLog = ddTankLog;
         this.properties = properties;
-        this.accountSignHandler = new SimpleDDTankAccountSignHandlerImpl(dm, new DMMouse(dm.getSource()), new DMKeyboard(dm.getSource()));
-    }
-
-    @Override
-    public boolean update(Object... complexObject) {
-        boolean success = true;
-        for (Object param : complexObject) {
-            if(param instanceof DDTankConfigProperties) {
-                this.properties = (DDTankConfigProperties) param;
-                continue;
-            }
-            if(param instanceof Library) {
-                this.dm = (Library) param;
-                this.accountSignHandler = new SimpleDDTankAccountSignHandlerImpl(dm, new DMMouse(dm.getSource()), new DMKeyboard(dm.getSource()));
-                continue;
-            }
-            success = false;
-        }
-
-        return success;
+        this.accountSignHandler = accountSignHandler;
     }
 
     @Override
     public long refindHwnd(long gameHwnd) {
-        if(StringUtils.isEmpty(properties.getWebsite()) || StringUtils.isEmpty(username) || StringUtils.isEmpty(password)) {
-            log.error("未设置该端的网址或未设置账号密码，自动重连失败，请将网址设置到配置中。");
+        if(StringUtils.isEmpty(properties.getWebsite())) {
+            log.error("未设置该端的网址，自动重连失败，请将网址设置到配置中。");
             delay(100, true);
             // 停止当前线程
             Thread.currentThread().interrupt();
@@ -125,7 +94,7 @@ public class DDTankCoreTaskRefindByNewWindow implements DDTankCoreTaskRefindHand
             return 0;
         }
         // 已绑定网页窗口，调用各种自定义登录接口
-        accountSignHandler.login(username, password);
+        accountSignHandler.login();
 
         // 搜索游戏窗口
         gameHwnd = findGameHwnd(htmlHwnd);
@@ -201,7 +170,7 @@ public class DDTankCoreTaskRefindByNewWindow implements DDTankCoreTaskRefindHand
             }
             if (newHwnds.size() > 0) {
                 hwnd = newHwnds.remove(0);
-                synchronized (DDTankCoreTaskRefindByNewWindow.class) {
+                synchronized (DDTankRefindByNewWindow.class) {
                     while (usedHwnds.contains(hwnd)) {
                         if (newHwnds.size() == 0) {
                             // 理论上来说不会出现这个错误日志，除非能够在很短的时间内

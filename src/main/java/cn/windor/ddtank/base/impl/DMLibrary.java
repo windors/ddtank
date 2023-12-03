@@ -2,6 +2,7 @@ package cn.windor.ddtank.base.impl;
 
 import cn.windor.ddtank.base.Library;
 import cn.windor.ddtank.base.Point;
+import cn.windor.ddtank.util.VariantUtils;
 import com.jacob.activeX.ActiveXComponent;
 import com.jacob.com.Variant;
 import lombok.extern.slf4j.Slf4j;
@@ -28,7 +29,6 @@ public class DMLibrary implements Library {
     private int offsetY;
 
     private final Map<Object, Variant> paramMap = new ConcurrentHashMap<>();
-    private final Map<Object, Variant> varParamMap = new ConcurrentHashMap<>();
 
     public DMLibrary(ActiveXComponent dm) {
         this.dm = dm;
@@ -36,17 +36,7 @@ public class DMLibrary implements Library {
 
     private Variant getParam(Object param) {
         callTimes++;
-        if (paramMap.get(param) != null) {
-            return paramMap.get(param);
-        }
-        Variant result;
-        synchronized (paramMap) {
-            if ((result = paramMap.get(param)) == null) {
-                result = new Variant(param);
-                paramMap.put(param, result);
-            }
-            return result;
-        }
+        return VariantUtils.getParam(param);
     }
 
     public long getCallTimes() {

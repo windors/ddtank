@@ -46,6 +46,10 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
     // 朝向
     TowardEnum toward;
     protected DDTankPic ddtankPic;
+
+    /**
+     * 关卡选择器
+     */
     DDTankCoreHandlerSelector handlerSelector;
 
     private final static ExecutorService calcStrengthExecutors = Executors.newCachedThreadPool();
@@ -61,34 +65,6 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
         myLastPosition = new Point();
         enemyLastPosition = new Point();
         handlerSelector = new DDTankCoreHandlerSelector(keyboard, properties);
-    }
-
-    @Override
-    public boolean update(Object... complexObject) {
-        boolean success = true;
-        for (Object param : complexObject) {
-            if (param instanceof Keyboard) {
-                this.keyboard = (Keyboard) param;
-                continue;
-            }
-            if (param instanceof DDTankPic) {
-                this.ddtankPic = (DDTankPic) param;
-                continue;
-            }
-            if (param instanceof DDTankOperate) {
-                this.ddtankOperate = (DDTankOperate) param;
-                continue;
-            }
-            if (param instanceof DDTankLog) {
-                this.ddtLog = (DDTankLog) param;
-                continue;
-            }
-            success = false;
-        }
-        if (success) {
-            handlerSelector = new DDTankCoreHandlerSelector(keyboard, properties);
-        }
-        return success;
     }
 
     @Override

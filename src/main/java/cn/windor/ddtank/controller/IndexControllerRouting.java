@@ -56,8 +56,8 @@ public class IndexControllerRouting {
         map.put("ddtankLog", coreThread.getDDTankLog());
         map.put("config", coreThread.getProperties());
         map.put("rules", coreThread.getRules());
-        map.put("username", coreThread.getTaskRefindHandler().getUsername());
-        map.put("password", coreThread.getTaskRefindHandler().getPassword());
+        map.put("username", coreThread.getAccountSignHandler().getUsername());
+        map.put("password", coreThread.getAccountSignHandler().getPassword());
         map.put("taskAutoComplete", coreThread.getTask().getTaskAutoComplete());
         map.put("autoUseProp", coreThread.getTask().getAutoUseProp());
         map.put("passes", coreThread.getPasses());

@@ -28,19 +28,6 @@ public class DDTankSelectMapHandlerImpl implements DDTankSelectMapHandler {
     }
 
     @Override
-    public boolean update(Object... complexObject) {
-        boolean success = true;
-        for (Object param : complexObject) {
-            if(param instanceof DDTankOperate) {
-                this.ddtankOperate = (DDTankOperate) param;
-                continue;
-            }
-            success = false;
-        }
-        return success;
-    }
-
-    @Override
     public void select(int passed) {
         LevelRule old = new LevelRule(properties.getLevelLine(), properties.getLevelRow(), passed, properties.getLevelDifficulty());
         for (LevelRule levelRule : levelRules) {

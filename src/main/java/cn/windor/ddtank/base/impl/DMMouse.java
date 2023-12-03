@@ -1,15 +1,17 @@
 package cn.windor.ddtank.base.impl;
 
-import cn.windor.ddtank.base.Library;
 import cn.windor.ddtank.base.Mouse;
 import cn.windor.ddtank.base.Point;
 import com.jacob.activeX.ActiveXComponent;
 import com.jacob.com.Variant;
 
-public class DMMouse implements Mouse {
+import java.io.Serializable;
+
+public class DMMouse implements Mouse, Serializable {
+    private static final long serialVersionUID = 1L;
     private int offsetX;
     private int offsetY;
-    private ActiveXComponent dm;
+    transient private ActiveXComponent dm;
 
     public DMMouse(ActiveXComponent dm) {
         this.dm = dm;
