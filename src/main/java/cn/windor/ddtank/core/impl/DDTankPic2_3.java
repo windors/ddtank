@@ -9,12 +9,15 @@ import cn.windor.ddtank.util.BinaryPicProcess;
 import cn.windor.ddtank.util.ColorUtils;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.Serializable;
 import java.util.List;
 
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 
 @Slf4j
-public class DDTankPic2_3 extends DDTankPic10_4 {
+public class DDTankPic2_3 extends DDTankPic10_4 implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     public DDTankPic2_3(Library dm, String path, DDTankConfigProperties properties, Mouse mouse) {
         super(dm, path, properties, mouse);
     }

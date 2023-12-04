@@ -10,6 +10,7 @@ import com.jacob.com.Dispatch;
 import org.thymeleaf.util.StringUtils;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -19,10 +20,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * 大漠库，当前版本必须先进行注册
  */
 @Slf4j
-public class DMLibrary implements Library {
+public class DMLibrary implements Library, Serializable {
 
     private long callTimes = 0;
-    private ActiveXComponent dm;
+    transient private ActiveXComponent dm;
 
     private int offsetX;
 

@@ -7,10 +7,13 @@ import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.core.DDTankPic;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.Serializable;
+
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 
 @Slf4j
-public class DDtankOperate2_3 extends DDtankOperate10_4{
+public class DDtankOperate2_3 extends DDtankOperate10_4 implements Serializable {
+    private static final long serialVersionUID = 1L;
     public DDtankOperate2_3(Library dm, Mouse mouse, Keyboard keyboard, DDTankPic ddTankPic, DDTankConfigProperties properties) {
         super(dm, mouse, keyboard, ddTankPic, properties);
     }

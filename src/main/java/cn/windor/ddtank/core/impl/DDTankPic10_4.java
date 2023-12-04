@@ -8,13 +8,16 @@ import cn.windor.ddtank.type.TowardEnum;
 import cn.windor.ddtank.util.BinaryPicProcess;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 
 @Slf4j
-public class DDTankPic10_4 implements DDTankPic {
+public class DDTankPic10_4 implements DDTankPic, Serializable {
+    private static final long serialVersionUID = 1L;
+
     protected Library dm;
 
     protected DDTankConfigProperties properties;

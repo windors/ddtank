@@ -10,9 +10,11 @@ import java.awt.image.BufferedImage;
 import java.awt.image.Raster;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.*;
 
-public class BinaryPicProcess {
+public class BinaryPicProcess implements Serializable {
+    private static final long serialVersionUID = 1L;
     private int[][] data;
 
     private int height;
@@ -25,7 +27,7 @@ public class BinaryPicProcess {
     private int x1;
     private int y1;
 
-    private final Library dm;
+    private Library dm;
     private Map<Integer, List<Point>> areasMap;
 
     private int area;

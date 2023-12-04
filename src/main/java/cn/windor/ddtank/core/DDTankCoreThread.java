@@ -40,7 +40,7 @@ public class DDTankCoreThread extends Thread implements Serializable {
 
     private boolean needCorrect;
 
-    transient protected Library dm;
+    protected Library dm;
 
     @Getter
     private DDTankCoreTask task;

@@ -4,12 +4,16 @@ import cn.windor.ddtank.base.Keyboard;
 import com.jacob.activeX.ActiveXComponent;
 import com.jacob.com.Variant;
 
+import java.io.Serializable;
+
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 import static cn.windor.ddtank.util.ThreadUtils.delayPersisted;
 
-public class DMKeyboard implements Keyboard {
+public class DMKeyboard implements Keyboard, Serializable {
 
-    private ActiveXComponent dm;
+    private static final long serialVersionUID = 42L;
+
+    transient private ActiveXComponent dm;
 
     public DMKeyboard(ActiveXComponent dm) {
         this.dm = dm;

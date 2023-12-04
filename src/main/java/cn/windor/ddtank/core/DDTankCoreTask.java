@@ -29,6 +29,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -37,10 +38,10 @@ import static cn.windor.ddtank.util.ThreadUtils.delay;
 import static cn.windor.ddtank.util.ThreadUtils.delayPersisted;
 
 @Slf4j
-public class DDTankCoreTask implements Runnable {
+public class DDTankCoreTask implements Runnable, Serializable {
 
     // 游戏句柄
-    long hwnd;
+    transient long hwnd;
 
     // 游戏版本，脚本在运行后会根据该字符串去创建相关检测和操作类
     String version;

@@ -18,7 +18,9 @@ import static cn.windor.ddtank.util.ThreadUtils.delay;
 import static java.lang.Math.PI;
 
 @Slf4j
-public class DDtankOperate10_4 implements DDTankOperate {
+public class DDtankOperate10_4 implements DDTankOperate, Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     protected Mouse mouse;
 

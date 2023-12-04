@@ -7,14 +7,16 @@ import cn.windor.ddtank.account.DDTankAccountSignHandler;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
+
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 
-public class SimpleDDTankAccountSignHandlerImpl implements DDTankAccountSignHandler {
-    transient private Mouse mouse;
+public class SimpleDDTankAccountSignHandlerImpl implements DDTankAccountSignHandler, Serializable {
+    private Mouse mouse;
 
-    transient private Keyboard keyboard;
+    private Keyboard keyboard;
 
-    transient private Library dm;
+    private Library dm;
 
     @Setter
     @Getter
