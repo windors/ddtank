@@ -209,30 +209,6 @@ public class UtilController {
         return HttpResponse.ok();
     }
 
-    @PostMapping("/run/{hwnd}/task")
-    public HttpResponse addTask(@PathVariable long hwnd,
-                                @RequestParam int passed,
-                                @RequestParam int levelLine,
-                                @RequestParam int levelRow,
-                                @RequestParam double levelDifficulty) {
-        BigDecimal difficulty = new BigDecimal(levelDifficulty);
-        LevelRule levelRule = new LevelRule(levelLine, levelRow, passed, difficulty.setScale(1, RoundingMode.UP).doubleValue());
-        return HttpResponse.auto(threadService.addRule(hwnd, levelRule));
-    }
-
-    @DeleteMapping("/run/{hwnd}/task")
-    public HttpResponse removeTask(@PathVariable long hwnd,
-                                   @RequestParam int index) {
-        return HttpResponse.auto(threadService.removeRule(hwnd, index));
-    }
-
-    @PostMapping("/run/{hwnd}/reconnect")
-    public HttpResponse autoReconnect(@PathVariable long hwnd,
-                                      @RequestParam String username,
-                                      @RequestParam String password) {
-        return HttpResponse.auto(threadService.setAutoReconnect(hwnd, username, password));
-    }
-
     @PostMapping("/strength")
     public HttpResponse saveStrength() {
         Map<String, Double> calcedMap = DDTankCoreAttackHandlerImpl.getCalcedMap();

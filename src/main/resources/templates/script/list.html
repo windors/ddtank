@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" th:replace="~{base/main :: main (title=~{::title}?:_, content=~{::body}, link=~{::link}?:~{}, script=~{::script}?:~{}, style=~{::style}?:~{}, contentBefore=~{}, contentAfter=~{},
+      h1='脚本列表（已保存）')}">
+<head>
+    <meta charset="UTF-8">
+    <title>DDTank —— 终章</title>
+    <link rel="stylesheet" th:href="@{/static/css/bg.css}"/>
+    <link rel="stylesheet" th:href="@{/static/css/common/form.css}"/>
+    <link rel="stylesheet" th:href="@{/static/css/rsSliderLens.css}"/>
+    <script src="/static/js/jquery.rsSliderLens.js"></script>
+    <script src="/static/js/common/form-base.js"></script>
+    <style>
+        .table > tbody > tr > td {
+            text-align: center;
+            line-height: 34px;
+        }
+
+        kbd {
+            margin: 0 10px;
+        }
+
+        .index-tool {
+            width: 40px;
+            position: absolute;
+            right: 50%;
+            top: 212px;
+        }
+
+        .index-tool button {
+            width: 40px;
+        }
+
+        @media (min-width: 992px) {
+            .index-tool {
+                margin-right: -540px;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .index-tool {
+                margin-right: -640px;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="row">
+    <div th:each="configName:${coreThreadsMap.keySet()}">
+        <form class="ddt start">
+            <table id="started-table" class="table table-hover started-table">
+                <caption>已保存脚本——[[${configName}]]</caption>
+                <tr>
+                    <th class="text-center"><input type="checkbox"/></th>
+                    <th class="text-center">脚本名称</th>
+                    <th class="text-center">最后消息</th>
+                    <th class="text-center">消息时间</th>
+                    <th class="text-center">选择副本</th>
+                    <th class="text-center">通关次数</th>
+                    <th class="text-center">运行时间</th>
+                    <th class="text-center">操作</th>
+                </tr>
+                <!--遍历集合，获取到每一个线程传输对象-->
+                <tr th:each="dto, n:${coreThreadsMap.get(configName)}" th:with="index=${dto.index},coreThread=${dto.coreThread}">
+                    <td><input type="checkbox" name="index" th:value="${index}"/></td>
+                    <td th:text="${coreThread.name}"></td>
+                    <td th:utext="${coreThread.getCurrentLog().msg}"></td>
+                    <td th:text="${time.hour + ':' + time.minute + ':' + time.second}" th:with="time=${coreThread.getCurrentLog().time}"></td>
+                    <td>[[${coreThread.properties.levelLine}]]-[[${coreThread.properties.levelRow}]]</td>
+                    <td th:text="${coreThread.passes}"></td>
+                    <td class="time-ms" th:text="${coreThread.runTime}"></td>
+                    <td>
+                        <a class="btn btn-info" th:href="@{/detail/script/{index}(index=${n.index})}">详细</a>
+                        <a class="btn btn-default" th:href="@{/config/script/{index}(index=${n.index})}">配置</a>
+                    </td>
+                </tr>
+            </table>
+
+            <div class="pull-right">
+                <button type="button" class="btn btn-warning script-start">启动</button>
+                <button type="button" class="btn btn-danger script-delete">删除</button>
+            </div>
+        </form>
+    </div>
+</div>
+</body>
+<script>
+    function getCheckedHwndSerialize(obj) {
+        let hwnds = "";
+        let find = $(obj).parent().parent().find("input[type='checkbox'][name='index']");
+        find.each(function (index, checkbox) {
+            if ($(checkbox).prop('checked')) {
+                hwnds = hwnds + "index=" + $(checkbox).val() + "&";
+            }
+        })
+        if (hwnds.length > 0) {
+            hwnds = hwnds.substring(0, hwnds.length - 1);
+        }
+        return hwnds;
+    }
+
+    $(function () {
+        $(".script-start").click(function () {
+            let index = getCheckedHwndSerialize(this);
+            if(index === "") {
+                windorAlert('提示', '请 <b>选中一些脚本后</b> 再执行启动')
+            }else{
+                postAjax('/script/start', index, function (data) {
+                    windorAlert('提示', '选中的脚本已启动');
+                })
+            }
+        })
+        $(".script-delete").click(function () {
+            let hwnds = getCheckedHwndSerialize(this);
+            if(hwnds === "") {
+                windorAlert('提示', '请 <b>选中一些脚本后</b> 再执行删除')
+            }else{
+                postAjax('/util/remove', hwnds, function (data) {
+                    windorAlert('提示', '已尝试移除指定脚本');
+                })
+            }
+        })
+    })
+
+    // 多选框的选择
+    $(function () {
+        // 取消继承
+        $(".ddt tr td:first-child input,th:first-child input").each(function (i, input) {
+            $(input).click(function (e) {
+                e.stopPropagation();
+            });
+        });
+        $(".ddt a").each(function (i, a) {
+            $(a).click(function (e) {
+                e.stopPropagation();
+            })
+        });
+
+        // 点击input的上一级的时候就点击input
+        $(".ddt tr td, th").click(function () {
+            $(this).parent().find("input[type='checkbox']").click();
+        })
+        // 全选按钮
+        $(".ddt tr th:first-child input").click(function () {
+            let checked = $(this).prop('checked');
+            let find = $(this).parent().parent().parent().find("tr td:first-child input");
+            find.each(function (i, checkbox) {
+                $(checkbox).prop('checked', checked);
+            });
+        })
+    })
+</script>
+</html>

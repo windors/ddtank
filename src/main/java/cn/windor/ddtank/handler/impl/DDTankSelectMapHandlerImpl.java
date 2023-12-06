@@ -7,13 +7,15 @@ import cn.windor.ddtank.entity.LevelRule;
 import cn.windor.ddtank.handler.DDTankSelectMapHandler;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.Serializable;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
-public class DDTankSelectMapHandlerImpl implements DDTankSelectMapHandler {
+public class DDTankSelectMapHandlerImpl implements DDTankSelectMapHandler, Serializable {
 
+    private static final long serialVersionUID = 1L;
 
     private List<LevelRule> levelRules = new CopyOnWriteArrayList<>();
 

@@ -4,9 +4,12 @@ import cn.windor.ddtank.base.Keyboard;
 import cn.windor.ddtank.base.Mouse;
 import cn.windor.ddtank.handler.DDTankAutoCompleteHandler;
 
+import java.io.Serializable;
+
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 
-public class DDTankAutoCompleteHandlerImpl implements DDTankAutoCompleteHandler {
+public class DDTankAutoCompleteHandlerImpl implements DDTankAutoCompleteHandler, Serializable {
+    private static final long serialVersionUID = 1L;
 
     private Keyboard keyboard;
 

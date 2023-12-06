@@ -7,10 +7,13 @@ import cn.windor.ddtank.handler.DDTankFindPositionMoveHandler;
 import cn.windor.ddtank.handler.impl.SimpleDDTankAngleAdjustMoveHandlerHandlerImpl;
 import cn.windor.ddtank.handler.impl.SimpleDDTankFindPositionMoveHandlerImpl;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class DDTankCoreHandlerSelector {
+public class DDTankCoreHandlerSelector implements Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private final Map<Integer, DDTankAngleAdjustMoveHandler> angleMoveHandlerMap = new ConcurrentHashMap<>();
     private final Map<Integer, DDTankFindPositionMoveHandler> positionMoveHandlerMap = new ConcurrentHashMap<>();

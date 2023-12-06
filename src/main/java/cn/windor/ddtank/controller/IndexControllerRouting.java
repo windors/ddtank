@@ -48,25 +48,6 @@ public class IndexControllerRouting {
         return "index";
     }
 
-    @GetMapping("/detail/run/{hwnd}")
-    public String runDetail(@PathVariable long hwnd,
-                            Map<String, Object> map) {
-        DDTankCoreThread coreThread = ddtankThreadService.getAllStartedThreadMap().get(hwnd);
-        map.put("name", coreThread.getName());
-        map.put("ddtankLog", coreThread.getDDTankLog());
-        map.put("config", coreThread.getProperties());
-        map.put("rules", coreThread.getRules());
-        map.put("username", coreThread.getAccountSignHandler().getUsername());
-        map.put("password", coreThread.getAccountSignHandler().getPassword());
-        map.put("taskAutoComplete", coreThread.getTask().getTaskAutoComplete());
-        map.put("autoUseProp", coreThread.getTask().getAutoUseProp());
-        map.put("passes", coreThread.getPasses());
-        map.put("state", coreThread.getCoreState());
-        map.put("runTime", coreThread.getRunTime());
-        map.put("suspend", coreThread.isSuspend());
-        return "detail";
-    }
-
     @GetMapping("about")
     public String about() {
         return "about";

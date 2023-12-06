@@ -31,6 +31,10 @@ public class DMLibrary implements Library, Serializable {
 
     private final Map<Object, Variant> paramMap = new ConcurrentHashMap<>();
 
+    public DMLibrary() {
+
+    }
+
     public DMLibrary(ActiveXComponent dm) {
         this.dm = dm;
     }

@@ -33,6 +33,8 @@ import static cn.windor.ddtank.util.ThreadUtils.delayPersisted;
 @Slf4j
 public class DDTankCoreThread extends Thread implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     @Getter
     transient private long gameHwnd;
     private String gameVersion;
@@ -50,7 +52,7 @@ public class DDTankCoreThread extends Thread implements Serializable {
     /**
      * 任务列表，用来测试功能
      */
-    transient private final LinkedBlockingQueue<FutureTask<?>> daemonTaskQueue = new LinkedBlockingQueue<>();
+    transient private LinkedBlockingQueue<FutureTask<?>> daemonTaskQueue;
 
     private DDTankCoreRefindHandler taskRefindHandler;
 
@@ -71,11 +73,13 @@ public class DDTankCoreThread extends Thread implements Serializable {
         this.gameHwnd = hwnd;
         this.gameVersion = version;
         this.properties = properties;
-        this.setName(startParam.getName());
         this.needCorrect = startParam.isNeedCorrect();
+        this.setName(startParam.getName());
         this.task = new DDTankCoreTask(gameHwnd, gameVersion, properties, needCorrect);
+        this.dm = new DMLibrary();
+        this.taskRefindHandler = new DDTankRefindByNewWindow(dm, task.ddtLog, new SimpleDDTankAccountSignHandlerImpl(dm, new DMMouse(dm.getSource()), new DMKeyboard(dm.getSource())), task.properties);
+        this.accountSignHandler = new SimpleDDTankAccountSignHandlerImpl(dm, new DMMouse(dm.getSource()), new DMKeyboard(dm.getSource()));
         this.stuckCheckDetectionHandler = new DDTankStuckCheckDetectionByLog(task.ddtLog);
-        this.coreThread = new Thread(task, getName() + "-exec");
     }
 
     /**
@@ -92,8 +96,9 @@ public class DDTankCoreThread extends Thread implements Serializable {
         this.setName(srcThread.getName());
         this.needCorrect = srcThread.needCorrect;
         this.task = new DDTankCoreTask(srcThread.task);
+        this.taskRefindHandler = srcThread.taskRefindHandler;
+        this.accountSignHandler = srcThread.accountSignHandler;
         this.stuckCheckDetectionHandler = new DDTankStuckCheckDetectionByLog(task.ddtLog);
-        this.coreThread = new Thread(task, getName() + "-exec");
     }
 
     /**
@@ -110,47 +115,49 @@ public class DDTankCoreThread extends Thread implements Serializable {
     }
 
     private void init() {
-        this.dm = new DMLibrary(LibraryFactory.getActiveXCompnent());
-//        this.taskRefindHandler = new DDTankCoreTaskRefindByOldWindow(gameHwnd, dm, getDDTankLog());
-        if (taskRefindHandler == null) {
-            this.taskRefindHandler = new DDTankRefindByNewWindow(dm, task.ddtLog, new SimpleDDTankAccountSignHandlerImpl(dm, new DMMouse(dm.getSource()), new DMKeyboard(dm.getSource())), task.properties);
+        if(coreThread == null) {
+            this.coreThread = new Thread(task, getName() + "-exec");
         }
-        if(accountSignHandler == null) {
-            accountSignHandler = new SimpleDDTankAccountSignHandlerImpl(dm, new DMMouse(dm.getSource()), new DMKeyboard(dm.getSource()));
+        if(daemonTaskQueue == null) {
+            this.daemonTaskQueue = new LinkedBlockingQueue<>();
         }
 
+        this.dm = new DMLibrary(LibraryFactory.getActiveXCompnent());
+        // 一键更新所有的ActiveXComponent
         ActiveXComponentUtils.update(this, () -> dm.getSource());
 
-        boolean autoLogin = false;
-        if (!dm.getWindowState(gameHwnd, 0)) {
-            // 窗口不存在
-            log.info("检测到窗口已失效，即将自动登录");
-            try {
-                if (!needRefindCheck()) {
-                    // 自动重绑定窗口失败
-                    log.warn("自动重绑定窗口失败");
-                    return;
-                }
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            autoLogin = true;
-        }
+        initWindowCheck();
 
         // 没有自动重连才尝试绑定游戏窗口
-        if (!autoLogin && !task.bind(this.dm)) {
+        if (!task.bind(this.dm)) {
             log.error("窗口[{}]绑定失败，请重新尝试启动脚本，大漠错误码：{}", gameHwnd, dm.getLastError());
             task.ddtLog.error("主绑定失败：" + dm.getLastError());
             return;
         }
 
         // 启动脚本线程
-        if (!autoLogin) {
-            log.info("[窗口绑定]：守护线程已成功绑定游戏窗口，即将启动脚本线程");
-            log.info("脚本已启动");
-            coreThread.start();
-        } else {
-            task.ddtLog.success("[窗口绑定]：守护线程已成功绑定游戏窗口，脚本已启动");
+        log.info("[窗口绑定]：守护线程已成功绑定游戏窗口，即将启动脚本线程");
+        log.info("脚本已启动");
+        coreThread.start();
+    }
+
+    private void initWindowCheck() {
+        if (!dm.getWindowState(gameHwnd, 0)) {
+            // 窗口不存在
+            getDDTankLog().warn("检测到窗口已失效，尝试自动登录");
+            // 自动重连，尝试三次
+            long hwnd = taskRefindHandler.refindHwnd(gameHwnd);
+            int failTimes = 1;
+            while (hwnd == 0 && failTimes++ < 3) {
+                hwnd = taskRefindHandler.refindHwnd(gameHwnd);
+            }
+            if (hwnd == 0) {
+                getDDTankLog().error("自动重绑定窗口失败");
+                return;
+            } else {
+                task.ddtLog.success("已重新找到窗口句柄");
+                rebind(hwnd, false);
+            }
         }
     }
 
@@ -228,7 +235,7 @@ public class DDTankCoreThread extends Thread implements Serializable {
             } else {
                 log.info("自动重连成功");
                 task.ddtLog.success("自动重连：已重新找到窗口句柄");
-                rebind(hwnd);
+                rebind(hwnd, true);
             }
         }
         return true;
@@ -240,7 +247,7 @@ public class DDTankCoreThread extends Thread implements Serializable {
      *
      * @param hwnd
      */
-    public boolean rebind(long hwnd) {
+    public boolean rebind(long hwnd, boolean needRestart) {
         if (hwnd != gameHwnd) {
             if (coreThread.isAlive()) {
                 stop(3000);
@@ -257,7 +264,9 @@ public class DDTankCoreThread extends Thread implements Serializable {
                 return false;
             }
             // 启动task
-            restartTask();
+            if(needRestart) {
+                restartTask();
+            }
         }
         return true;
     }

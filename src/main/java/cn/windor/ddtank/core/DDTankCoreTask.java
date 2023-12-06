@@ -39,6 +39,7 @@ import static cn.windor.ddtank.util.ThreadUtils.delayPersisted;
 
 @Slf4j
 public class DDTankCoreTask implements Runnable, Serializable {
+    private static final long serialVersionUID = 1L;
 
     // 游戏句柄
     transient long hwnd;
@@ -118,13 +119,35 @@ public class DDTankCoreTask implements Runnable, Serializable {
      * @param needCorrect
      */
     public DDTankCoreTask(long hwnd, String version, DDTankConfigProperties properties, boolean needCorrect) {
-        super();
         this.ddtLog = new DDTankLog();
         this.hwnd = hwnd;
         this.version = version;
         this.coreState.set(CoreThreadStateEnum.WAITING_START);
         this.properties = properties;
         this.needCorrect = needCorrect;
+
+        // 复杂对象的创建
+        this.dm = new DMLibrary();
+        this.mouse = new DMMouse(dm.getSource());
+        this.keyboard = new DMKeyboard(dm.getSource());
+
+        String picDir = new File(DDTankFileConfigProperties.getBaseDir(), properties.getPicDir()).getAbsolutePath() + "/";
+        if ("10".equals(version)) {
+            this.ddtankPic = new DDTankPic10_4(dm, picDir, properties, mouse);
+        } else if ("2.4".equalsIgnoreCase(version)) {
+            this.ddtankPic = new DDTankPic2_4(dm, picDir, properties, mouse);
+        } else {
+            this.ddtankPic = new DDTankPic2_3(dm, picDir, properties, mouse);
+        }
+        if ("10".equals(version)) {
+            this.ddtankOperate = new DDtankOperate10_4(dm, mouse, keyboard, ddtankPic, properties);
+        } else {
+            this.ddtankOperate = new DDtankOperate2_3(dm, mouse, keyboard, ddtankPic, properties);
+        }
+        this.ddTankCoreAttackHandler = new DDTankCoreAttackHandlerImpl(properties, keyboard, ddtankPic, ddtankOperate, ddtLog);
+        this.ddtankSelectMapHandler = new DDTankSelectMapHandlerImpl(properties, ddtankOperate, ddtLog);
+        this.ddTankTaskAutoCompleteHandler = new DDTankAutoCompleteHandlerImpl(keyboard, mouse);
+        this.ddTankAutoUsePropHandler = new DDTankAutoUsePropHandlerImpl(mouse, keyboard, dm, ddtLog);
     }
 
     /**
@@ -143,10 +166,6 @@ public class DDTankCoreTask implements Runnable, Serializable {
         this.runTime = task.getRunTime();
         this.taskAutoComplete = task.taskAutoComplete;
         this.autoUseProp = task.autoUseProp;
-        this.ddTankCoreAttackHandler = task.ddTankCoreAttackHandler;
-        this.ddtankSelectMapHandler = task.ddtankSelectMapHandler;
-        this.ddTankTaskAutoCompleteHandler = task.ddTankTaskAutoCompleteHandler;
-        this.ddTankAutoUsePropHandler = task.ddTankAutoUsePropHandler;
         this.suspend = task.suspend;
         this.needRestart = false;
         this.needCorrect = task.needCorrect;
@@ -154,6 +173,12 @@ public class DDTankCoreTask implements Runnable, Serializable {
         this.offsetY = task.offsetY;
         this.ddtankPic = task.ddtankPic;
         this.ddtankOperate = task.ddtankOperate;
+        this.keyboard = task.keyboard;
+        this.mouse = task.mouse;
+        this.ddTankCoreAttackHandler = task.ddTankCoreAttackHandler;
+        this.ddtankSelectMapHandler = task.ddtankSelectMapHandler;
+        this.ddTankTaskAutoCompleteHandler = task.ddTankTaskAutoCompleteHandler;
+        this.ddTankAutoUsePropHandler = task.ddTankAutoUsePropHandler;
     }
 
     /**
@@ -183,49 +208,8 @@ public class DDTankCoreTask implements Runnable, Serializable {
             }
         }
 
-        // 设置脚本参数
-        this.mouse = new DMMouse(dm.getSource());
-        this.keyboard = new DMKeyboard(dm.getSource());
-
         // 跳过过场动画
         mouse.moveAndClick(21, 519);
-
-        String picDir = new File(DDTankFileConfigProperties.getBaseDir(), properties.getPicDir()).getAbsolutePath() + "/";
-        if(ddtankPic == null) {
-            if ("10".equals(version)) {
-                this.ddtankPic = new DDTankPic10_4(dm, picDir, properties, mouse);
-            } else if ("2.4".equalsIgnoreCase(version)) {
-                this.ddtankPic = new DDTankPic2_4(dm, picDir, properties, mouse);
-            } else {
-                this.ddtankPic = new DDTankPic2_3(dm, picDir, properties, mouse);
-            }
-        } else {
-            log.info("使用之前创建的Pic");
-        }
-        if(ddtankOperate == null) {
-            if ("10".equals(version)) {
-                this.ddtankOperate = new DDtankOperate10_4(dm, mouse, keyboard, ddtankPic, properties);
-            } else {
-                this.ddtankOperate = new DDtankOperate2_3(dm, mouse, keyboard, ddtankPic, properties);
-            }
-        }else {
-            log.info("使用之前创建的Operate");
-        }
-
-        // 复杂对象在非空时创建，非空表示通过复制的方式创建的Task，否则就需要更新复杂对象所依赖的插件对象
-        if (ddTankCoreAttackHandler == null) {
-            ddTankCoreAttackHandler = new DDTankCoreAttackHandlerImpl(properties, keyboard, ddtankPic, ddtankOperate, ddtLog);
-        }
-        if (ddtankSelectMapHandler == null) {
-            ddtankSelectMapHandler = new DDTankSelectMapHandlerImpl(properties, ddtankOperate, ddtLog);
-        }
-        if(ddTankTaskAutoCompleteHandler == null) {
-            ddTankTaskAutoCompleteHandler = new DDTankAutoCompleteHandlerImpl(keyboard, mouse);
-        }
-        if(ddTankAutoUsePropHandler == null) {
-            ddTankAutoUsePropHandler = new DDTankAutoUsePropHandlerImpl(mouse, keyboard, dm, ddtLog);
-        }
-
         ActiveXComponentUtils.update(this, () -> dm.getSource());
 
         // 首次启动时向控制台说明当前为前台模式启动，重启等操作就不会再重复
@@ -431,6 +415,9 @@ public class DDTankCoreTask implements Runnable, Serializable {
     }
 
     public CoreThreadStateEnum getCoreState() {
+        if(coreState == null) {
+            coreState = new AtomicReference<>(CoreThreadStateEnum.NOT_STARTED);
+        }
         return coreState.get();
     }
 

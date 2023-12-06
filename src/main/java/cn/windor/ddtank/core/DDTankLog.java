@@ -2,11 +2,15 @@ package cn.windor.ddtank.core;
 
 import lombok.Getter;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
 
-public class DDTankLog {
+public class DDTankLog implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
     private final LocalDateTime createTime;
 
     private final int maxSize;
@@ -62,7 +66,10 @@ public class DDTankLog {
         }
     }
 
-    public static class Log {
+    public static class Log implements Serializable {
+
+        private static final long serialVersionUID = 1L;
+
         @Getter
         private final LocalDateTime time;
 

@@ -3,6 +3,7 @@ package cn.windor.ddtank.controller;
 import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.core.DDTankCoreThread;
 import cn.windor.ddtank.service.DDTankConfigService;
+import cn.windor.ddtank.service.DDTankScriptService;
 import cn.windor.ddtank.service.DDTankThreadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -25,6 +26,9 @@ public class ConfigControllerRouting {
     @Autowired
     private DDTankConfigService configService;
 
+    @Autowired
+    private DDTankScriptService scriptService;
+
     /**
      * 查看指定运行中脚本的配置
      */
@@ -35,6 +39,15 @@ public class ConfigControllerRouting {
         map.put("threadName", coreThread.getName());
         map.put("config", coreThread.getProperties());
         return "config/update";
+    }
+    @GetMapping("/script/{index}")
+    public String scriptCoreThreadConfig(@PathVariable int index,
+                                         Map<String, Object> map) {
+        DDTankCoreThread coreThread = scriptService.getByIndex(index);
+        map.put("threadName", coreThread.getName());
+        map.put("config", coreThread.getProperties());
+        return "config/update";
+
     }
 
     @GetMapping("/add")

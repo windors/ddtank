@@ -8,10 +8,13 @@ import cn.windor.ddtank.config.DDTankFileConfigProperties;
 import cn.windor.ddtank.core.DDTankLog;
 import cn.windor.ddtank.handler.DDTankAutoUsePropHandler;
 
+import java.io.Serializable;
+
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 
-public class DDTankAutoUsePropHandlerImpl implements DDTankAutoUsePropHandler {
+public class DDTankAutoUsePropHandlerImpl implements DDTankAutoUsePropHandler, Serializable {
 
+    private static final long serialVersionUID = 1L;
 
     private Mouse mouse;
 

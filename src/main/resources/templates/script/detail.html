@@ -5,20 +5,18 @@
     <meta charset="UTF-8">
     <title>life track</title>
     <link rel="stylesheet" href="/static/css/rsSliderLens.css" th:href="@{/static/css/rsSliderLens.css}">
-    <link rel="stylesheet" href="/static/css/common/form.css" th:href="@{/static/css/common/form.css}">
-    <link rel="stylesheet" th:href="@{/static/css/bg.css}"/>
     <script src="/static/js/jquery.rsSliderLens.js" th:src="@{/static/js/jquery.rsSliderLens.js}"></script>
     <link rel="stylesheet" th:href="@{/static/css/common/thread_detail.css}"/>
 </head>
 <body>
-<div th:replace="~{common/thread-detail :: detail(${passes}, ${state}, ${suspend}, ${runTime}, ${hwnd}, ${config}, ${rules}, ${taskAutoComplete}, ${autoUseProp}, ${username}, ${password}, ${ddtankLog})}">
-
+<div th:replace="~{common/thread-detail :: detail(${passes}, ${state}, ${suspend}, ${runTime}, -1, ${config}, ${rules}, ${taskAutoComplete}, ${autoUseProp}, ${username}, ${password}, ${ddtankLog})}">
 </div>
 </body>
+<script th:src="@{/static/js/common/thread_detail.js}"></script>
 <script>
     // 设置自动使用活力
     $("#btn-autoUseProp").click(function () {
-        postAjax('/detail/run/[[${hwnd}]]/autoUseProp', {
+        postAjax('/detail/script/[[${index}]]/autoUseProp', {
             autoUseProp: $("#i-autoUseProp").val()
         }, function (data) {
             windorAlert('提示', '自动补充活力设置成功！');
@@ -27,7 +25,7 @@
 
     // 设置自动领取任务
     $("#btn-autoTask").click(function () {
-        postAjax('/detail/run/[[${hwnd}]]/taskAutoComplete', {
+        postAjax('/detail/script/[[${index}]]/taskAutoComplete', {
             taskAutoComplete: $("#i-autoTask").val()
         }, function (data) {
             windorAlert('提示', '自动领取任务设置成功！');
@@ -36,7 +34,7 @@
 
     // 设置自动重连的用户名和密码
     $("#form-reconnect").submit(function () {
-        postAjax('/detail/run/[[${hwnd}]]/reconnect', $(this).serialize(), function (data) {
+        postAjax('/detail/script/[[${index}]]/reconnect', $(this).serialize(), function (data) {
             windorAlert('提示', '自动重连设置成功！');
         })
         return false;
@@ -44,7 +42,7 @@
 
     // 移除任务
     $("#btn-removeTask").click(function () {
-        deleteAjax('/detail/run/[[${hwnd}]]/task', {
+        deleteAjax('/detail/script/[[${index}]]/task', {
             index: $("#select-tasks").prop("selectedIndex")
         }, function (data) {
             alert("任务删除成功！");
@@ -54,7 +52,7 @@
 
     // 添加任务
     $("#btn-addTask-submit").click(function () {
-        postAjax('/detail/run/[[${hwnd}]]/task', $("#form-taskAdd").serialize(), function (data) {
+        postAjax('/detail/script/[[${index}]]/task', $("#form-taskAdd").serialize(), function (data) {
             alert("任务添加成功！");
             location.reload();
         })
@@ -63,7 +61,7 @@
     /*重绑定*/
     $("#ddt-rebind").click(function () {
         let param = {
-            hwnd: [[${hwnd}]],
+            hwnd: -1,
             newHwnd: $("#i-rebind-hwnd").val()
         };
         if (param['hwnd'] == param['newHwnd']) {

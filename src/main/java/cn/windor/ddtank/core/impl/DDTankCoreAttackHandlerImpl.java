@@ -12,6 +12,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
@@ -20,8 +21,9 @@ import java.util.concurrent.*;
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 
 @Slf4j
-public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler {
+public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler, Serializable {
 
+    private static final long serialVersionUID = 1L;
     private final DDTankConfigProperties properties;
     private Keyboard keyboard;
     private DDTankOperate ddtankOperate;

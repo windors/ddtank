@@ -81,5 +81,5 @@ public interface DDTankThreadService {
 
     boolean removeRule(long hwnd, int index);
 
-    boolean setAutoReconnect(long hwnd, String username, String password);
+    boolean setAutoReconnect(DDTankCoreThread thread, String username, String password);
 }

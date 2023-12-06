@@ -266,7 +266,7 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
             return false;
         }
         if (coreThread.isAlive()) {
-            return coreThread.rebind(newHwnd);
+            return coreThread.rebind(newHwnd, true);
         } else {
             // 3. 调用线程的重绑定方法
             coreThread = new DDTankCoreThread(coreThread, newLegalHwnd, newLegalHwnd != newHwnd);
@@ -299,12 +299,10 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
     }
 
     @Override
-    public boolean setAutoReconnect(long hwnd, String username, String password) {
-        DDTankCoreThread coreThread = threadMap.get(hwnd);
+    public boolean setAutoReconnect(DDTankCoreThread coreThread, String username, String password) {
         if (coreThread == null) {
             return false;
         }
-
         return coreThread.setAutoReconnect(username, password);
     }
 

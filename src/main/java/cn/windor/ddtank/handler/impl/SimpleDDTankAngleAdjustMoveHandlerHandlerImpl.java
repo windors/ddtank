@@ -4,9 +4,13 @@ import cn.windor.ddtank.base.Keyboard;
 import cn.windor.ddtank.handler.DDTankAngleAdjustMoveHandler;
 import cn.windor.ddtank.type.TowardEnum;
 
+import java.io.Serializable;
+
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 
-public class SimpleDDTankAngleAdjustMoveHandlerHandlerImpl implements DDTankAngleAdjustMoveHandler {
+public class SimpleDDTankAngleAdjustMoveHandlerHandlerImpl implements DDTankAngleAdjustMoveHandler, Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private Keyboard keyboard;
 

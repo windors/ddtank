@@ -3,9 +3,13 @@ package cn.windor.ddtank.handler.impl;
 import cn.windor.ddtank.base.Keyboard;
 import cn.windor.ddtank.handler.DDTankFindPositionMoveHandler;
 
+import java.io.Serializable;
+
 import static cn.windor.ddtank.util.ThreadUtils.delay;
 
-public class SimpleDDTankFindPositionMoveHandlerImpl implements DDTankFindPositionMoveHandler {
+public class SimpleDDTankFindPositionMoveHandlerImpl implements DDTankFindPositionMoveHandler, Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     private Keyboard keyboard;
 
