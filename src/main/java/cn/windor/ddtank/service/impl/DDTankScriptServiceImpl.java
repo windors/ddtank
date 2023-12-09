@@ -9,6 +9,7 @@ import cn.windor.ddtank.service.DDTankScriptService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,6 +36,17 @@ public class DDTankScriptServiceImpl implements DDTankScriptService {
     public DDTankCoreScript getByIndex(int index) {
         return ddTankScriptMapper.getByIndex(index);
     }
+
+    @Override
+    public boolean removeByIndex(List<Integer> indexList) {
+        // 倒序删除
+        indexList.sort((a, b) -> b - a);
+        for (Integer index : indexList) {
+            ddTankScriptMapper.removeByIndex(index);
+        }
+        return false;
+    }
+
 
     @Override
     public boolean addOrUpdate(DDTankCoreScript script) {

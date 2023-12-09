@@ -9,7 +9,7 @@
     <link rel="stylesheet" th:href="@{/static/css/common/thread_detail.css}"/>
 </head>
 <body>
-<div th:replace="~{common/thread-detail :: detail(${passes}, ${running}, ${state}, ${suspend}, ${runTime}, -1, ${config}, ${rules}, ${taskAutoComplete}, ${autoUseProp}, ${username}, ${password}, ${ddtankLog})}">
+<div th:replace="~{common/thread-detail :: detail(${passes}, ${running}, ${state}, ${suspend}, ${runTime}, -1, ${config}, ${rules}, ${taskAutoComplete}, ${autoUseProp}, ${username}, ${password}, ${ddtankLog}, ${levelSummaryMap})}">
 </div>
 </body>
 <script th:src="@{/static/js/common/thread_detail.js}"></script>

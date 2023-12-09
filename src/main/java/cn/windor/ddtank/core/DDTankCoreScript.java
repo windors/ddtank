@@ -438,4 +438,8 @@ public class DDTankCoreScript implements Serializable, Runnable {
             }));
         }
     }
+
+    public void updateFieldIfNull() {
+        task.updateFieldIfNull();
+    }
 }

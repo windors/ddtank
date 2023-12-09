@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh" xmlns:th="http://www.thymeleaf.org" >
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
@@ -29,7 +29,66 @@
 
 
 -->
-<div th:fragment="detail(passes, running, state, suspend, runTime, hwnd, config, rules, taskAutoComplete, autoUseProp, username, password, ddtankLog)">
+<div th:fragment="detail(passes, running, state, suspend, runTime, hwnd, config, rules, taskAutoComplete, autoUseProp, username, password, ddtankLog, levelSummaryMap)">
+    <div id="addTask" class="modal fade" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
+                    </button>
+                    <h4 class="modal-title">添加任务</h4>
+                </div>
+                <div class="modal-body">
+                    <form id="form-taskAdd" class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">通关数</label>
+                            <div class="col-md-9">
+                                <input class="form-control" name="passed" type="number"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">关卡选择</label>
+                            <div class="col-md-4">
+                                <select class="form-control" name="levelLine">
+                                    <option value="1" th:selected="${config.levelLine == 1}">1 行</option>
+                                    <option value="2" th:selected="${config.levelLine == 2}">2 行</option>
+                                    <option value="3" th:selected="${config.levelLine == 3}">3 行</option>
+                                    <option value="4" th:selected="${config.levelLine == 4}">4 行</option>
+                                    <option value="5" th:selected="${config.levelLine == 5}">5 行</option>
+                                    <option value="6" th:selected="${config.levelLine == 6}">6 行</option>
+                                    <option value="7" th:selected="${config.levelLine == 7}">7 行</option>
+                                    <option value="8" th:selected="${config.levelLine == 8}">8 行</option>
+                                    <option value="9" th:selected="${config.levelLine == 9}">9 行</option>
+                                    <option value="10" th:selected="${config.levelLine == 10}">10 行</option>
+                                </select>
+                            </div>
+                            <div class="col-md-offset-1 col-md-4">
+                                <select class="form-control" name="levelRow">
+                                    <option value="1" th:selected="${config.levelRow == 1}">1 列</option>
+                                    <option value="2" th:selected="${config.levelRow == 2}">2 列</option>
+                                    <option value="3" th:selected="${config.levelRow == 3}">3 列</option>
+                                    <option value="4" th:selected="${config.levelRow == 4}">4 列</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">难度</label>
+                            <div class="col-md-9">
+                                <div class="slider-img" th:attr="slider-default=${config.levelDifficulty}">
+                                    <img src="/static/img/副本难度.bmp" style="width: 100%"/>
+                                </div>
+                                <input type="hidden" name="levelDifficulty" th:value="${config.levelDifficulty}"/>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+                    <button id="btn-addTask-submit" type="button" class="btn btn-primary">添加</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
     <div id="detail-panel" class="detail-body row">
         <div class="detail-panel-head">
             <div class="detail-panel-head-wrapper">
@@ -196,65 +255,24 @@
             </div>
         </div>
     </div>
-    <div id="addTask" class="modal fade" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span>
-                    </button>
-                    <h4 class="modal-title">添加任务</h4>
-                </div>
-                <div class="modal-body">
-                    <form id="form-taskAdd" class="form-horizontal">
-                        <div class="form-group">
-                            <label class="col-md-2 control-label">通关数</label>
-                            <div class="col-md-9">
-                                <input class="form-control" name="passed" type="number"/>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-md-2 control-label">关卡选择</label>
-                            <div class="col-md-4">
-                                <select class="form-control" name="levelLine">
-                                    <option value="1" th:selected="${config.levelLine == 1}">1 行</option>
-                                    <option value="2" th:selected="${config.levelLine == 2}">2 行</option>
-                                    <option value="3" th:selected="${config.levelLine == 3}">3 行</option>
-                                    <option value="4" th:selected="${config.levelLine == 4}">4 行</option>
-                                    <option value="5" th:selected="${config.levelLine == 5}">5 行</option>
-                                    <option value="6" th:selected="${config.levelLine == 6}">6 行</option>
-                                    <option value="7" th:selected="${config.levelLine == 7}">7 行</option>
-                                    <option value="8" th:selected="${config.levelLine == 8}">8 行</option>
-                                    <option value="9" th:selected="${config.levelLine == 9}">9 行</option>
-                                    <option value="10" th:selected="${config.levelLine == 10}">10 行</option>
-                                </select>
-                            </div>
-                            <div class="col-md-offset-1 col-md-4">
-                                <select class="form-control" name="levelRow">
-                                    <option value="1" th:selected="${config.levelRow == 1}">1 列</option>
-                                    <option value="2" th:selected="${config.levelRow == 2}">2 列</option>
-                                    <option value="3" th:selected="${config.levelRow == 3}">3 列</option>
-                                    <option value="4" th:selected="${config.levelRow == 4}">4 列</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="col-md-2 control-label">难度</label>
-                            <div class="col-md-9">
-                                <div class="slider-img" th:attr="slider-default=${config.levelDifficulty}">
-                                    <img src="/static/img/副本难度.bmp" style="width: 100%"/>
-                                </div>
-                                <input type="hidden" name="levelDifficulty" th:value="${config.levelDifficulty}"/>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-                    <button id="btn-addTask-submit" type="button" class="btn btn-primary">添加</button>
-                </div>
-            </div><!-- /.modal-content -->
-        </div><!-- /.modal-dialog -->
-    </div><!-- /.modal -->
+    <div id="detail-summary" class="row">
+        <table class="table table-hover">
+            <tbody>
+            <tr>
+                <th>模式</th>
+                <th>关卡</th>
+                <th>难度值</th>
+                <th>通关数</th>
+            </tr>
+            <tr th:each="level:${levelSummaryMap.keySet()}">
+                <td>[[${level.mode}]]</td>
+                <td>[[${level.line}]]-[[${level.row}]]</td>
+                <td>[[${level.difficulty}]]</td>
+                <td>[[${levelSummaryMap.get(level)}]]</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 </body>
 </html>

@@ -13,5 +13,7 @@ public interface DDTankScriptService {
 
     DDTankCoreScript getByIndex(int index);
 
+    boolean removeByIndex(List<Integer> index);
+
     boolean addOrUpdate(DDTankCoreScript script);
 }

@@ -110,11 +110,11 @@
             }
         })
         $(".script-delete").click(function () {
-            let hwnds = getCheckedHwndSerialize(this);
-            if(hwnds === "") {
+            let index = getCheckedHwndSerialize(this);
+            if(index === "") {
                 windorAlert('提示', '请 <b>选中一些脚本后</b> 再执行删除')
             }else{
-                postAjax('/util/remove', hwnds, function (data) {
+                postAjax('/script/remove', index, function (data) {
                     windorAlert('提示', '已尝试移除指定脚本');
                 })
             }

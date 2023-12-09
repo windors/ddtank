@@ -40,6 +40,7 @@ public class DetailControllerRouting {
         map.put("state", script.getCoreState());
         map.put("runTime", script.getRunTime());
         map.put("suspend", script.isSuspend());
+        map.put("levelSummaryMap", script.getTask().getSummary());
         return "detail";
     }
 
@@ -61,6 +62,7 @@ public class DetailControllerRouting {
         map.put("state", script.getCoreState());
         map.put("runTime", script.getRunTime());
         map.put("suspend", script.isSuspend());
+        map.put("levelSummaryMap", script.getTask().getSummary());
         return "script/detail";
     }
 }

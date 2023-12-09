@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static cn.windor.ddtank.util.ThreadUtils.delay;
@@ -105,6 +106,8 @@ public class DDTankCoreTask implements Runnable, Serializable {
     private DDTankAutoCompleteHandler ddTankTaskAutoCompleteHandler;
     private DDTankAutoUsePropHandler ddTankAutoUsePropHandler;
 
+    private DDTankLevelSummary levelSummary;
+
 
     /**
      * 普通的新建任务方法
@@ -130,6 +133,7 @@ public class DDTankCoreTask implements Runnable, Serializable {
         this.ddtankSelectMapHandler = new DDTankSelectMapHandlerImpl(properties, ddtankOperate, ddtLog);
         this.ddTankTaskAutoCompleteHandler = new DDTankAutoCompleteHandlerImpl(keyboard, mouse);
         this.ddTankAutoUsePropHandler = new DDTankAutoUsePropHandlerImpl(mouse, keyboard, dm, ddtLog);
+        this.levelSummary = new DDTankLevelSummaryImpl(properties);
     }
 
     /**
@@ -158,6 +162,7 @@ public class DDTankCoreTask implements Runnable, Serializable {
         this.ddtankSelectMapHandler = task.ddtankSelectMapHandler;
         this.ddTankTaskAutoCompleteHandler = task.ddTankTaskAutoCompleteHandler;
         this.ddTankAutoUsePropHandler = task.ddTankAutoUsePropHandler;
+        this.levelSummary = task.levelSummary;
     }
 
     /**
@@ -195,9 +200,6 @@ public class DDTankCoreTask implements Runnable, Serializable {
         startTime = System.currentTimeMillis();
         endTime = -1;
 
-        // 跳过过场动画
-        mouse.moveAndClick(21, 519);
-
         // 更新对象
         String picDir = new File(DDTankFileConfigProperties.getBaseDir(), properties.getPicDir()).getAbsolutePath() + "/";
         String version = properties.getVersion();
@@ -214,6 +216,9 @@ public class DDTankCoreTask implements Runnable, Serializable {
             this.ddtankOperate = new DDtankOperate2_3(dm, mouse, keyboard, ddtankPic, properties);
         }
         DDTankComplexObjectUpdateUtils.update(this, dm.getSource(), ddtankPic, ddtankOperate);
+
+        // 跳过过场动画
+        mouse.moveAndClick(21, 519);
 
         // 首次启动时向控制台说明当前为前台模式启动，重启等操作就不会再重复
         if (!isAutoRestart && needCorrect) {
@@ -347,6 +352,7 @@ public class DDTankCoreTask implements Runnable, Serializable {
                                 delay(300, true);
                                 DMLibrary.capture(dm, hwnd, DDTankFileConfigProperties.getDrawDir(Thread.currentThread().getName()) + "/" + passes + ".png");
                                 ddtLog.success("第" + ++passes + "次副本已通关");
+                                levelSummary.summary();
 
                                 // 执行自动领任务操作
                                 if(taskAutoComplete > 0 && passes % taskAutoComplete == 0) {
@@ -463,5 +469,16 @@ public class DDTankCoreTask implements Runnable, Serializable {
     public void suspend() {
         this.suspend = true;
         this.ddTankCoreAttackHandler.suspend();
+    }
+
+    public Map<DDTankLevel, Integer> getSummary() {
+        return levelSummary.getSummary();
+    }
+
+    public void updateFieldIfNull() {
+        properties.updateFieldIfNull();
+        if(levelSummary == null) {
+            levelSummary = new DDTankLevelSummaryImpl(properties);
+        }
     }
 }

@@ -25,6 +25,10 @@ public class DDTankScriptMapper extends BaseMapper {
 
         if(scriptsList == null) {
             scriptsList = new ArrayList<>();
+        }else {
+            for (DDTankCoreScript script : scriptsList) {
+                script.updateFieldIfNull();
+            }
         }
     }
 

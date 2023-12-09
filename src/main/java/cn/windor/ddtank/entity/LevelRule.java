@@ -1,6 +1,11 @@
 package cn.windor.ddtank.entity;
 
-public class LevelRule {
+import java.io.Serializable;
+
+public class LevelRule implements Serializable {
+    private static final long serialVersionUID = 1L;
+
+
     public final int levelLine;
     public final int levelRow;
 

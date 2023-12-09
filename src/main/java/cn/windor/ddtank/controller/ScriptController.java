@@ -71,4 +71,9 @@ public class ScriptController {
         }
         return HttpDataResponse.ok(success);
     }
+
+    @PostMapping("/remove")
+    public HttpResponse removeScripts(@RequestParam(name = "index") List<Integer> indexList) {
+        return HttpDataResponse.ok(scriptService.removeByIndex(indexList));
+    }
 }

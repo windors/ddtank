@@ -79,6 +79,7 @@ public class DDTankCoreTaskProperties implements Serializable, Cloneable {
         this.picDir = properties.picDir;
         this.website = properties.website;
         this.attackDelay = properties.attackDelay;
+        this.exactWind = properties.exactWind;
     }
 
     public DDTankCoreTaskProperties(DDTankCoreTaskProperties defaultConfig) {
@@ -197,4 +198,10 @@ public class DDTankCoreTaskProperties implements Serializable, Cloneable {
 
     private volatile Double attackDelay = 1.0;
     private volatile Boolean exactWind = false;
+
+    public void updateFieldIfNull() {
+        if(exactWind == null) {
+            exactWind = false;
+        }
+    }
 }
