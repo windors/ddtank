@@ -11,10 +11,11 @@
     <link rel="stylesheet" th:href="@{/static/css/common/thread_detail.css}"/>
 </head>
 <body>
-<div th:replace="~{common/thread-detail :: detail(${passes}, ${state}, ${suspend}, ${runTime}, ${hwnd}, ${config}, ${rules}, ${taskAutoComplete}, ${autoUseProp}, ${username}, ${password}, ${ddtankLog})}">
+<div th:replace="~{common/thread-detail :: detail(${passes}, ${running}, ${state}, ${suspend}, ${runTime}, ${hwnd}, ${config}, ${rules}, ${taskAutoComplete}, ${autoUseProp}, ${username}, ${password}, ${ddtankLog})}">
 
 </div>
 </body>
+<script th:src="@{/static/js/common/thread_detail.js}"></script>
 <script>
     // 设置自动使用活力
     $("#btn-autoUseProp").click(function () {

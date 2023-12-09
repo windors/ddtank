@@ -1,7 +1,7 @@
 package cn.windor.ddtank.core.impl;
 
 import cn.windor.ddtank.base.*;
-import cn.windor.ddtank.config.DDTankConfigProperties;
+import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 import cn.windor.ddtank.config.DDTankFileConfigProperties;
 import cn.windor.ddtank.core.DDTankPic;
 import cn.windor.ddtank.type.TowardEnum;
@@ -9,7 +9,6 @@ import cn.windor.ddtank.util.BinaryPicProcess;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.List;
 
 import static cn.windor.ddtank.util.ThreadUtils.delay;
@@ -20,7 +19,7 @@ public class DDTankPic10_4 implements DDTankPic, Serializable {
 
     protected Library dm;
 
-    protected DDTankConfigProperties properties;
+    protected DDTankCoreTaskProperties properties;
 
     /**
      * 存放资源的路径
@@ -31,7 +30,7 @@ public class DDTankPic10_4 implements DDTankPic, Serializable {
 
     protected BinaryPicProcess binaryPicProcess;
 
-    public DDTankPic10_4(Library dm, String path, DDTankConfigProperties properties, Mouse mouse) {
+    public DDTankPic10_4(Library dm, String path, DDTankCoreTaskProperties properties, Mouse mouse) {
         this.dm = dm;
         this.mouse = mouse;
         this.properties = properties;
@@ -213,8 +212,12 @@ public class DDTankPic10_4 implements DDTankPic, Serializable {
      */
     @Override
     public Point getMyPosition() {
-        return binaryPicProcess.findRoundRole(properties.getStaticX1(), properties.getStaticY1(), properties.getStaticX2(), properties.getStaticY2(),
+        Point result = binaryPicProcess.findRoundRole(properties.getStaticX1(), properties.getStaticY1(), properties.getStaticX2(), properties.getStaticY2(),
                 properties.getColorRole(), 1.0);
+        if(result != null) {
+            result.setOffset(properties.getMyOffsetX(), properties.getMyOffsetY());
+        }
+        return result;
     }
 
     @Override
@@ -246,6 +249,7 @@ public class DDTankPic10_4 implements DDTankPic, Serializable {
                         result.setOffset(-2, -2);
                         break;
                 }
+                result.setOffset(properties.getEnemyOffsetX(), properties.getEnemyOffsetY());
                 return result;
             }
         }

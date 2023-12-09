@@ -1,10 +1,9 @@
 package cn.windor.ddtank.mapper;
 
-import cn.windor.ddtank.config.DDTankConfigProperties;
+import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 import cn.windor.ddtank.util.FileUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.io.File;
@@ -22,11 +21,11 @@ public class DDTankConfigMapper extends BaseMapper {
 
     @Getter
     private static final File DDTankStrengthFile = new File(SerializeDir, "strengthTable");
-    private static List<DDTankConfigProperties> list;
+    private static List<DDTankCoreTaskProperties> list;
 
     static {
         try {
-            list = (List<DDTankConfigProperties>) FileUtils.readSeriaizedObject(DDTankConfigPropertiesListFile);
+            list = (List<DDTankCoreTaskProperties>) FileUtils.readSeriaizedObject(DDTankConfigPropertiesListFile);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -36,9 +35,9 @@ public class DDTankConfigMapper extends BaseMapper {
         }
     }
 
-    public static DDTankConfigProperties getDefaultConfigProperties() {
+    public static DDTankCoreTaskProperties getDefaultConfigProperties() {
         try {
-            return (DDTankConfigProperties) FileUtils.readSeriaizedObject(DefaultDDTankConfigPropertiesFile);
+            return (DDTankCoreTaskProperties) FileUtils.readSeriaizedObject(DefaultDDTankConfigPropertiesFile);
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
             log.error("读取默认配置列表出错：{}", e.getMessage());
@@ -46,29 +45,29 @@ public class DDTankConfigMapper extends BaseMapper {
         return null;
     }
 
-    public boolean saveDefaultConfig(DDTankConfigProperties config) {
+    public boolean saveDefaultConfig(DDTankCoreTaskProperties config) {
         return FileUtils.writeObject(config, DefaultDDTankConfigPropertiesFile);
     }
 
-    public List<DDTankConfigProperties> list() {
+    public List<DDTankCoreTaskProperties> list() {
         return list;
     }
 
-    public DDTankConfigProperties removeByIndex(int index) {
-        DDTankConfigProperties result = list.remove(index);
+    public DDTankCoreTaskProperties removeByIndex(int index) {
+        DDTankCoreTaskProperties result = list.remove(index);
         save();
         return result;
     }
 
-    public DDTankConfigProperties getByIndex(int index) {
+    public DDTankCoreTaskProperties getByIndex(int index) {
         return list.get(index);
     }
 
-    public boolean updateByIndex(int index, DDTankConfigProperties config) {
+    public boolean updateByIndex(int index, DDTankCoreTaskProperties config) {
         list.set(index, config);
         return save();
     }
-    public boolean add(DDTankConfigProperties properties) {
+    public boolean add(DDTankCoreTaskProperties properties) {
         list.add(properties);
         return save();
     }

@@ -1,14 +1,13 @@
 package cn.windor.ddtank.controller;
 
-import cn.windor.ddtank.base.Library;
-import cn.windor.ddtank.core.DDTankCoreThread;
+import cn.windor.ddtank.core.DDTankCoreScript;
 import cn.windor.ddtank.dto.StartedDDTankCoreThreadDTO;
 import cn.windor.ddtank.service.DDTankConfigService;
+import cn.windor.ddtank.service.DDTankMarkHwndService;
 import cn.windor.ddtank.service.DDTankThreadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.*;
 
@@ -19,25 +18,29 @@ public class IndexControllerRouting {
     private DDTankThreadService ddtankThreadService;
 
     @Autowired
+    private DDTankMarkHwndService markHwndService;
+
+    @Autowired
     private DDTankConfigService configService;
 
     @GetMapping({"", "/", "/index"})
     public String index(Map<String, Object> map) {
-        map.put("waitStartMap", ddtankThreadService.getWaitStartMap());
-        if (ddtankThreadService.getWaitStartMap().size() > 0) {
+        Map<Long, DDTankCoreScript> waitStartMap = markHwndService.getWaitStartMap();
+        map.put("waitStartMap", waitStartMap);
+        if (waitStartMap.size() > 0) {
             map.put("configList", configService.list());
         }
 
         // key: 配置名称, value: 脚本集合
         Map<String, List<StartedDDTankCoreThreadDTO>> classifiedStartedMap = new HashMap<>();
-        Map<Long, DDTankCoreThread> startedThreadMap = ddtankThreadService.getAllStartedThreadMap();
+        Map<Long, DDTankCoreScript> startedThreadMap = ddtankThreadService.getAllStartedScriptMap();
         for (Long hwnd : startedThreadMap.keySet()) {
-            DDTankCoreThread coreThread = startedThreadMap.get(hwnd);
+            DDTankCoreScript coreThread = startedThreadMap.get(hwnd);
             String configName = coreThread.getProperties().getName();
             List<StartedDDTankCoreThreadDTO> threadList = classifiedStartedMap.computeIfAbsent(configName, k -> new ArrayList<>());
             threadList.add(new StartedDDTankCoreThreadDTO(hwnd, coreThread));
         }
-        classifiedStartedMap.values().forEach(list -> list.sort(Comparator.comparing(dto -> dto.getCoreThread().getName())));
+        classifiedStartedMap.values().forEach(list -> list.sort(Comparator.comparing(dto -> dto.getScript().getName())));
 
         map.put("classifiedStartedMap", classifiedStartedMap);
 

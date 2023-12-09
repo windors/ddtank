@@ -7,8 +7,6 @@ import cn.windor.ddtank.base.impl.DMKeyboard;
 import cn.windor.ddtank.base.impl.DMLibrary;
 import cn.windor.ddtank.base.impl.DMMouse;
 import cn.windor.ddtank.base.impl.LibraryFactory;
-import cn.windor.ddtank.config.DDTankConfigProperties;
-import cn.windor.ddtank.config.DDTankStartParam;
 import cn.windor.ddtank.entity.LevelRule;
 import cn.windor.ddtank.handler.DDTankCoreRefindHandler;
 import cn.windor.ddtank.handler.DDTankStuckCheckDetectionHandler;
@@ -16,7 +14,7 @@ import cn.windor.ddtank.handler.impl.DDTankRefindByNewWindow;
 import cn.windor.ddtank.handler.impl.DDTankStuckCheckDetectionByLog;
 import cn.windor.ddtank.service.impl.DDTankThreadServiceImpl;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
-import cn.windor.ddtank.util.ActiveXComponentUtils;
+import cn.windor.ddtank.util.DDTankComplexObjectUpdateUtils;
 import cn.windor.ddtank.util.VariantUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -28,26 +26,28 @@ import java.util.concurrent.*;
 import static cn.windor.ddtank.util.ThreadUtils.delayPersisted;
 
 /**
- * 守护线程的任务是通过日志勘察脚本线程是否出现问题，同时调用一些其他操作
+ * 核心脚本的任务是通过日志勘察脚本线程是否出现问题，同时调用一些其他操作
  */
 @Slf4j
-public class DDTankCoreThread extends Thread implements Serializable {
+public class DDTankCoreScript implements Serializable, Runnable {
 
     private static final long serialVersionUID = 1L;
 
     @Getter
-    transient private long gameHwnd;
-    private String gameVersion;
-    private DDTankConfigProperties properties;
+    private long hwnd;
+
+    @Getter
+    private String name;
+    private DDTankCoreTaskProperties properties;
 
     private boolean needCorrect;
 
     protected Library dm;
 
     @Getter
-    private DDTankCoreTask task;
+    DDTankCoreTask task;
 
-    transient private Thread coreThread;
+    transient Thread coreThread;
 
     /**
      * 任务列表，用来测试功能
@@ -65,91 +65,62 @@ public class DDTankCoreThread extends Thread implements Serializable {
      * 初始构造函数
      *
      * @param hwnd       游戏窗口句柄（能检测到游戏画面的句柄，同时需要键盘和鼠标操作在该拆窗口有效）
-     * @param version    游戏版本
      * @param properties 游戏配置
-     * @param startParam 起始参数，包含了线程名称、是否需要进行窗口矫正
      */
-    public DDTankCoreThread(long hwnd, String version, DDTankConfigProperties properties, DDTankStartParam startParam) {
-        this.gameHwnd = hwnd;
-        this.gameVersion = version;
+    public DDTankCoreScript(long hwnd, String name, DDTankCoreTaskProperties properties, boolean needCorrect) {
+        this.hwnd = hwnd;
         this.properties = properties;
-        this.needCorrect = startParam.isNeedCorrect();
-        this.setName(startParam.getName());
-        this.task = new DDTankCoreTask(gameHwnd, gameVersion, properties, needCorrect);
+        this.needCorrect = needCorrect;
+        this.name = name;
+        this.task = new DDTankCoreTask(this.hwnd, properties, needCorrect);
         this.dm = new DMLibrary();
         this.taskRefindHandler = new DDTankRefindByNewWindow(dm, task.ddtLog, new SimpleDDTankAccountSignHandlerImpl(dm, new DMMouse(dm.getSource()), new DMKeyboard(dm.getSource())), task.properties);
         this.accountSignHandler = new SimpleDDTankAccountSignHandlerImpl(dm, new DMMouse(dm.getSource()), new DMKeyboard(dm.getSource()));
         this.stuckCheckDetectionHandler = new DDTankStuckCheckDetectionByLog(task.ddtLog);
     }
 
-    /**
-     * 通过现有的线程创建一个新的脚本，该方法用来重启脚本
-     *
-     * @param srcThread 现有脚本
-     */
-    public DDTankCoreThread(DDTankCoreThread srcThread) {
-        this.taskRefindHandler = srcThread.taskRefindHandler;
-        this.accountSignHandler = srcThread.accountSignHandler;
-        this.gameHwnd = srcThread.gameHwnd;
-        this.gameVersion = srcThread.gameVersion;
-        this.properties = srcThread.properties;
-        this.setName(srcThread.getName());
-        this.needCorrect = srcThread.needCorrect;
-        this.task = new DDTankCoreTask(srcThread.task);
-        this.taskRefindHandler = srcThread.taskRefindHandler;
-        this.accountSignHandler = srcThread.accountSignHandler;
-        this.stuckCheckDetectionHandler = new DDTankStuckCheckDetectionByLog(task.ddtLog);
+    public void setProperties(DDTankCoreTaskProperties properties) {
+        this.properties = properties;
+        task.properties = properties;
+        DDTankComplexObjectUpdateUtils.update(this, properties);
     }
 
-    /**
-     * 通过现有的线程创建一个新的脚本，该方法用来重绑定脚本
-     *
-     * @param srcThread 原来的脚本线程
-     * @param newHwnd   新的游戏窗口
-     */
-    public DDTankCoreThread(DDTankCoreThread srcThread, long newHwnd, boolean needCorrect) {
-        this(srcThread);
-        this.needCorrect = needCorrect;
-        this.gameHwnd = newHwnd;
-        this.task.hwnd = newHwnd;
-    }
-
-    private void init() {
-        if(coreThread == null) {
-            this.coreThread = new Thread(task, getName() + "-exec");
-        }
-        if(daemonTaskQueue == null) {
+    private boolean init() {
+        this.coreThread = new Thread(task, name + "-task");
+        if (daemonTaskQueue == null) {
             this.daemonTaskQueue = new LinkedBlockingQueue<>();
         }
 
         this.dm = new DMLibrary(LibraryFactory.getActiveXCompnent());
         // 一键更新所有的ActiveXComponent
-        ActiveXComponentUtils.update(this, () -> dm.getSource());
+        DDTankComplexObjectUpdateUtils.update(this, dm.getSource());
 
+        // TODO 窗口检查失败
         initWindowCheck();
 
-        // 没有自动重连才尝试绑定游戏窗口
+        // 绑定窗口
         if (!task.bind(this.dm)) {
-            log.error("窗口[{}]绑定失败，请重新尝试启动脚本，大漠错误码：{}", gameHwnd, dm.getLastError());
+            log.error("窗口[{}]绑定失败，请重新尝试启动脚本，大漠错误码：{}", hwnd, dm.getLastError());
             task.ddtLog.error("主绑定失败：" + dm.getLastError());
-            return;
+            return false;
         }
 
         // 启动脚本线程
         log.info("[窗口绑定]：守护线程已成功绑定游戏窗口，即将启动脚本线程");
         log.info("脚本已启动");
         coreThread.start();
+        return true;
     }
 
     private void initWindowCheck() {
-        if (!dm.getWindowState(gameHwnd, 0)) {
+        if (!dm.getWindowState(hwnd, 0)) {
             // 窗口不存在
             getDDTankLog().warn("检测到窗口已失效，尝试自动登录");
             // 自动重连，尝试三次
-            long hwnd = taskRefindHandler.refindHwnd(gameHwnd);
+            long hwnd = taskRefindHandler.refindHwnd(this.hwnd);
             int failTimes = 1;
             while (hwnd == 0 && failTimes++ < 3) {
-                hwnd = taskRefindHandler.refindHwnd(gameHwnd);
+                hwnd = taskRefindHandler.refindHwnd(this.hwnd);
             }
             if (hwnd == 0) {
                 getDDTankLog().error("自动重绑定窗口失败");
@@ -163,9 +134,11 @@ public class DDTankCoreThread extends Thread implements Serializable {
 
     @Override
     public void run() {
-        init();
+        if (!init()) {
+            return;
+        }
         try {
-            while (!interrupted()) {
+            while (!Thread.interrupted()) {
                 if (!needRefindCheck()) {
                     break;
                 }
@@ -184,7 +157,7 @@ public class DDTankCoreThread extends Thread implements Serializable {
                         task.run();
                     }
                 } catch (InterruptedException e) {
-                    interrupt();
+                    Thread.currentThread().interrupt();
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -201,12 +174,13 @@ public class DDTankCoreThread extends Thread implements Serializable {
 
     /**
      * 检查是否需要进行重连
+     *
      * @return
      * @throws InterruptedException
      */
     private boolean needRefindCheck() throws InterruptedException {
         boolean needRefindWindow = false;
-        if (!dm.getWindowState(gameHwnd, 0)) {
+        if (!dm.getWindowState(hwnd, 0)) {
             // 调用dm在出错时往往会弹出窗口，所以需要手动关闭线程
             log.info("检测到游戏窗口关闭");
             task.ddtLog.error("检测到游戏窗口关闭，即将重新启动");
@@ -224,9 +198,9 @@ public class DDTankCoreThread extends Thread implements Serializable {
             // 后处理
             dm.unbindWindow();
             // 自动重连
-            long hwnd = taskRefindHandler.refindHwnd(gameHwnd);
+            long hwnd = taskRefindHandler.refindHwnd(this.hwnd);
             while (hwnd == 0) {
-                hwnd = taskRefindHandler.refindHwnd(gameHwnd);
+                hwnd = taskRefindHandler.refindHwnd(this.hwnd);
             }
             if (hwnd == 0) {
                 log.info("自动重连失败");
@@ -248,13 +222,14 @@ public class DDTankCoreThread extends Thread implements Serializable {
      * @param hwnd
      */
     public boolean rebind(long hwnd, boolean needRestart) {
-        if (hwnd != gameHwnd) {
+        if (hwnd != this.hwnd) {
             if (coreThread.isAlive()) {
-                stop(3000);
+                // TODO 关闭task线程
+                coreThread.interrupt();
             }
-            DDTankThreadServiceImpl.changeBindHwnd(gameHwnd, hwnd);
+            DDTankThreadServiceImpl.changeBindHwnd(this.hwnd, hwnd);
             task.hwnd = hwnd;
-            this.gameHwnd = hwnd;
+            this.hwnd = hwnd;
             // 当前线程先对窗口进行重绑定，确保游戏窗口首个绑定的是守护线程
             if (dm.bindWindowEx(hwnd, properties.getBindDisplay(), properties.getBindMouse(), properties.getBindKeypad(), properties.getBindPublic(), properties.getBindMode())) {
                 task.ddtLog.success("重绑定成功！");
@@ -264,15 +239,30 @@ public class DDTankCoreThread extends Thread implements Serializable {
                 return false;
             }
             // 启动task
-            if(needRestart) {
+            if (needRestart) {
                 restartTask();
             }
         }
         return true;
     }
 
+    /**
+     * 如果线程未在运行中，那么将新创建一个线程运行脚本任务
+     *
+     * @return
+     */
+    public boolean restartTask() {
+        if (coreThread.isAlive()) {
+            return false;
+        }
+        this.task = new DDTankCoreTask(task);
+        coreThread = new Thread(task, name + "-task");
+        coreThread.start();
+        return true;
+    }
+
     public boolean screenshot(String filepath) {
-        int[] clientSize = dm.getClientSize(gameHwnd);
+        int[] clientSize = dm.getClientSize(hwnd);
         return screenshot(0, 0, clientSize[0], clientSize[1], filepath);
     }
 
@@ -297,7 +287,7 @@ public class DDTankCoreThread extends Thread implements Serializable {
         }
     }
 
-    public void updateProperties(DDTankConfigProperties properties) {
+    public void updateProperties(DDTankCoreTaskProperties properties) {
         log.info("更新了配置信息");
         task.ddtLog.info("更新了配置信息");
         task.properties.update(properties);
@@ -307,38 +297,6 @@ public class DDTankCoreThread extends Thread implements Serializable {
         return task.suspend;
     }
 
-    /**
-     * 停止操作是线程安全的，因为isAlive()方法并不受线程上下文干扰
-     */
-    public void stop(long waitMillis) {
-        tryStop();
-        try {
-            coreThread.join(waitMillis);
-            this.join(waitMillis);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        if (coreThread.isAlive()) {
-            log.warn("线程{}未在{}ms内关闭", coreThread.getName(), waitMillis);
-        }
-        if (this.isAlive()) {
-            log.warn("线程{}未在{}ms内关闭", this.getName(), waitMillis);
-        }
-    }
-
-    public void tryStop() {
-        log.info("{}尝试停止操作", getName());
-        if (coreThread.isAlive() || this.isAlive()) {
-            task.coreState.set(CoreThreadStateEnum.WAITING_STOP);
-        }
-
-        if (coreThread.isAlive()) {
-            coreThread.interrupt();
-        }
-        if (this.isAlive()) {
-            this.interrupt();
-        }
-    }
 
     public void sendSuspend() {
         synchronized (task) {
@@ -409,7 +367,7 @@ public class DDTankCoreThread extends Thread implements Serializable {
         return task.ddtankOperate;
     }
 
-    public DDTankConfigProperties getProperties() {
+    public DDTankCoreTaskProperties getProperties() {
         return task.properties;
     }
 
@@ -425,25 +383,9 @@ public class DDTankCoreThread extends Thread implements Serializable {
         return task.getCallTimes();
     }
 
-    /**
-     * 如果线程未在运行中，那么将新创建一个线程运行脚本任务
-     *
-     * @return
-     */
-    public boolean restartTask() {
-        if (coreThread.isAlive()) {
-            return false;
-        }
-        this.task = new DDTankCoreTask(task);
-        coreThread = new Thread(task, getName() + "-exec");
-        coreThread.start();
-        return true;
-    }
-
     public DDTankLog getDDTankLog() {
         return task.ddtLog;
     }
-
 
     public CoreThreadStateEnum getCoreState() {
         return task.getCoreState();
@@ -469,5 +411,23 @@ public class DDTankCoreThread extends Thread implements Serializable {
         accountSignHandler.setUsername(username);
         accountSignHandler.setPassword(password);
         return true;
+    }
+
+    public void setHwnd(long hwnd) {
+        this.hwnd = hwnd;
+        this.task.hwnd = hwnd;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+        if (coreThread != null) {
+            coreThread.setName(name + "-task");
+        }
+        if (daemonTaskQueue != null) {
+            daemonTaskQueue.add(new FutureTask<>(() -> {
+                Thread.currentThread().setName(name);
+                return null;
+            }));
+        }
     }
 }

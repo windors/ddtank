@@ -1,16 +1,17 @@
 package cn.windor.ddtank.service;
 
-import cn.windor.ddtank.config.DDTankConfigProperties;
-import cn.windor.ddtank.core.DDTankCoreThread;
+import cn.windor.ddtank.core.DDTankCoreScript;
+import cn.windor.ddtank.core.DDTankCoreScriptThread;
+import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 
 import java.util.List;
 
 public interface DDTankScriptService {
-    DDTankCoreThread add(String name, String version, boolean needCorrect, DDTankConfigProperties properties);
+    DDTankCoreScript add(String name, boolean needCorrect, DDTankCoreTaskProperties properties);
 
-    List<DDTankCoreThread> list();
+    List<DDTankCoreScript> list();
 
-    public DDTankCoreThread getByIndex(int index);
+    DDTankCoreScript getByIndex(int index);
 
-    int start(List<Integer> indexList);
+    boolean addOrUpdate(DDTankCoreScript script);
 }

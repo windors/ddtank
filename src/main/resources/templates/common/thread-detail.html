@@ -29,11 +29,14 @@
 
 
 -->
-<div th:fragment="detail(passes, state, suspend, runTime, hwnd, config, rules, taskAutoComplete, autoUseProp, username, password, ddtankLog)">
+<div th:fragment="detail(passes, running, state, suspend, runTime, hwnd, config, rules, taskAutoComplete, autoUseProp, username, password, ddtankLog)">
     <div id="detail-panel" class="detail-body row">
         <div class="detail-panel-head">
             <div class="detail-panel-head-wrapper">
                 <div class="detail-panel-head-title">脚本信息</div>
+                <div class="detail-panel-head-title">
+                    <button id="btn-serialize" class="btn btn-success">保存</button>
+                </div>
             </div>
         </div>
         <div class="detail-panel-body">
@@ -43,12 +46,16 @@
                     <span th:text="${passes}"></span>
                 </div>
                 <div class="detail-panel-col">
-                    <div>当前状态</div>
-                    <span th:text="${state.getMsg()}"></span>
+                    <div>是否正在运行</div>
+                    <span th:text="${running ? '是' : '否'}"></span>
                 </div>
                 <div class="detail-panel-col">
                     <div>是否暂停</div>
                     <span th:text="${suspend ? '是' : '否'}"></span>
+                </div>
+                <div class="detail-panel-col">
+                    <div>当前状态</div>
+                    <span th:text="${state.getMsg()}"></span>
                 </div>
                 <div class="detail-panel-col">
                     <div>脚本运行时间</div>
@@ -168,7 +175,7 @@
                             <div class="col-md-3"><input class="form-control" name="password" type="password"
                                                          th:value="${password}"/></div>
                             <div class="col-md-2">
-                                <button class="btn btn-success col-xs-12">保存</button>
+                                <button class="btn btn-primary col-xs-12">设置</button>
                             </div>
                         </div>
                     </form>

@@ -29,6 +29,17 @@
                 </div>
             </div>
             <div class="form-group">
+                <label class="col-md-2 control-label">版本配置</label>
+                <div class="col-md-10">
+                    <select class="form-control" name="version">
+                        <option value="10" th:selected="${config.version == '10'}">10.4</option>
+                        <option value="2">2.3</option>
+                        <option value="2.4">2.4（可爱弹弹堂）</option>
+                        <option value="10">自定义（功能待添加，目前就是10.4）</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
                 <label class="col-md-2 control-label">自动重连网址</label>
                 <div class="col-md-10">
                     <input class="form-control" name="website" th:value="${config.website}"/>
@@ -64,7 +75,7 @@
                 </div>
                 <label class="col-md-2 control-label">结束等待时间</label>
                 <div class="col-md-4">
-                    <div class="input-group ">
+                    <div class="input-group">
                         <input type="text" class="form-control" name="levelEndWaitTime"
                                th:value="${config.levelEndWaitTime}">
                         <span class="input-group-addon">秒</span>
@@ -276,6 +287,39 @@
                 </div>
             </div>
         </div>
+        <h3 id="rectify-position">坐标</h3>
+        <div class="col-md-12">
+            <div class="form-group">
+                <label class="col-md-2 control-label">
+                    我的坐标偏移
+                </label>
+                <div class="col-md-10 input-group-fix">
+                    <div class="input-group">
+                        <span class="input-group-addon">X</span>
+                        <input type="text" class="form-control" name="myOffsetX"
+                               th:value="${config.myOffsetX}">
+                        <span class="input-group-addon">Y</span>
+                        <input type="text" class="form-control" name="myOffsetY"
+                               th:value="${config.myOffsetY}">
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-md-2 control-label">
+                    敌人坐标偏移
+                </label>
+                <div class="col-md-10 input-group-fix">
+                    <div class="input-group">
+                        <span class="input-group-addon">X</span>
+                        <input type="text" class="form-control" name="enemyOffsetX"
+                               th:value="${config.enemyOffsetX}">
+                        <span class="input-group-addon">Y</span>
+                        <input type="text" class="form-control" name="enemyOffsetY"
+                               th:value="${config.enemyOffsetY}">
+                    </div>
+                </div>
+            </div>
+        </div>
         <h2 id="args">启动参数</h2>
         <hr/>
         <div class="col-md-12">
@@ -418,6 +462,7 @@
                         <li><a href="#rectify-unitDistance">屏距</a></li>
                         <li><a href="#rectify-angle">角度</a></li>
                         <li><a href="#rectify-identify">识别</a></li>
+                        <li><a href="#rectify-position">坐标</a></li>
                     </ul>
                 </li>
                 <li><a href="#args">启动参数</a></li>

@@ -2,7 +2,7 @@ package cn.windor.ddtank.core.impl;
 
 import cn.windor.ddtank.base.Keyboard;
 import cn.windor.ddtank.base.Point;
-import cn.windor.ddtank.config.DDTankConfigProperties;
+import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 import cn.windor.ddtank.core.*;
 import cn.windor.ddtank.exception.DDTankAngleResolveException;
 import cn.windor.ddtank.core.DDTankCoreAttackHandler;
@@ -24,7 +24,7 @@ import static cn.windor.ddtank.util.ThreadUtils.delay;
 public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler, Serializable {
 
     private static final long serialVersionUID = 1L;
-    private final DDTankConfigProperties properties;
+    private final DDTankCoreTaskProperties properties;
     private Keyboard keyboard;
     private DDTankOperate ddtankOperate;
 
@@ -56,7 +56,7 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler, Ser
 
     private final static ExecutorService calcStrengthExecutors = Executors.newCachedThreadPool();
 
-    public DDTankCoreAttackHandlerImpl(DDTankConfigProperties properties, Keyboard keyboard, DDTankPic ddtankPic, DDTankOperate ddtankOperate, DDTankLog ddtLog) {
+    public DDTankCoreAttackHandlerImpl(DDTankCoreTaskProperties properties, Keyboard keyboard, DDTankPic ddtankPic, DDTankOperate ddtankOperate, DDTankLog ddtLog) {
         this.properties = properties;
         this.keyboard = keyboard;
         this.ddtankPic = ddtankPic;

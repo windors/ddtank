@@ -41,7 +41,7 @@ public class UtilControllerRouting {
             }
         }
         map.put("tests", tests);
-        map.put("startedThreadMap", threadService.getAllStartedThreadMap());
+        map.put("startedScriptMap", threadService.getAllStartedScriptMap());
         return "util/test";
     }
 

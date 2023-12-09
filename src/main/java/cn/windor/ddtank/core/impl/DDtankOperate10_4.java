@@ -1,21 +1,17 @@
 package cn.windor.ddtank.core.impl;
 
 import cn.windor.ddtank.base.*;
-import cn.windor.ddtank.config.DDTankConfigProperties;
+import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 import cn.windor.ddtank.exception.DDTankAngleResolveException;
 import cn.windor.ddtank.exception.DDTankStrengthResolveException;
-import cn.windor.ddtank.handler.DDTankAngleAdjustMoveHandler;
 import cn.windor.ddtank.core.DDTankOperate;
 import cn.windor.ddtank.core.DDTankPic;
-import cn.windor.ddtank.type.TowardEnum;
 import cn.windor.ddtank.util.ColorUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.*;
-import java.util.function.Function;
 
 import static cn.windor.ddtank.util.ThreadUtils.delay;
-import static java.lang.Math.PI;
 
 @Slf4j
 public class DDtankOperate10_4 implements DDTankOperate, Serializable {
@@ -28,11 +24,11 @@ public class DDtankOperate10_4 implements DDTankOperate, Serializable {
 
     protected DDTankPic ddTankPic;
 
-    protected DDTankConfigProperties properties;
+    protected DDTankCoreTaskProperties properties;
 
     protected Library dm;
 
-    public DDtankOperate10_4(Library dm, Mouse mouse, Keyboard keyboard, DDTankPic ddTankPic, DDTankConfigProperties properties) {
+    public DDtankOperate10_4(Library dm, Mouse mouse, Keyboard keyboard, DDTankPic ddTankPic, DDTankCoreTaskProperties properties) {
         this.dm = dm;
         this.mouse = mouse;
         this.keyboard = keyboard;

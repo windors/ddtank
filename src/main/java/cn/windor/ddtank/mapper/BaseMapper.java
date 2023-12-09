@@ -1,12 +1,8 @@
 package cn.windor.ddtank.mapper;
 
-import cn.windor.ddtank.config.DDTankConfigProperties;
-import cn.windor.ddtank.util.FileUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 @Slf4j
 public class BaseMapper {

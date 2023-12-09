@@ -7,7 +7,7 @@ import cn.windor.ddtank.base.Point;
 import cn.windor.ddtank.base.impl.DMLibrary;
 import cn.windor.ddtank.base.impl.DMMouse;
 import cn.windor.ddtank.base.impl.LibraryFactory;
-import cn.windor.ddtank.config.DDTankConfigProperties;
+import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 import cn.windor.ddtank.config.DDTankFileConfigProperties;
 import cn.windor.ddtank.core.DDTankLog;
 import cn.windor.ddtank.handler.DDTankCoreRefindHandler;
@@ -35,13 +35,13 @@ public class DDTankRefindByNewWindow implements DDTankCoreRefindHandler, Seriali
 
     private DDTankLog ddTankLog;
 
-    private DDTankConfigProperties properties;
+    private DDTankCoreTaskProperties properties;
 
     private DDTankAccountSignHandler accountSignHandler;
 
     private Library dm;
 
-    public DDTankRefindByNewWindow(Library dm, DDTankLog ddTankLog, DDTankAccountSignHandler accountSignHandler, DDTankConfigProperties properties) {
+    public DDTankRefindByNewWindow(Library dm, DDTankLog ddTankLog, DDTankAccountSignHandler accountSignHandler, DDTankCoreTaskProperties properties) {
         this.dm = dm;
         this.ddTankLog = ddTankLog;
         this.properties = properties;

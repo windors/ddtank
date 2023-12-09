@@ -1,14 +1,14 @@
 package cn.windor.ddtank.controller;
 
 import cn.windor.ddtank.base.Library;
-import cn.windor.ddtank.config.DDTankConfigProperties;
+import cn.windor.ddtank.core.DDTankCoreScript;
+import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 import cn.windor.ddtank.config.DDTankFileConfigProperties;
 import cn.windor.ddtank.core.DDTankPic;
-import cn.windor.ddtank.core.DDTankCoreThread;
 import cn.windor.ddtank.core.impl.DDTankCoreAttackHandlerImpl;
-import cn.windor.ddtank.entity.LevelRule;
 import cn.windor.ddtank.mapper.DDTankConfigMapper;
 import cn.windor.ddtank.service.DDTankConfigService;
+import cn.windor.ddtank.service.DDTankMarkHwndService;
 import cn.windor.ddtank.service.DDTankThreadService;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
 import cn.windor.ddtank.util.FileUtils;
@@ -23,10 +23,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -38,10 +35,13 @@ public class UtilController {
     private DDTankThreadService threadService;
 
     @Autowired
+    private DDTankMarkHwndService markHwndService;
+
+    @Autowired
     private DDTankConfigService configService;
 
     @Autowired
-    private DDTankConfigProperties defaultProperties;
+    private DDTankCoreTaskProperties defaultProperties;
 
     @Autowired
     private Library dm;
@@ -49,7 +49,7 @@ public class UtilController {
     @PostMapping("/test")
     public HttpDataResponse<Object> test(@RequestParam String methodName,
                                          @RequestParam long hwnd) {
-        DDTankCoreThread thread = threadService.getAllStartedThreadMap().get(hwnd);
+        DDTankCoreScript thread = threadService.get(hwnd);
         if (thread == null) {
             return new HttpDataResponse(HttpResponseEnum.ILLEGAL_INPUT, null);
         }
@@ -66,13 +66,13 @@ public class UtilController {
 
     @GetMapping("/screenshot")
     public StreamingResponseBody getScreenshot(@RequestParam long hwnd) {
-        DDTankCoreThread thread = threadService.getAllStartedThreadMap().get(hwnd);
-        if (thread == null) {
+        DDTankCoreScript script = threadService.get(hwnd);
+        if (script == null) {
             return null;
         }
         String path = DDTankFileConfigProperties.getScreenshotPath();
         try {
-            thread.screenshot(path);
+            script.screenshot(path);
         }catch (IllegalStateException ignore) {
             return outputStream -> {
 
@@ -88,7 +88,7 @@ public class UtilController {
     public HttpDataResponse<Integer> suspendCoreThread(@RequestParam(name = "hwnd") List<Long> hwnds) {
         int success = 0;
         for (Long hwnd : hwnds) {
-            DDTankCoreThread thread = threadService.getAllStartedThreadMap().get(hwnd);
+            DDTankCoreScript thread = threadService.get(hwnd);
             if (thread == null) {
                 continue;
             }
@@ -102,7 +102,7 @@ public class UtilController {
     public HttpResponse continueCoreThread(@RequestParam(name = "hwnd") List<Long> hwnds) {
         int success = 0;
         for (Long hwnd : hwnds) {
-            DDTankCoreThread thread = threadService.getAllStartedThreadMap().get(hwnd);
+            DDTankCoreScript thread = threadService.get(hwnd);
             if (thread == null) {
                 continue;
             }
@@ -120,7 +120,7 @@ public class UtilController {
      */
     @PostMapping("/state")
     public HttpDataResponse<CoreThreadStateEnum> getCoreThreadState(@RequestParam long hwnd) {
-        DDTankCoreThread thread = threadService.getAllStartedThreadMap().get(hwnd);
+        DDTankCoreScript thread = threadService.get(hwnd);
         if (thread == null) {
             return HttpDataResponse.ok(CoreThreadStateEnum.NOT_STARTED);
         }
@@ -129,9 +129,8 @@ public class UtilController {
 
     @PostMapping("/start")
     public HttpResponse start(@RequestParam long hwnd,
-                              @RequestParam String name,
-                              @RequestParam String version,
-                              @RequestParam int propertiesMode,
+                              String name,
+                              Integer propertiesMode,
                               Integer levelLine,
                               Integer levelRow,
                               Double levelDifficulty,
@@ -140,34 +139,40 @@ public class UtilController {
                               Boolean isHandleCalcDistance,
                               Double handleDistance) {
 //        threadService.start(hwnd, version, propertiesMode, name);
-        DDTankConfigProperties startProperties;
-        if (propertiesMode == 0) {
-            startProperties = defaultProperties.clone();
-        } else {
-            startProperties = configService.getByIndex(propertiesMode - 1).clone();
+        DDTankCoreScript script = markHwndService.get(hwnd);
+        if(propertiesMode != null) {
+            if (propertiesMode == 0) {
+                script.setProperties(defaultProperties.clone());
+            } else {
+                script.setProperties(configService.getByIndex(propertiesMode - 1).clone());
+            }
         }
-        if (levelLine != null) {
-            startProperties.setLevelLine(levelLine);
+        if(name != null) {
+            script.setName(name);
         }
-        if (levelRow != null) {
-            startProperties.setLevelRow(levelRow);
+        DDTankCoreTaskProperties properties = script.getProperties();
+        if(levelLine != null) {
+            properties.setLevelLine(levelLine);
         }
-        if (levelDifficulty != null) {
-            startProperties.setLevelDifficulty(levelDifficulty);
+        if(levelRow != null) {
+            properties.setLevelRow(levelRow);
         }
-        if (attackSkill != null) {
-            startProperties.setAttackSkill(attackSkill);
+        if(levelDifficulty != null) {
+            properties.setLevelDifficulty(levelDifficulty);
         }
-        if (enemyFindMode != null) {
-            startProperties.setEnemyFindMode(enemyFindMode);
+        if(attackSkill != null) {
+            properties.setAttackSkill(attackSkill);
         }
-        if (isHandleCalcDistance != null) {
-            startProperties.setIsHandleCalcDistance(isHandleCalcDistance);
+        if(enemyFindMode != null) {
+            properties.setEnemyFindMode(enemyFindMode);
         }
-        if (handleDistance != null) {
-            startProperties.setHandleDistance(handleDistance);
+        if(isHandleCalcDistance != null) {
+            properties.setIsHandleCalcDistance(isHandleCalcDistance);
         }
-        return HttpResponse.auto(threadService.start(hwnd, version, name, startProperties));
+        if(handleDistance != null && properties.getIsHandleCalcDistance()) {
+            properties.setHandleDistance(handleDistance);
+        }
+        return HttpResponse.auto(threadService.start(script));
     }
 
     @PostMapping("/restart")
@@ -198,13 +203,13 @@ public class UtilController {
 
     @PostMapping("/refreshPic")
     public HttpResponse refreshPic(long hwnd) {
-        DDTankCoreThread coreThread = threadService.getAllStartedThreadMap().get(hwnd);
+        DDTankCoreScript coreThread = threadService.get(hwnd);
         return HttpResponse.auto(coreThread.refreshPic());
     }
 
     @PostMapping("/rename")
     public HttpResponse rename(long hwnd, String newName) {
-        DDTankCoreThread coreThread = threadService.getAllStartedThreadMap().get(hwnd);
+        DDTankCoreScript coreThread = threadService.get(hwnd);
         coreThread.setName(newName);
         return HttpResponse.ok();
     }

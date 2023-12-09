@@ -22,7 +22,7 @@
 
 `cn.windor.ddtank.base.Library`：第三方接口，本项目使用大漠作为实现。
 
-`cn.windor.ddtank.config.DDTankConfigProperties`：基本所有主要的配置内容都在这个类中。
+`cn.windor.ddtank.core.DDTankCoreTaskProperties`：基本所有主要的配置内容都在这个类中。
 
 `cn.windor.ddtank.core.DDTankPic`：定义了弹弹堂自动挂机需要用到的所有图像识别方法，计划**之后的自定义功能围绕该接口实现全端通用**。
 
@@ -30,7 +30,7 @@
 
 `cn.windor.ddtank.core.DDTankCoreTask implements Runnable `：启动线程后执行的任务，负责调用图像识别、操作游戏窗口内一切内容。（Runnable接口作为线程对象的参数，在线程启动后会执行Runnable接口的run方法）
 
-`cn.windor.ddtank.core.DDTankCoreThread extends Thread`：负责守护管理已启动的 `DDTankCoreTask`，启动或停止脚本、实时截图、自动重连、定点重启等功能在此实现。
+`cn.windor.ddtank.core.DDTankCoreScript extends Thread`：负责守护管理已启动的 `DDTankCoreTask`，启动或停止脚本、实时截图、自动重连、定点重启等功能在此实现。
 
 `cn.windor.ddtank.service.DDTankThreadService`：负责包装已启动的`DDTankCoreThread`，对外提供线程服务。
 

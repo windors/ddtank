@@ -1,7 +1,7 @@
 package cn.windor.ddtank.controller;
 
-import cn.windor.ddtank.config.DDTankConfigProperties;
-import cn.windor.ddtank.core.DDTankCoreThread;
+import cn.windor.ddtank.core.DDTankCoreScript;
+import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 import cn.windor.ddtank.service.DDTankConfigService;
 import cn.windor.ddtank.service.DDTankScriptService;
 import cn.windor.ddtank.service.DDTankThreadService;
@@ -18,7 +18,7 @@ import java.util.Map;
 public class ConfigControllerRouting {
 
     @Autowired
-    private DDTankConfigProperties defaultConfig;
+    private DDTankCoreTaskProperties defaultConfig;
 
     @Autowired
     private DDTankThreadService threadService;
@@ -35,17 +35,17 @@ public class ConfigControllerRouting {
     @GetMapping("/run/{hwnd}")
     public String coreThreadConfig(@PathVariable long hwnd,
                             Map<String, Object> map) {
-        DDTankCoreThread coreThread = threadService.getAllStartedThreadMap().get(hwnd);
-        map.put("threadName", coreThread.getName());
-        map.put("config", coreThread.getProperties());
+        DDTankCoreScript script = threadService.get(hwnd);
+        map.put("threadName", script.getName());
+        map.put("config", script.getProperties());
         return "config/update";
     }
     @GetMapping("/script/{index}")
     public String scriptCoreThreadConfig(@PathVariable int index,
                                          Map<String, Object> map) {
-        DDTankCoreThread coreThread = scriptService.getByIndex(index);
-        map.put("threadName", coreThread.getName());
-        map.put("config", coreThread.getProperties());
+        DDTankCoreScript script = scriptService.getByIndex(index);
+        map.put("threadName", script.getName());
+        map.put("config", script.getProperties());
         return "config/update";
 
     }

@@ -69,8 +69,8 @@
                     <td th:text="${coreThread.passes}"></td>
                     <td class="time-ms" th:text="${coreThread.runTime}"></td>
                     <td>
-                        <a class="btn btn-info" th:href="@{/detail/script/{index}(index=${n.index})}">详细</a>
-                        <a class="btn btn-default" th:href="@{/config/script/{index}(index=${n.index})}">配置</a>
+                        <a class="btn btn-info" th:href="@{/detail/script/{index}(index=${index})}">详细</a>
+                        <a class="btn btn-default" th:href="@{/config/script/{index}(index=${index})}">配置</a>
                     </td>
                 </tr>
             </table>

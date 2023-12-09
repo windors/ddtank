@@ -1,6 +1,6 @@
 package cn.windor.ddtank.handler.impl;
 
-import cn.windor.ddtank.config.DDTankConfigProperties;
+import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 import cn.windor.ddtank.core.DDTankLog;
 import cn.windor.ddtank.core.DDTankOperate;
 import cn.windor.ddtank.entity.LevelRule;
@@ -19,11 +19,11 @@ public class DDTankSelectMapHandlerImpl implements DDTankSelectMapHandler, Seria
 
     private List<LevelRule> levelRules = new CopyOnWriteArrayList<>();
 
-    private final DDTankConfigProperties properties;
+    private final DDTankCoreTaskProperties properties;
     private DDTankOperate ddtankOperate;
     private DDTankLog ddtLog;
 
-    public DDTankSelectMapHandlerImpl(DDTankConfigProperties properties, DDTankOperate ddtankOperate, DDTankLog ddtLog) {
+    public DDTankSelectMapHandlerImpl(DDTankCoreTaskProperties properties, DDTankOperate ddtankOperate, DDTankLog ddtLog) {
         this.properties = properties;
         this.ddtankOperate = ddtankOperate;
         this.ddtLog = ddtLog;

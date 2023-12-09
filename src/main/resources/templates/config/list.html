@@ -38,11 +38,12 @@
 </body>
 <script>
     function removeConfig(index) {
-        alert("由于未添加数据库，所以配置只是简单的保存在本地，删除操作是根据索引而非是id，因此千万不要连续点击删除按钮!")
-        deleteAjax("/config/" + index, {}, function (data) {
-            alert("删除成功！");
-            location.reload();
-        })
+        if(confirm("由于未添加数据库，所以配置只是简单的保存在本地，删除操作是根据索引而非是id，因此千万不要连续点击删除按钮!点击确定删除本条配置")) {
+            deleteAjax("/config/" + index, {}, function (data) {
+                alert("删除成功！");
+                location.reload();
+            })
+        }
     }
 </script>
 </html>

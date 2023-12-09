@@ -15,18 +15,6 @@
             </div>
         </div>
         <div class="form-group">
-            <label class="control-label col-md-2">版本配置</label>
-            <div class="col-md-10">
-                <select class="form-control" name="version">
-                    <option value="10">10.4</option>
-                    <option value="2">2.3</option>
-                    <option value="2.4">2.4（可爱弹弹堂）</option>
-                    <option value="2">自定义2（待添加）</option>
-                    <option value="2">自定义3（待添加）</option>
-                </select>
-            </div>
-        </div>
-        <div class="form-group">
             <label class="control-label col-md-2">整体配置</label>
             <div class="col-md-10">
                 <select class="form-control" name="propertiesMode">
@@ -41,7 +29,7 @@
                 <div class="checkbox">
                     <label class="control-label">
                         <input type="checkbox" name="needCorrect">
-                        需要矫正
+                        需要矫正（前台模式）
                     </label>
                 </div>
             </div>
@@ -56,9 +44,13 @@
 </body>
 <script>
     $("#form-script-add").submit(function () {
-        postAjax('/script/add', $(this).serialize(), function (data) {
-            windorAlert('提示', '添加成功!');
-        })
+        let scriptName = $(this).find("input[name='name']").val();
+        let propertiesName = $("#form-script-add select[name='propertiesMode'] option:selected").html().trim();
+        if (confirm('确定要添加基于【' + propertiesName + '】的脚本【' + scriptName + '】吗？')) {
+            postAjax('/script/add', $(this).serialize(), function (data) {
+                windorAlert('提示', '添加成功!');
+            })
+        }
         return false;
     })
 </script>

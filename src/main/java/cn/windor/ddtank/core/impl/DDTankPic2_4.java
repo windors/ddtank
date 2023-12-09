@@ -3,10 +3,8 @@ package cn.windor.ddtank.core.impl;
 import cn.windor.ddtank.base.Library;
 import cn.windor.ddtank.base.Mouse;
 import cn.windor.ddtank.base.Point;
-import cn.windor.ddtank.config.DDTankConfigProperties;
+import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 import cn.windor.ddtank.config.DDTankFileConfigProperties;
-import cn.windor.ddtank.util.BinaryPicProcess;
-import cn.windor.ddtank.util.ColorUtils;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
@@ -20,7 +18,7 @@ public class DDTankPic2_4 extends DDTankPic2_3 implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    public DDTankPic2_4(Library dm, String path, DDTankConfigProperties properties, Mouse mouse) {
+    public DDTankPic2_4(Library dm, String path, DDTankCoreTaskProperties properties, Mouse mouse) {
         super(dm, path, properties, mouse);
     }
 

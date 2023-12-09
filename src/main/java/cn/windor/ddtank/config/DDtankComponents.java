@@ -3,18 +3,14 @@ package cn.windor.ddtank.config;
 import cn.windor.ddtank.base.Keyboard;
 import cn.windor.ddtank.base.Mouse;
 import cn.windor.ddtank.base.impl.*;
+import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 import cn.windor.ddtank.mapper.DDTankConfigMapper;
-import cn.windor.ddtank.util.FileUtils;
 import com.jacob.activeX.ActiveXComponent;
-import com.jacob.com.Variant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.io.File;
-import java.io.IOException;
 
 @Configuration
 @Slf4j
@@ -24,8 +20,8 @@ public class DDtankComponents {
     private ConfigurableApplicationContext context;
 
     @Bean
-    public DDTankConfigProperties getDDTankConfigProperties() {
-        return new DDTankConfigProperties(DDTankConfigMapper.getDefaultConfigProperties());
+    public DDTankCoreTaskProperties getDDTankConfigProperties() {
+        return new DDTankCoreTaskProperties(DDTankConfigMapper.getDefaultConfigProperties());
     }
 
     /**

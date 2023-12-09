@@ -1,6 +1,6 @@
 package cn.windor.ddtank.service.impl;
 
-import cn.windor.ddtank.config.DDTankConfigProperties;
+import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 import cn.windor.ddtank.mapper.DDTankConfigMapper;
 import cn.windor.ddtank.service.DDTankConfigService;
 import lombok.extern.slf4j.Slf4j;
@@ -14,41 +14,40 @@ import java.util.List;
 public class DDTankConfigServiceImpl implements DDTankConfigService {
 
 
-
     @Autowired
-    private DDTankConfigProperties config;
+    private DDTankCoreTaskProperties config;
 
     @Autowired
     private DDTankConfigMapper mapper;
 
     @Override
-    public boolean saveDefaultConfig(DDTankConfigProperties newDefaultConfig) {
+    public boolean saveDefaultConfig(DDTankCoreTaskProperties newDefaultConfig) {
         config.update(newDefaultConfig);
         return mapper.saveDefaultConfig(config);
     }
 
     @Override
-    public List<DDTankConfigProperties> list() {
+    public List<DDTankCoreTaskProperties> list() {
         return mapper.list();
     }
 
     @Override
-    public DDTankConfigProperties removeByIndex(int index) {
+    public DDTankCoreTaskProperties removeByIndex(int index) {
         return mapper.removeByIndex(index);
     }
 
     @Override
-    public DDTankConfigProperties getByIndex(int index) {
+    public DDTankCoreTaskProperties getByIndex(int index) {
         return mapper.getByIndex(index);
     }
 
     @Override
-    public boolean add(DDTankConfigProperties properties) {
+    public boolean add(DDTankCoreTaskProperties properties) {
         return mapper.add(properties);
     }
 
     @Override
-    public boolean update(int index, DDTankConfigProperties properties) {
+    public boolean update(int index, DDTankCoreTaskProperties properties) {
         return mapper.updateByIndex(index, properties);
     }
 }

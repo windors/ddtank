@@ -1,6 +1,6 @@
 package cn.windor.ddtank.controller;
 
-import cn.windor.ddtank.config.DDTankConfigProperties;
+import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 import cn.windor.ddtank.service.DDTankConfigService;
 import cn.windor.ddtank.service.DDTankThreadService;
 import cn.windor.dto.HttpResponse;
@@ -21,7 +21,7 @@ public class ConfigController {
      * 保存默认配置
      */
     @PostMapping("default")
-    public HttpResponse updateDefault(DDTankConfigProperties config) {
+    public HttpResponse updateDefault(DDTankCoreTaskProperties config) {
         return HttpResponse.auto(configService.saveDefaultConfig(config));
     }
 
@@ -30,7 +30,7 @@ public class ConfigController {
      */
     @PutMapping("/run/{hwnd}")
     public HttpResponse updateCoreThreadProperties(@PathVariable long hwnd,
-                                                   DDTankConfigProperties properties) {
+                                                   DDTankCoreTaskProperties properties) {
         return HttpResponse.auto(threadService.updateProperties(hwnd, properties));
     }
 
@@ -39,7 +39,7 @@ public class ConfigController {
      */
     @PutMapping("{index}")
     public HttpResponse updateProperties(@PathVariable int index,
-                                                   DDTankConfigProperties properties) {
+                                                   DDTankCoreTaskProperties properties) {
         return HttpResponse.auto(configService.update(index, properties));
     }
 
@@ -56,7 +56,7 @@ public class ConfigController {
      */
     @PostMapping("")
     public HttpResponse addConfig(@RequestParam String name,
-                                  DDTankConfigProperties config) {
+                                  DDTankCoreTaskProperties config) {
         return HttpResponse.auto(configService.add(config));
     }
 }

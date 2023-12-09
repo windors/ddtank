@@ -1,20 +1,20 @@
 package cn.windor.ddtank.service;
 
-import cn.windor.ddtank.config.DDTankConfigProperties;
+import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 
 import java.util.List;
 
 public interface DDTankConfigService {
-    boolean saveDefaultConfig(DDTankConfigProperties newDefaultConfig);
+    boolean saveDefaultConfig(DDTankCoreTaskProperties newDefaultConfig);
 
-    List<DDTankConfigProperties> list();
+    List<DDTankCoreTaskProperties> list();
 
 
-    DDTankConfigProperties removeByIndex(int index);
+    DDTankCoreTaskProperties removeByIndex(int index);
 
-    DDTankConfigProperties getByIndex(int index);
+    DDTankCoreTaskProperties getByIndex(int index);
 
-    boolean add(DDTankConfigProperties properties);
+    boolean add(DDTankCoreTaskProperties properties);
 
-    boolean update(int index, DDTankConfigProperties properties);
+    boolean update(int index, DDTankCoreTaskProperties properties);
 }

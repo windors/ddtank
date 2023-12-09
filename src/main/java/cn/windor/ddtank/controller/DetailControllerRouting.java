@@ -1,6 +1,7 @@
 package cn.windor.ddtank.controller;
 
-import cn.windor.ddtank.core.DDTankCoreThread;
+import cn.windor.ddtank.core.DDTankCoreScript;
+import cn.windor.ddtank.core.DDTankCoreScriptThread;
 import cn.windor.ddtank.service.DDTankScriptService;
 import cn.windor.ddtank.service.DDTankThreadService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,39 +25,42 @@ public class DetailControllerRouting {
     @GetMapping("run/{hwnd}")
     public String runDetail(@PathVariable long hwnd,
                             Map<String, Object> map) {
-        DDTankCoreThread coreThread = ddTankThreadService.getAllStartedThreadMap().get(hwnd);
-        map.put("name", coreThread.getName());
-        map.put("ddtankLog", coreThread.getDDTankLog());
-        map.put("config", coreThread.getProperties());
-        map.put("rules", coreThread.getRules());
-        map.put("username", coreThread.getAccountSignHandler().getUsername());
-        map.put("password", coreThread.getAccountSignHandler().getPassword());
-        map.put("taskAutoComplete", coreThread.getTask().getTaskAutoComplete());
-        map.put("autoUseProp", coreThread.getTask().getAutoUseProp());
-        map.put("passes", coreThread.getPasses());
-        map.put("state", coreThread.getCoreState());
-        map.put("runTime", coreThread.getRunTime());
-        map.put("suspend", coreThread.isSuspend());
+        DDTankCoreScriptThread thread = ddTankThreadService.getThread(hwnd);
+        DDTankCoreScript script = thread.getScript();
+        map.put("name", script.getName());
+        map.put("running", thread.isAlive());
+        map.put("ddtankLog", script.getDDTankLog());
+        map.put("config", script.getProperties());
+        map.put("rules", script.getRules());
+        map.put("username", script.getAccountSignHandler().getUsername());
+        map.put("password", script.getAccountSignHandler().getPassword());
+        map.put("taskAutoComplete", script.getTask().getTaskAutoComplete());
+        map.put("autoUseProp", script.getTask().getAutoUseProp());
+        map.put("passes", script.getPasses());
+        map.put("state", script.getCoreState());
+        map.put("runTime", script.getRunTime());
+        map.put("suspend", script.isSuspend());
         return "detail";
     }
 
     @GetMapping("/script/{index}")
     public String detail(@PathVariable Integer index,
                          Map<String, Object> map) {
-        DDTankCoreThread coreThread = scriptService.getByIndex(index);
+        DDTankCoreScript script = scriptService.getByIndex(index);
         map.put("index", index);
-        map.put("name", coreThread.getName());
-        map.put("ddtankLog", coreThread.getDDTankLog());
-        map.put("config", coreThread.getProperties());
-        map.put("rules", coreThread.getRules());
-        map.put("username", coreThread.getAccountSignHandler().getUsername());
-        map.put("password", coreThread.getAccountSignHandler().getPassword());
-        map.put("taskAutoComplete", coreThread.getTask().getTaskAutoComplete());
-        map.put("autoUseProp", coreThread.getTask().getAutoUseProp());
-        map.put("passes", coreThread.getPasses());
-        map.put("state", coreThread.getCoreState());
-        map.put("runTime", coreThread.getRunTime());
-        map.put("suspend", coreThread.isSuspend());
+        map.put("name", script.getName());
+        map.put("running", ddTankThreadService.isRunning(script));
+        map.put("ddtankLog", script.getDDTankLog());
+        map.put("config", script.getProperties());
+        map.put("rules", script.getRules());
+        map.put("username", script.getAccountSignHandler().getUsername());
+        map.put("password", script.getAccountSignHandler().getPassword());
+        map.put("taskAutoComplete", script.getTask().getTaskAutoComplete());
+        map.put("autoUseProp", script.getTask().getAutoUseProp());
+        map.put("passes", script.getPasses());
+        map.put("state", script.getCoreState());
+        map.put("runTime", script.getRunTime());
+        map.put("suspend", script.isSuspend());
         return "script/detail";
     }
 }

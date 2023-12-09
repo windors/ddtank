@@ -3,11 +3,11 @@ package cn.windor.ddtank.service.impl;
 import cn.windor.ddtank.base.*;
 import cn.windor.ddtank.config.DDTankStartParam;
 import cn.windor.ddtank.core.*;
-import cn.windor.ddtank.config.DDTankConfigProperties;
+import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 import cn.windor.ddtank.entity.LevelRule;
 import cn.windor.ddtank.handler.DDTankHwndMarkHandler;
 import cn.windor.ddtank.handler.impl.DDTankHwndMarkHandlerImpl;
-import cn.windor.ddtank.service.DDTankConfigService;
+import cn.windor.ddtank.service.DDTankMarkHwndService;
 import cn.windor.ddtank.service.DDTankThreadService;
 import com.melloware.jintellitype.HotkeyListener;
 import com.melloware.jintellitype.JIntellitype;
@@ -15,10 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -31,109 +28,61 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
     @Autowired
     private Library dm;
 
-    public static final int SHORTCUT_START = 1; // 模拟任务开始快捷键
-    public static final int SHORTCUT_STOP = 2; // 模拟手动结束任务快捷键
+    @Autowired
+    private DDTankMarkHwndService markHwndService;
 
     // 用来批量执行停止任务
     private static final ExecutorService threadPool = Executors.newCachedThreadPool();
 
-    private static final Map<Long, DDTankCoreThread> threadMap = new ConcurrentHashMap<>();
-
-    private static final Map<Long, DDTankStartParam> waitStartMap = new ConcurrentHashMap<>();
-
-    private final DDTankHwndMarkHandler DDTankHwndMarkHandler;
-
-    public DDTankThreadServiceImpl(Library dm) {
-        this.dm = dm;
-        DDTankHwndMarkHandler = new DDTankHwndMarkHandlerImpl(dm);
-        JIntellitype.getInstance().registerHotKey(SHORTCUT_START, JIntellitype.MOD_ALT, '1');
-        JIntellitype.getInstance().registerHotKey(SHORTCUT_STOP,
-                JIntellitype.MOD_CONTROL + JIntellitype.MOD_ALT, '1');
-        JIntellitype.getInstance().addHotKeyListener(new DDtankHotkeyListener()); // 添加监听
-        log.info("正在监听快捷键");
-    }
-
-    @Override
-    public void changeStartShortcut(int modifier, char keycode) {
-        JIntellitype.getInstance().registerHotKey(SHORTCUT_START, modifier, keycode);
-    }
-
-    @Override
-    public void removeStartShortcut() {
-        JIntellitype.getInstance().unregisterHotKey(SHORTCUT_START); // 移除快捷键 FIRST_SHORTCUT
-    }
-
-    @Override
-    public Map<Long, DDTankCoreThread> getAllStartedThreadMap() {
-        return this.threadMap;
-    }
-
-    @Override
-    public Map<Long, DDTankStartParam> getWaitStartMap() {
-        for (Long hwnd : waitStartMap.keySet()) {
-            if (!dm.getWindowState(hwnd, 0)) {
-                log.warn("检测到窗口关闭，已自动移除待启动脚本");
-                waitStartMap.remove(hwnd);
-            }
-        }
-        return this.waitStartMap;
-    }
+    /**
+     * 窗口-脚本线程映射，脚本的启动/重启/停止都由该变量维护
+     */
+    private static final Map<Long, DDTankCoreScriptThread> threadMap = new ConcurrentHashMap<>();
 
     /**
      * 启动脚本
      */
     @Override
-    public synchronized boolean start(long hwnd, String version, String name, DDTankConfigProperties startProperties) {
-        if (threadMap.get(hwnd) != null) {
-            DDTankCoreThread coreThread = threadMap.get(hwnd);
-            if (!coreThread.restartTask()) {
-                log.warn("请勿重复启动，当前窗口已正在运行脚本");
+    public boolean start(DDTankCoreScript coreScript) {
+        long hwnd = coreScript.getHwnd();
+        DDTankCoreScriptThread thread;
+        synchronized (threadMap) {
+            if ((thread = threadMap.get(hwnd)) != null) {
+                // 指定脚本已保存在线程映射中
+                DDTankCoreScript script = thread.getScript();
+                if (script == coreScript) {
+                    if (!thread.isAlive()) {
+                        // 如果脚本线程已停止运行则再次启动脚本
+                        thread = new DDTankCoreScriptThread(script);
+                        threadMap.put(hwnd, thread);
+                    }
+                    return true;
+                }else {
+                    log.warn("启动失败，当前窗口[{}]已绑定脚本[{}]", hwnd, thread.getScript().getName());
+                    return false;
+                }
+            } else {
+                // 当前窗口未运行过脚本，则直接启动脚本即可。
+                thread = new DDTankCoreScriptThread(coreScript);
+                thread.start();
+                threadMap.put(hwnd, thread);
+                markHwndService.removeByHwnd(hwnd);
+                return true;
             }
-            return false;
-        } else {
-            DDTankStartParam startParam = waitStartMap.remove(hwnd);
-            startParam.setName(name);
-            // 1. 创建任务
-            DDTankCoreThread thread = new DDTankCoreThread(hwnd, version, startProperties, startParam);
-            threadMap.put(hwnd, thread);
-
-            // 2. 启动线程
-            thread.start();
-            return true;
         }
     }
 
     @Override
-    public Long mark() {
-        long hwnd = dm.getMousePointWindow();
-        if (DDTankHwndMarkHandler.isLegalHwnd(hwnd)) {
-            long legalHwnd = DDTankHwndMarkHandler.getLegalHwnd(hwnd);
-            synchronized (this) {
-                DDTankCoreThread coreThread = threadMap.get(hwnd);
-                if (coreThread != null) {
-                    log.info("窗口[{}]已记录在首页中，对应脚本名称为[{}]；若需启动当前脚本请在首页点击重启按钮；若需要更换版本配置请在首页手动将脚本移除后再次尝试", hwnd, coreThread.getName());
-                } else if (waitStartMap.get(hwnd) == null) {
-                    if (legalHwnd == hwnd) {
-                        log.info("已成功记录当前窗口[{}]，请前往配置页面设置启动参数", hwnd);
-                        waitStartMap.put(hwnd, new DDTankStartParam());
-                    } else {
-                        log.warn("当前窗口[{}]为前台模式（脚本启动后鼠标和键盘操作都将变为前台），请勿随意调整窗口大小和最小化。若需要使用后台模式请将浏览器设置为兼容模式", hwnd);
-                        if (waitStartMap.get(legalHwnd) == null) {
-                            waitStartMap.put(legalHwnd, new DDTankStartParam(true));
-                            log.info("已记录当前顶层窗口{}", legalHwnd);
-                        } else {
-                            log.info("当前标签栏{}已被记录，前台模式多开请将标签栏拖出为一个新的窗口", legalHwnd);
-                        }
-                    }
-                } else {
-                    log.info("已记录过当前窗口[{}]，请前往配置页面设置启动参数", hwnd);
-                }
-            }
-        } else {
-            log.warn("当前窗口未通过脚本预设值！");
+    public boolean start(DDTankCoreScriptThread coreScriptThread) {
+        if(coreScriptThread.getState() == Thread.State.TERMINATED) {
+            // 如果线程终止则调用start(script)
+            return start(new DDTankCoreScriptThread(coreScriptThread.getScript()));
         }
-        return hwnd;
+
+        // 否则现有线程可以
+        return false;
     }
+
 
     /**
      * 停止脚本
@@ -146,9 +95,13 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
         int result = 0;
         List<Callable<Boolean>> stopThreadList = new ArrayList<>(hwnds.size());
         for (Long hwnd : hwnds) {
-            DDTankCoreThread thread = threadMap.get(hwnd);
+            DDTankCoreScriptThread thread = threadMap.get(hwnd);
             if (thread == null) {
-                // 未找到指定脚本，尝试从父窗口中查找（前台模式绑定的是顶层父窗口）
+                // 未找到指定脚本，有可能是在换绑后前端未刷新仍然传送的旧句柄，先进行窗口存在检测
+                if(!dm.getWindowState(hwnd, 0)) {
+                    continue;
+                }
+                // 窗口未失效，尝试从父窗口中查找（前台模式绑定的是顶层父窗口）
                 hwnd = dm.getWindow(hwnd, 7);
                 thread = threadMap.get(hwnd);
                 if (thread == null) {
@@ -156,7 +109,7 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
                     continue;
                 }
             }
-            final DDTankCoreThread finalThread = thread;
+            final DDTankCoreScriptThread finalThread = thread;
             result++;
             stopThreadList.add(() -> {
                 finalThread.tryStop();
@@ -175,12 +128,12 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
 
 
     @Override
-    public boolean updateProperties(long hwnd, DDTankConfigProperties config) {
-        DDTankCoreThread thread = threadMap.get(hwnd);
+    public boolean updateProperties(long hwnd, DDTankCoreTaskProperties config) {
+        DDTankCoreScriptThread thread = threadMap.get(hwnd);
         if (thread == null) {
             return false;
         }
-        thread.updateProperties(config);
+        thread.getScript().updateProperties(config);
         return true;
     }
 
@@ -196,7 +149,7 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
         List<Long> aliveHwnds = new ArrayList<>(hwnds.size());
         List<Long> legalHwnds = new ArrayList<>(hwnds.size());
         for (Long hwnd : hwnds) {
-            DDTankCoreThread thread = threadMap.get(hwnd);
+            DDTankCoreScriptThread thread = threadMap.get(hwnd);
             if (thread == null) {
                 // 未找到指定脚本，尝试从父窗口中查找（前台模式绑定的是顶层父窗口）
                 hwnd = dm.getWindow(hwnd, 7);
@@ -219,13 +172,13 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
         result += stop(aliveHwnds);
 
         for (Long hwnd : legalHwnds) {
-            DDTankCoreThread thread = threadMap.get(hwnd);
+            DDTankCoreScriptThread thread = threadMap.get(hwnd);
             if (thread == null) {
                 // 未找到指定脚本，尝试从父窗口中查找（前台模式绑定的是顶层父窗口）
                 hwnd = dm.getWindow(hwnd, 7);
                 thread = threadMap.get(hwnd);
             }
-            thread = new DDTankCoreThread(thread);
+            thread = new DDTankCoreScriptThread(thread.getScript());
             threadMap.put(hwnd, thread);
             thread.start();
         }
@@ -234,7 +187,7 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
 
     @Override
     public boolean remove(long hwnd) {
-        DDTankCoreThread coreThread = threadMap.remove(hwnd);
+        DDTankCoreScriptThread coreThread = threadMap.remove(hwnd);
         if (coreThread == null) {
             return false;
         }
@@ -246,92 +199,116 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
 
     @Override
     public synchronized boolean rebind(long hwnd, long newHwnd) {
-        // 1. 尝试标记 newHwnd
-        if (!DDTankHwndMarkHandler.isLegalHwnd(newHwnd)) {
-            log.error("重绑定失败，检测到窗口{}非法！", newHwnd);
+        long newLegalHwnd = markHwndService.getLegalHwnd(newHwnd);
+        if(newLegalHwnd == 0) {
+            log.error("重绑定失败：新窗口无效！");
             return false;
         }
 
-        long newLegalHwnd = DDTankHwndMarkHandler.getLegalHwnd(newHwnd);
-
-        if (threadMap.get(newLegalHwnd) != null) {
+        if (threadMap.get(newHwnd) != null) {
             log.error("重绑定失败：新窗口已绑定到{}！", threadMap.get(newLegalHwnd).getName());
             return false;
         }
 
-        // 2. 获取hwnd所挂脚本的状态, 如果线程未停止则先停止线程
-        DDTankCoreThread coreThread = threadMap.get(hwnd);
+        // 2. 获取hwnd所挂脚本的状态
+        DDTankCoreScriptThread coreThread = threadMap.get(hwnd);
         if (coreThread == null) {
-            log.error("重绑定失败，检测到脚本{}已被移除，请重新创建脚本！", hwnd);
+            log.error("重绑定失败：检测到窗口{}绑定脚本已被移除，请重新创建脚本！", hwnd);
             return false;
         }
         if (coreThread.isAlive()) {
-            return coreThread.rebind(newHwnd, true);
+            // 线程还在运行，调用内部的hwnd自行重绑定即可
+            return coreThread.getScript().rebind(newLegalHwnd, true);
         } else {
-            // 3. 调用线程的重绑定方法
-            coreThread = new DDTankCoreThread(coreThread, newLegalHwnd, newLegalHwnd != newHwnd);
+            // 线程终止，直接改变hwnd即可
+            DDTankCoreScript script = coreThread.getScript();
+            script.setHwnd(newLegalHwnd);
+            coreThread = new DDTankCoreScriptThread(script);
             coreThread.start();
-            // 4. 重绑定成功，移除标记中的该窗口句柄
-            waitStartMap.remove(newHwnd);
+            // 移除等待队列中的newHwnd
+            markHwndService.removeByHwnd(newHwnd);
             threadMap.remove(hwnd);
-            threadMap.put(newHwnd, coreThread);
+            threadMap.put(newLegalHwnd, coreThread);
         }
         return true;
     }
 
     @Override
     public boolean addRule(long hwnd, LevelRule rule) {
-        DDTankCoreThread coreThread = threadMap.get(hwnd);
+        DDTankCoreScriptThread coreThread = threadMap.get(hwnd);
         if (coreThread == null) {
             return false;
         }
 
-        return coreThread.addRule(rule);
+        return coreThread.getScript().addRule(rule);
     }
 
     @Override
     public boolean removeRule(long hwnd, int index) {
-        DDTankCoreThread coreThread = threadMap.get(hwnd);
+        DDTankCoreScriptThread coreThread = threadMap.get(hwnd);
         if (coreThread == null) {
             return false;
         }
-        return coreThread.removeRule(index);
+        return coreThread.getScript().removeRule(index);
     }
 
     @Override
-    public boolean setAutoReconnect(DDTankCoreThread coreThread, String username, String password) {
+    public boolean setAutoReconnect(DDTankCoreScript coreThread, String username, String password) {
         if (coreThread == null) {
             return false;
         }
         return coreThread.setAutoReconnect(username, password);
     }
 
-    public synchronized static boolean changeBindHwnd(long hwnd, long newHwnd) {
+    @Override
+    public DDTankCoreScript get(long hwnd) {
+        DDTankCoreScriptThread scriptThread = threadMap.get(hwnd);
+        if(scriptThread == null) {
+            return null;
+        }
+        return scriptThread.getScript();
+    }
+
+    @Override
+    public DDTankCoreScriptThread getThread(long hwnd) {
+        return threadMap.get(hwnd);
+    }
+
+    @Override
+    public boolean isRunning(DDTankCoreScript script) {
+        for (DDTankCoreScriptThread thread : threadMap.values()) {
+            if(thread.getScript() == script) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    @Override
+    public Map<Long, DDTankCoreScript> getAllStartedScriptMap() {
+        Map<Long, DDTankCoreScript> scriptMap = new HashMap<>();
+        for (Long hwnd : threadMap.keySet()) {
+            scriptMap.put(hwnd, threadMap.get(hwnd).getScript());
+        }
+        return scriptMap;
+    }
+
+    /**
+     * 提供给正在运行中的脚本的重绑定方法，用于不停止/重启的内部重绑定
+     * @param hwnd
+     * @param newHwnd
+     * @return
+     */
+    public static boolean changeBindHwnd(long hwnd, long newHwnd) {
         threadMap.put(newHwnd, threadMap.remove(hwnd));
         return true;
     }
 
-    class DDtankHotkeyListener implements HotkeyListener {
-        @Override
-        public void onHotKey(int identifier) {
-            switch (identifier) {
-                case SHORTCUT_START: {
-                    mark();
-                    break;
-                }
-                case SHORTCUT_STOP: {
-                    long hwnd = dm.getMousePointWindow();
-                    try {
-                        stop(Collections.singletonList(hwnd));
-                    } catch (InterruptedException e) {
-                        log.warn("脚本已在停止");
-                        throw new RuntimeException(e);
-                    }
-                    break;
-                }
-                default:
-                    log.info("监听了此快捷键但是未定义其行为");
-            }
+    public static DDTankCoreScript getRunningScript(long hwnd) {
+        DDTankCoreScriptThread scriptThread = threadMap.get(hwnd);
+        if(scriptThread == null) {
+            return null;
         }
+        return scriptThread.getScript();
     }
 }

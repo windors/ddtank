@@ -1,16 +1,16 @@
 package cn.windor.ddtank.service;
 
-import cn.windor.ddtank.core.DDTankCoreThread;
+import cn.windor.ddtank.core.DDTankCoreScript;
 import cn.windor.ddtank.entity.LevelRule;
 
 public interface DDTankDetailService {
-    boolean setTaskAutoComplete(DDTankCoreThread coreThread, int taskAutoComplete);
+    boolean setTaskAutoComplete(DDTankCoreScript coreThread, int taskAutoComplete);
 
-    boolean setAutoUseProp(DDTankCoreThread coreThread, int autoUseProp);
+    boolean setAutoUseProp(DDTankCoreScript coreThread, int autoUseProp);
 
-    boolean setAutoReconnect(DDTankCoreThread coreThread, String username, String password);
+    boolean setAutoReconnect(DDTankCoreScript coreThread, String username, String password);
 
-    boolean addRule(DDTankCoreThread coreThread, LevelRule levelRule);
+    boolean addRule(DDTankCoreScript coreThread, LevelRule levelRule);
 
-    boolean removeRule(DDTankCoreThread coreThread, int index);
+    boolean removeRule(DDTankCoreScript coreThread, int index);
 }

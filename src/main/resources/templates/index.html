@@ -88,20 +88,8 @@
                             <div class="col-md-2">
                                 <input class="form-control" th:value="${waitStartMap.get(hwnd).name}" name="name"/>
                             </div>
-                            <label class="col-md-2 control-label">版本配置</label>
-                            <div class="col-md-6">
-                                <select class="form-control" name="version">
-                                    <option value="10">10.4</option>
-                                    <option value="2">2.3</option>
-                                    <option value="2.4">2.4（可爱弹弹堂）</option>
-                                    <option value="2">自定义2（待添加）</option>
-                                    <option value="2">自定义3（待添加）</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group" th:fragment="before">
                             <label class="col-md-2 control-label">整体配置</label>
-                            <div class="col-md-10">
+                            <div class="col-md-6">
                                 <select class="form-control" name="propertiesMode">
                                     <option value="0">* 默认配置</option>
                                     <option th:value="${n.count}" th:each="config, n:${configList}">[[${config.name}]]
@@ -123,18 +111,6 @@
             <div role="tabpanel" id="allHwnds" class="tab-pane">
                 <form id="start-all-form" class="form-horizontal">
                     <div th:replace="common/form-base :: form-base(${@getDDTankConfigProperties}, ~{::all-before}, ~{::all-end})">
-                        <div class="form-group" th:fragment="all-before">
-                            <label class="col-md-2 control-label">版本配置</label>
-                            <div class="col-md-10">
-                                <select class="form-control" name="version">
-                                    <option value="10">10.4</option>
-                                    <option value="2">2.3</option>
-                                    <option value="2.4">2.4（可爱弹弹堂）</option>
-                                    <option value="2">自定义2（待添加）</option>
-                                    <option value="2">自定义3（待添加）</option>
-                                </select>
-                            </div>
-                        </div>
                         <div class="form-group" th:fragment="all-before">
                             <label class="col-md-2 control-label">整体配置</label>
                             <div class="col-md-10">
@@ -181,9 +157,9 @@
                     <th class="text-center">操作</th>
                 </tr>
                 <!--遍历集合，获取到每一个线程传输对象-->
-                <tr th:each="threadDto:${classifiedStartedMap.get(configName)}" th:with="hwnd=${threadDto.hwnd}, coreThread=${threadDto.coreThread}">
+                <tr th:each="threadDto:${classifiedStartedMap.get(configName)}" th:with="hwnd=${threadDto.hwnd}, coreThread=${threadDto.getScript}">
                     <td><input type="checkbox" name="hwnd" th:value="${hwnd}"/></td>
-                    <td th:text="${coreThread.getGameHwnd()}"></td>
+                    <td th:text="${coreThread.getHwnd()}"></td>
                     <td th:text="${coreThread.name}"></td>
                     <td class="ddt-state" th:text="${coreThread.coreState.getMsg()}"></td>
                     <td th:utext="${coreThread.getCurrentLog().msg}"></td>

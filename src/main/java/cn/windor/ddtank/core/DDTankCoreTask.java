@@ -8,7 +8,6 @@ import cn.windor.ddtank.base.impl.DMKeyboard;
 import cn.windor.ddtank.base.impl.DMLibrary;
 import cn.windor.ddtank.base.impl.DMMouse;
 import cn.windor.ddtank.base.impl.LibraryFactory;
-import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.config.DDTankFileConfigProperties;
 import cn.windor.ddtank.core.impl.*;
 import cn.windor.ddtank.entity.LevelRule;
@@ -21,7 +20,7 @@ import cn.windor.ddtank.core.impl.DDTankCoreAttackHandlerImpl;
 import cn.windor.ddtank.handler.impl.DDTankSelectMapHandlerImpl;
 import cn.windor.ddtank.handler.impl.DDTankAutoCompleteHandlerImpl;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
-import cn.windor.ddtank.util.ActiveXComponentUtils;
+import cn.windor.ddtank.util.DDTankComplexObjectUpdateUtils;
 import cn.windor.ddtank.util.VariantUtils;
 import com.jacob.com.ComThread;
 import lombok.Getter;
@@ -44,9 +43,6 @@ public class DDTankCoreTask implements Runnable, Serializable {
     // 游戏句柄
     transient long hwnd;
 
-    // 游戏版本，脚本在运行后会根据该字符串去创建相关检测和操作类
-    String version;
-
     protected DDTankLog ddtLog;
 
     @Getter
@@ -55,7 +51,7 @@ public class DDTankCoreTask implements Runnable, Serializable {
 
     @Getter
     // 整体设置
-    protected DDTankConfigProperties properties;
+    protected DDTankCoreTaskProperties properties;
 
     // 脚本开始时间
     private long startTime = -1;
@@ -114,14 +110,12 @@ public class DDTankCoreTask implements Runnable, Serializable {
      * 普通的新建任务方法
      *
      * @param hwnd
-     * @param version
      * @param properties
      * @param needCorrect
      */
-    public DDTankCoreTask(long hwnd, String version, DDTankConfigProperties properties, boolean needCorrect) {
+    public DDTankCoreTask(long hwnd, DDTankCoreTaskProperties properties, boolean needCorrect) {
         this.ddtLog = new DDTankLog();
         this.hwnd = hwnd;
-        this.version = version;
         this.coreState.set(CoreThreadStateEnum.WAITING_START);
         this.properties = properties;
         this.needCorrect = needCorrect;
@@ -131,19 +125,7 @@ public class DDTankCoreTask implements Runnable, Serializable {
         this.mouse = new DMMouse(dm.getSource());
         this.keyboard = new DMKeyboard(dm.getSource());
 
-        String picDir = new File(DDTankFileConfigProperties.getBaseDir(), properties.getPicDir()).getAbsolutePath() + "/";
-        if ("10".equals(version)) {
-            this.ddtankPic = new DDTankPic10_4(dm, picDir, properties, mouse);
-        } else if ("2.4".equalsIgnoreCase(version)) {
-            this.ddtankPic = new DDTankPic2_4(dm, picDir, properties, mouse);
-        } else {
-            this.ddtankPic = new DDTankPic2_3(dm, picDir, properties, mouse);
-        }
-        if ("10".equals(version)) {
-            this.ddtankOperate = new DDtankOperate10_4(dm, mouse, keyboard, ddtankPic, properties);
-        } else {
-            this.ddtankOperate = new DDtankOperate2_3(dm, mouse, keyboard, ddtankPic, properties);
-        }
+
         this.ddTankCoreAttackHandler = new DDTankCoreAttackHandlerImpl(properties, keyboard, ddtankPic, ddtankOperate, ddtLog);
         this.ddtankSelectMapHandler = new DDTankSelectMapHandlerImpl(properties, ddtankOperate, ddtLog);
         this.ddTankTaskAutoCompleteHandler = new DDTankAutoCompleteHandlerImpl(keyboard, mouse);
@@ -159,7 +141,6 @@ public class DDTankCoreTask implements Runnable, Serializable {
     public DDTankCoreTask(DDTankCoreTask task) {
         this.ddtLog = task.ddtLog;
         this.hwnd = task.hwnd;
-        this.version = task.version;
         this.coreState.set(CoreThreadStateEnum.WAITING_START);
         this.properties = task.properties;
         this.passes = task.passes;
@@ -171,8 +152,6 @@ public class DDTankCoreTask implements Runnable, Serializable {
         this.needCorrect = task.needCorrect;
         this.offsetX = task.offsetX;
         this.offsetY = task.offsetY;
-        this.ddtankPic = task.ddtankPic;
-        this.ddtankOperate = task.ddtankOperate;
         this.keyboard = task.keyboard;
         this.mouse = task.mouse;
         this.ddTankCoreAttackHandler = task.ddTankCoreAttackHandler;
@@ -208,9 +187,33 @@ public class DDTankCoreTask implements Runnable, Serializable {
             }
         }
 
+        // 重新开始计时
+        runTime = getRunTime();
+        if(runTime < 0) {
+            log.error("时间算法有误，请");
+        }
+        startTime = System.currentTimeMillis();
+        endTime = -1;
+
         // 跳过过场动画
         mouse.moveAndClick(21, 519);
-        ActiveXComponentUtils.update(this, () -> dm.getSource());
+
+        // 更新对象
+        String picDir = new File(DDTankFileConfigProperties.getBaseDir(), properties.getPicDir()).getAbsolutePath() + "/";
+        String version = properties.getVersion();
+        if ("10".equals(version)) {
+            this.ddtankPic = new DDTankPic10_4(dm, picDir, properties, mouse);
+        } else if ("2.4".equalsIgnoreCase(version)) {
+            this.ddtankPic = new DDTankPic2_4(dm, picDir, properties, mouse);
+        } else {
+            this.ddtankPic = new DDTankPic2_3(dm, picDir, properties, mouse);
+        }
+        if ("10".equals(version)) {
+            this.ddtankOperate = new DDtankOperate10_4(dm, mouse, keyboard, ddtankPic, properties);
+        } else {
+            this.ddtankOperate = new DDtankOperate2_3(dm, mouse, keyboard, ddtankPic, properties);
+        }
+        DDTankComplexObjectUpdateUtils.update(this, dm.getSource(), ddtankPic, ddtankOperate);
 
         // 首次启动时向控制台说明当前为前台模式启动，重启等操作就不会再重复
         if (!isAutoRestart && needCorrect) {
@@ -317,7 +320,7 @@ public class DDTankCoreTask implements Runnable, Serializable {
 
                             if (ddtankPic.needChooseMap()) {
                                 ddtankSelectMapHandler.select(passes);
-                                if ("10".equals(version)) {
+                                if ("10".equals(properties.getVersion())) {
                                     delay(1000, true);
                                 }
                             }

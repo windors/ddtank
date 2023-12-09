@@ -34,9 +34,7 @@ public class ThreadUtils {
         long start = System.currentTimeMillis();
         try {
             if (millis > 0) {
-                log.info("等待。。。");
                 Thread.sleep(millis);
-                log.info("等待结束...");
             }
         } catch (Exception e) {
             long need = millis - (System.currentTimeMillis() - start);

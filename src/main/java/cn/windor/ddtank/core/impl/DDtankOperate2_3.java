@@ -3,7 +3,7 @@ package cn.windor.ddtank.core.impl;
 import cn.windor.ddtank.base.Keyboard;
 import cn.windor.ddtank.base.Library;
 import cn.windor.ddtank.base.Mouse;
-import cn.windor.ddtank.config.DDTankConfigProperties;
+import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 import cn.windor.ddtank.core.DDTankPic;
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,7 +14,7 @@ import static cn.windor.ddtank.util.ThreadUtils.delay;
 @Slf4j
 public class DDtankOperate2_3 extends DDtankOperate10_4 implements Serializable {
     private static final long serialVersionUID = 1L;
-    public DDtankOperate2_3(Library dm, Mouse mouse, Keyboard keyboard, DDTankPic ddTankPic, DDTankConfigProperties properties) {
+    public DDtankOperate2_3(Library dm, Mouse mouse, Keyboard keyboard, DDTankPic ddTankPic, DDTankCoreTaskProperties properties) {
         super(dm, mouse, keyboard, ddTankPic, properties);
     }
 

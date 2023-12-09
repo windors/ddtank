@@ -1,35 +1,38 @@
-package cn.windor.ddtank.config;
+package cn.windor.ddtank.core;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.io.Serializable;
-import java.lang.reflect.Field;
 
 @Slf4j
 @Getter
 @Setter
 @ToString
 @NoArgsConstructor
-public class DDTankConfigProperties implements Serializable, Cloneable {
+public class DDTankCoreTaskProperties implements Serializable, Cloneable {
 
     private static final long serialVersionUID = 1L;
 
     @Override
-    public DDTankConfigProperties clone() {
+    public DDTankCoreTaskProperties clone() {
         try {
             Object clone = super.clone();
-            return (DDTankConfigProperties) clone;
+            return (DDTankCoreTaskProperties) clone;
         } catch (CloneNotSupportedException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public synchronized void update(DDTankConfigProperties properties) {
+    public synchronized void update(DDTankCoreTaskProperties properties) {
+        this.enemyOffsetX = properties.enemyOffsetX;
+        this.enemyOffsetY = properties.enemyOffsetY;
+        this.myOffsetX = properties.myOffsetX;
+        this.myOffsetY = properties.myOffsetY;
+        this.version = properties.version;
         this.bindDisplay = properties.bindDisplay;
         this.bindMouse = properties.bindMouse;
         this.bindKeypad = properties.bindKeypad;
@@ -78,7 +81,7 @@ public class DDTankConfigProperties implements Serializable, Cloneable {
         this.attackDelay = properties.attackDelay;
     }
 
-    public DDTankConfigProperties(DDTankConfigProperties defaultConfig) {
+    public DDTankCoreTaskProperties(DDTankCoreTaskProperties defaultConfig) {
         if(defaultConfig != null) {
             update(defaultConfig);
         }
@@ -88,15 +91,25 @@ public class DDTankConfigProperties implements Serializable, Cloneable {
 
     private volatile String name = "默认";
 
+    private volatile String version = "10";
+
     private volatile String bindDisplay = "dx2";
 
     private volatile String bindMouse = "dx2";
 
     private volatile String bindKeypad = "dx";
 
-    private volatile String bindPublic = "dx.public.active.message";
+    private volatile String bindPublic = "dx.public.active.message|dx.public.input.ime";
 
     private volatile Integer bindMode = 0;
+
+    private volatile Integer enemyOffsetX = 0;
+
+    private volatile Integer enemyOffsetY = 0;
+
+    private volatile Integer myOffsetX = 0;
+
+    private volatile Integer myOffsetY = 0;
 
     // 关卡模式
     private volatile Double levelMode = 10.0;

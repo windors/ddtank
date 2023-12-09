@@ -13,16 +13,16 @@
 </head>
 <body>
 <div class="row">
-    <div class="alert alert-warning alert-dismissible fade in" role="alert" th:if="${startedThreadMap.size() == 0}">
+    <div class="alert alert-warning alert-dismissible fade in" role="alert" th:if="${startedScriptMap.size() == 0}">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>
         当前无已启动的脚本，启动脚本后请 <a href="">刷新</a>
     </div>
-    <div th:if="${startedThreadMap.size() > 0}" style="margin-bottom: 20px">
+    <div th:if="${startedScriptMap.size() > 0}" style="margin-bottom: 20px">
         <select id="select-debug" class="form-control">
             <option value="-1">请选择测试环境</option>
-            <option th:value="${hwnd}" th:each="hwnd:${startedThreadMap.keySet()}" th:selected="${startedThreadMap.get(hwnd).isSuspend()}">[[${startedThreadMap.get(hwnd).name}]]</option>
+            <option th:value="${hwnd}" th:each="hwnd:${startedScriptMap.keySet()}" th:selected="${startedScriptMap.get(hwnd).isSuspend()}">[[${startedThreadMap.get(hwnd).name}]]</option>
         </select>
     </div>
 </div>

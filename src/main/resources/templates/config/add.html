@@ -26,11 +26,22 @@
             </div>
             <div th:fragment="end">
                 <div class="col-md-offset-10 col-md-2">
-                    <button class=" btn btn-default" type="button" style="width: 100%">新增</button>
+                    <button class=" btn btn-default" type="submit" style="width: 100%">新增</button>
                 </div>
             </div>
         </div>
     </form>
 </div>
 </body>
+<script>
+    $("#configAddForm").submit(function () {
+        let configName = $("#configAddForm input[name='name']").val();
+        if(confirm("确定要添加新配置【" + configName + "】吗？")) {
+            postAjax("/config", $(this).serialize(), function () {
+                windorAlert('提示', '配置添加成功！');
+            })
+        }
+        return false;
+    })
+</script>
 </html>

@@ -1,6 +1,6 @@
 package cn.windor.ddtank.dto;
 
-import cn.windor.ddtank.core.DDTankCoreThread;
+import cn.windor.ddtank.core.DDTankCoreScript;
 import lombok.Getter;
 
 public class StartedDDTankCoreThreadDTO {
@@ -8,10 +8,10 @@ public class StartedDDTankCoreThreadDTO {
     private final long hwnd;
 
     @Getter
-    private final DDTankCoreThread coreThread;
+    private final DDTankCoreScript script;
 
-    public StartedDDTankCoreThreadDTO(long hwnd, DDTankCoreThread coreThread) {
+    public StartedDDTankCoreThreadDTO(long hwnd, DDTankCoreScript script) {
         this.hwnd = hwnd;
-        this.coreThread = coreThread;
+        this.script = script;
     }
 }

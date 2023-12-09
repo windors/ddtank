@@ -1,7 +1,6 @@
 package cn.windor.ddtank.core;
 
 import cn.windor.ddtank.base.Keyboard;
-import cn.windor.ddtank.config.DDTankConfigProperties;
 import cn.windor.ddtank.handler.DDTankAngleAdjustMoveHandler;
 import cn.windor.ddtank.handler.DDTankFindPositionMoveHandler;
 import cn.windor.ddtank.handler.impl.SimpleDDTankAngleAdjustMoveHandlerHandlerImpl;
@@ -18,9 +17,9 @@ public class DDTankCoreHandlerSelector implements Serializable {
     private final Map<Integer, DDTankAngleAdjustMoveHandler> angleMoveHandlerMap = new ConcurrentHashMap<>();
     private final Map<Integer, DDTankFindPositionMoveHandler> positionMoveHandlerMap = new ConcurrentHashMap<>();
 
-    private final DDTankConfigProperties properties;
+    private final DDTankCoreTaskProperties properties;
 
-    public DDTankCoreHandlerSelector(Keyboard keyboard, DDTankConfigProperties properties) {
+    public DDTankCoreHandlerSelector(Keyboard keyboard, DDTankCoreTaskProperties properties) {
         this.properties = properties;
         angleMoveHandlerMap.put(0, new SimpleDDTankAngleAdjustMoveHandlerHandlerImpl(keyboard));
         positionMoveHandlerMap.put(0, new SimpleDDTankFindPositionMoveHandlerImpl(keyboard));

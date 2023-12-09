@@ -51,6 +51,7 @@
 .detail-panel-head-wrapper {
     display: flex;
     align-items: center;
+    justify-content: space-between;
 }
 
 .detail-panel-head-title {
