@@ -75,8 +75,8 @@ public class DDTankCoreScript implements Serializable, Runnable {
         this.name = name;
         this.task = new DDTankCoreTask(this.hwnd, properties, needCorrect);
         this.dm = new DMLibrary();
-        this.taskRefindHandler = new DDTankRefindByNewWindow(dm, task.ddtLog, new SimpleDDTankAccountSignHandlerImpl(dm, new DMMouse(dm.getSource()), new DMKeyboard(dm.getSource())), task.properties);
         this.accountSignHandler = new SimpleDDTankAccountSignHandlerImpl(dm, new DMMouse(dm.getSource()), new DMKeyboard(dm.getSource()));
+        this.taskRefindHandler = new DDTankRefindByNewWindow(dm, task.ddtLog, accountSignHandler, task.properties);
         this.stuckCheckDetectionHandler = new DDTankStuckCheckDetectionByLog(task.ddtLog);
     }
 
