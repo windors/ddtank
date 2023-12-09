@@ -195,5 +195,6 @@ public class DDTankCoreTaskProperties implements Serializable, Cloneable {
     private volatile Integer positionMoveMode = 0;
     private volatile String website = "";
 
-    private volatile Double attackDelay = 0.0;
+    private volatile Double attackDelay = 1.0;
+    private volatile Boolean exactWind = false;
 }

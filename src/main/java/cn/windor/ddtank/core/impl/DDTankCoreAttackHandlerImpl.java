@@ -204,13 +204,21 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler, Ser
         double horizontal = new BigDecimal((enemyPosition.getX() - myPosition.getX()) / distance).setScale(2, RoundingMode.UP).doubleValue();
         double vertical = new BigDecimal((myPosition.getY() - enemyPosition.getY()) / distance).setScale(2, RoundingMode.UP).doubleValue();
         double wind = ddtankPic.getWind();
+        boolean exactWind = properties.getExactWind();
+        if(!exactWind) {
+            wind = Math.ceil(wind / 0.5) * 0.5;
+        }
         if (toward == TowardEnum.LEFT) {
             // 当前头朝左，此时风向需要取反
             wind = -wind;
         }
         log.debug("水平屏距：{}, 垂直屏距：{}, 风力：{}", horizontal, vertical, wind);
-        ddtLog.info("水平屏距：" + horizontal + ", 垂直屏距：" + vertical);
-        ddtLog.info("风力：" + wind);
+        ddtLog.info("水平屏距: " + horizontal + ", 垂直屏距：" + vertical);
+        if(exactWind) {
+            ddtLog.info("风力: " + wind);
+        }else {
+            ddtLog.info("风力（区间模式）: " + wind);
+        }
         // 开辟线程去异步计算力度（大约要花1.5s）
         Future<Double> calcStrengthTask = calcStrengthExecutors.submit(new CalcStrengthTask(angle, wind, horizontal, vertical));
 
