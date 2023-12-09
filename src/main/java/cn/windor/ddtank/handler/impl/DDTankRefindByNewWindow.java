@@ -50,7 +50,7 @@ public class DDTankRefindByNewWindow implements DDTankCoreRefindHandler, Seriali
 
     @Override
     public long refindHwnd(long gameHwnd) {
-        if(StringUtils.isEmpty(properties.getWebsite())) {
+        if (StringUtils.isEmpty(properties.getWebsite())) {
             log.error("未设置该端的网址，自动重连失败，请将网址设置到配置中。");
             delay(100, true);
             // 停止当前线程
@@ -75,7 +75,7 @@ public class DDTankRefindByNewWindow implements DDTankCoreRefindHandler, Seriali
             log.error("[自动重连]：未找到新打开的窗口");
             ddTankLog.error("[自动重连]：未找到新打开的窗口");
             return 0;
-        }else {
+        } else {
             ddTankLog.success("[自动重连]：已打开新的浏览器窗口");
         }
 
@@ -206,7 +206,7 @@ public class DDTankRefindByNewWindow implements DDTankCoreRefindHandler, Seriali
             delay(1000, true);
         } while (hwnd == 0 && System.currentTimeMillis() - start < 10000);
 
-        if(hwnd != 0) {
+        if (hwnd != 0) {
             // 找到游戏窗口后不着急返回，先进行一段时间的延迟，好让第七大道的过场动画跳过，然后在脚本启动后点击屏幕就可以直接跳过过场动画了。
             ddTankLog.success("[自动重连]：已成功找到新的游戏窗口!");
             delay(10000, true);
@@ -258,10 +258,11 @@ public class DDTankRefindByNewWindow implements DDTankCoreRefindHandler, Seriali
 
                     // 尝试变更速度
                     long toolHwnd = dm.findWindowEx(hwnd, "AfxWnd80su", "BrowserBar");
-                    if(dm.bindWindowEx(toolHwnd, "dx2", "dx2", "dx", "dx.public.active.message", 0)) {
+                    if (dm.bindWindowEx(toolHwnd, "dx2", "dx2", "dx", "dx.public.active.message", 0)) {
                         delayPersisted(500, false);
-                        for (int i = 0; i < 10; i++) {
-                            mouse.moveAndClick(dm.getClientSize(toolHwnd)[0] -16, 16);
+                        mouse.moveTo(dm.getClientSize(toolHwnd)[0] - 16, 16);
+                        for (int i = 0; i < 50; i++) {
+                            mouse.leftClick();
                         }
                         dm.unbindWindow();
                         delayPersisted(500, false);
