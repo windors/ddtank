@@ -31,38 +31,40 @@ public class DDTankStuckCheckDetectionByLog implements DDTankStuckCheckDetection
             return true;
         }
 
-        Map<String, Integer> msgMap = new HashMap<>();
+        List<String> msgs = new ArrayList<>();
+        int cycle = 3;
+        boolean stopAdd = false;
         int size = 0;
+
         for (DDTankLog.Log log : ddTankLog.getLogs()) {
-            if(log.getMsg().contains("自动重连")) {
+            if (log.getMsg().contains("自动重连")) {
                 // 若过去的时间节点中已经自动重连过，则暂时认为没有卡住。
                 return false;
             }
             if (log.getTime().isAfter(begin)) {
-                String key = log.getMsg();
-                msgMap.merge(key, 1, Integer::sum);
                 size++;
+                String msg = log.getMsg();
+                if(stopAdd || msgs.size() == cycle) {
+                    stopAdd = true;
+                }else {
+                    if (!msgs.contains(msg)) {
+                        msgs.add(msg);
+                    }
+                }
+                if(stopAdd) {
+                    // 如果所有符合时间节点的消息都在msgs中，说明确实卡住，否则期间出现了其他消息说明没有卡住
+                    if(!msgs.contains(msg)) {
+                        return false;
+                    }
+                }
             } else {
                 // 我定义的日志集合是按时间顺序排列的，所以遇到第一个不满足的后面的就都不满足
                 break;
             }
         }
-        if(size >= checkTime / 3) {
-            // 日志输出速度超过了3秒钟1条日志时，极有可能卡住了，此时认为任何一条日志超过1/6，则判断卡死。
-            for (Integer value : msgMap.values()) {
-                if ((double) value / (double) size >  1.0 / 6) {
-                    return true;
-                }
-            }
-        } else if(size >= 10) {
-            for (Integer value : msgMap.values()) {
-                // 某条信息出现的次数超过了4成，认为当前日志在一直循环某个操作
-                if ((double) value / (double) size > 0.4) {
-                    return true;
-                }
-            }
-        }
 
-        return false;
+        // 运行到这里说明没有通过循环操作卡死检测
+        // 当日志个数超过10时才认为卡住
+        return size > 10;
     }
 }
