@@ -2,7 +2,7 @@ package cn.windor.ddtank.base.impl;
 
 import cn.windor.ddtank.base.Library;
 import cn.windor.ddtank.base.Point;
-import cn.windor.ddtank.util.VariantUtils;
+import cn.windor.ddtank.util.JacobUtils;
 import com.jacob.activeX.ActiveXComponent;
 import com.jacob.com.Variant;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import static cn.windor.ddtank.util.ThreadUtils.delayPersisted;
 
 /**
  * 大漠库，当前版本必须先进行注册
@@ -41,7 +43,7 @@ public class DMLibrary implements Library, Serializable {
 
     private Variant getParam(Object param) {
         callTimes++;
-        return VariantUtils.getParam(param);
+        return JacobUtils.getParam(param);
     }
 
     public long getCallTimes() {
@@ -347,11 +349,13 @@ public class DMLibrary implements Library, Serializable {
      * 详见大漠文档绑定说明
      */
     public boolean bindWindowEx(long hwnd, String display, String mouse, String keypad, String publicAttr, int mode) {
+        delayPersisted(1000, false);
         return Dispatch.call(dm, "bindWindowEx", getParam(hwnd), getParam(display), getParam(mouse), getParam(keypad),
                 getParam(publicAttr), getParam(mode)).getInt() == 1;
     }
 
     public boolean unbindWindow() {
+        delayPersisted(1000, false);
         return Dispatch.call(dm, "unbindWindow").getInt() == 1;
     }
 
@@ -446,7 +450,7 @@ public class DMLibrary implements Library, Serializable {
     }
 
     public static void main(String[] args) throws IOException {
-        Library dm = new DMLibrary(LibraryFactory.getActiveXCompnent());
+        Library dm = new DMLibrary(JacobUtils.getActiveXCompnent());
         Long hwnd = dm.findWindowEx(986392l, "AfxWnd80su", "PageLabelBar");
         System.out.println(hwnd);
     }

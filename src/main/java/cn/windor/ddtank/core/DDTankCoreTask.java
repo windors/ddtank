@@ -7,7 +7,6 @@ import cn.windor.ddtank.base.Point;
 import cn.windor.ddtank.base.impl.DMKeyboard;
 import cn.windor.ddtank.base.impl.DMLibrary;
 import cn.windor.ddtank.base.impl.DMMouse;
-import cn.windor.ddtank.base.impl.LibraryFactory;
 import cn.windor.ddtank.config.DDTankFileConfigProperties;
 import cn.windor.ddtank.core.impl.*;
 import cn.windor.ddtank.entity.LevelRule;
@@ -21,7 +20,7 @@ import cn.windor.ddtank.handler.impl.DDTankSelectMapHandlerImpl;
 import cn.windor.ddtank.handler.impl.DDTankAutoCompleteHandlerImpl;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
 import cn.windor.ddtank.util.DDTankComplexObjectUpdateUtils;
-import cn.windor.ddtank.util.VariantUtils;
+import cn.windor.ddtank.util.JacobUtils;
 import com.jacob.com.ComThread;
 import lombok.Getter;
 import lombok.Setter;
@@ -283,7 +282,7 @@ public class DDTankCoreTask implements Runnable, Serializable {
 
     @Override
     public void run() {
-        this.dm = new DMLibrary(LibraryFactory.getActiveXCompnent());
+        this.dm = new DMLibrary(JacobUtils.getActiveXCompnent());
         if (bind(this.dm)) {
             if (!isAutoRestart) {
                 log.info("[窗口绑定]：已成功绑定游戏窗口");
@@ -388,8 +387,8 @@ public class DDTankCoreTask implements Runnable, Serializable {
 
             } finally {
                 // 副绑定不用管
-                unBind(this.dm);
-                VariantUtils.remove();
+                dm.unbindWindow();
+                JacobUtils.release();
             }
             endTime = System.currentTimeMillis();
             log.info("脚本停止运行");
@@ -437,12 +436,6 @@ public class DDTankCoreTask implements Runnable, Serializable {
             return true;
         }
         return false;
-    }
-
-    public void unBind(Library dm) {
-        delayPersisted(1000, false);
-        dm.unbindWindow();
-        ComThread.Release();
     }
 
     public long getRunTime() {

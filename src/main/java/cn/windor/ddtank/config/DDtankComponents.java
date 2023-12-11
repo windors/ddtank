@@ -5,6 +5,7 @@ import cn.windor.ddtank.base.Mouse;
 import cn.windor.ddtank.base.impl.*;
 import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 import cn.windor.ddtank.mapper.DDTankConfigMapper;
+import cn.windor.ddtank.util.JacobUtils;
 import com.jacob.activeX.ActiveXComponent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,7 +32,7 @@ public class DDtankComponents {
      */
     @Bean
     public ActiveXComponent getDmActiveXComponent() {
-        return LibraryFactory.getActiveXCompnent();
+        return JacobUtils.getActiveXCompnent();
     }
 
     /**

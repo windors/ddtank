@@ -1,19 +1,93 @@
-package cn.windor.ddtank.base.impl;
+package cn.windor.ddtank.util;
 
-import cn.windor.ddtank.util.FileUtils;
+import com.jacob.activeX.ActiveXComponent;
 import com.jacob.com.ComThread;
 import com.jacob.com.Variant;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
-public class LibraryFactory {
-    public static com.jacob.activeX.ActiveXComponent getActiveXCompnent() {
-        com.jacob.activeX.ActiveXComponent dm;
+public class JacobUtils {
+    private static final ThreadLocal<Map<Object, Variant>> paramMap = new ThreadLocal<>();
+
+    private static final ThreadLocal<ActiveXComponent> activeXComponents = new ThreadLocal<>();
+
+    // 用于判断线程是否调用过关闭方法
+    private static final ThreadLocal<Boolean> isClosed = new ThreadLocal<>();
+
+    public static Variant getParam(Object param) {
+        Map<Object, Variant> threadParamMap = paramMap.get();
+        // 若当前线程没有则new一个对象
+        if(threadParamMap == null) {
+            synchronized (Thread.currentThread().getName()) {
+                threadParamMap = paramMap.get();
+                if(threadParamMap == null) {
+                    threadParamMap = new ConcurrentHashMap<>();
+                    paramMap.set(threadParamMap);
+                }
+            }
+        }
+
+        // 获取Variant对象
+        if (threadParamMap.get(param) != null) {
+            return threadParamMap.get(param);
+        }
+        Variant result;
+        synchronized (paramMap) {
+            if ((result = threadParamMap.get(param)) == null) {
+                result = new Variant(param);
+                threadParamMap.put(param, result);
+            }
+            return result;
+        }
+    }
+    public static ActiveXComponent getActiveXComponent() {
+        ActiveXComponent result = activeXComponents.get();
+        if(result == null) {
+            synchronized (activeXComponents) {
+                result = activeXComponents.get();
+                if(result == null) {
+                    result = getActiveXCompnent();
+                    Boolean closed = isClosed.get();
+                    if(closed == null) {
+                        isClosed.set(false);
+                    }else if(closed) {
+                        log.error("调用错误：当前线程ActiveXComponent已被释放");
+                        throw new RuntimeException("调用错误：当前线程ActiveXComponent已被释放");
+                    }
+                    activeXComponents.set(result);
+                }
+            }
+        }
+        return result;
+    }
+
+
+
+    public static void release() {
+        // 清空当前线程的所有Variant对象
+        paramMap.remove();
+        Boolean closed = isClosed.get();
+        if(closed == null || closed) {
+            return;
+        }else {
+            isClosed.set(true);
+            ComThread.Release();
+        }
+    }
+
+    public static ActiveXComponent getActiveXComponent(boolean isNew) {
+        return getActiveXCompnent();
+    }
+
+    public static ActiveXComponent getActiveXCompnent() {
+        ActiveXComponent dm;
         try {
             ComThread.InitSTA();
-            dm = new com.jacob.activeX.ActiveXComponent("dm.dmsoft");
+            dm = new ActiveXComponent("dm.dmsoft");
             String ver = dm.invoke("ver").toString();
             if (!"7.2336".equals(ver)) {
                 ComThread.Release();
@@ -24,7 +98,7 @@ public class LibraryFactory {
                 FileUtils.putAttachment("library/dm_7.2336.dll", new File("c:\\tmp"));
                 Runtime.getRuntime().exec("regsvr32 c:\\tmp\\library-dm_7.2336.dll");
                 log.info("等待注册大漠对象到系统...");
-                dm = new com.jacob.activeX.ActiveXComponent("dm.dmsoft");
+                dm = new ActiveXComponent("dm.dmsoft");
                 String ver = dm.invoke("ver").toString();
                 if (!"7.2336".equals(ver)) {
                     throw new RuntimeException("大漠插件注册失败：版本不同");

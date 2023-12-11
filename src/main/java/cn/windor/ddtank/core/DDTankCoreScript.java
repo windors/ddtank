@@ -6,7 +6,6 @@ import cn.windor.ddtank.base.Library;
 import cn.windor.ddtank.base.impl.DMKeyboard;
 import cn.windor.ddtank.base.impl.DMLibrary;
 import cn.windor.ddtank.base.impl.DMMouse;
-import cn.windor.ddtank.base.impl.LibraryFactory;
 import cn.windor.ddtank.entity.LevelRule;
 import cn.windor.ddtank.handler.DDTankCoreRefindHandler;
 import cn.windor.ddtank.handler.DDTankStuckCheckDetectionHandler;
@@ -15,7 +14,7 @@ import cn.windor.ddtank.handler.impl.DDTankStuckCheckDetectionByLog;
 import cn.windor.ddtank.service.impl.DDTankThreadServiceImpl;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
 import cn.windor.ddtank.util.DDTankComplexObjectUpdateUtils;
-import cn.windor.ddtank.util.VariantUtils;
+import cn.windor.ddtank.util.JacobUtils;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.thymeleaf.util.StringUtils;
@@ -92,7 +91,7 @@ public class DDTankCoreScript implements Serializable, Runnable {
             this.daemonTaskQueue = new LinkedBlockingQueue<>();
         }
 
-        this.dm = new DMLibrary(LibraryFactory.getActiveXCompnent());
+        this.dm = new DMLibrary(JacobUtils.getActiveXCompnent());
         // 一键更新所有的ActiveXComponent
         DDTankComplexObjectUpdateUtils.update(this, dm.getSource());
 
@@ -166,10 +165,10 @@ public class DDTankCoreScript implements Serializable, Runnable {
         } catch (InterruptedException ignored) {
             // 在调用某些方法的时候发生了中断，直接执行finally即可
         } finally {
-            task.unBind(this.dm);
+            dm.unbindWindow();
             log.info("[窗口绑定]：守护线程已成功解除绑定游戏窗口");
             task.ddtLog.success("脚本已成功停止，主绑定成功解除");
-            VariantUtils.remove();
+            JacobUtils.release();
         }
     }
 

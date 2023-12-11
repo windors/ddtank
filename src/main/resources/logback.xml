@@ -54,6 +54,6 @@ debug：当此属性设置为true时，将打印出logback内部日志信息，�
     <root level="INFO">
         <!--日志输出的目的地-->
         <appender-ref ref="Console"/>
-<!--        <appender-ref ref="RollingFile"/>-->
+        <appender-ref ref="RollingFile"/>
     </root>
 </configuration>

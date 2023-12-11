@@ -6,11 +6,11 @@ import cn.windor.ddtank.base.Mouse;
 import cn.windor.ddtank.base.Point;
 import cn.windor.ddtank.base.impl.DMLibrary;
 import cn.windor.ddtank.base.impl.DMMouse;
-import cn.windor.ddtank.base.impl.LibraryFactory;
 import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 import cn.windor.ddtank.config.DDTankFileConfigProperties;
 import cn.windor.ddtank.core.DDTankLog;
 import cn.windor.ddtank.handler.DDTankCoreRefindHandler;
+import cn.windor.ddtank.util.JacobUtils;
 import com.jacob.activeX.ActiveXComponent;
 import com.jacob.com.ComThread;
 import lombok.extern.slf4j.Slf4j;
@@ -250,7 +250,7 @@ public class DDTankRefindByNewWindow implements DDTankCoreRefindHandler, Seriali
         public static void gc() {
             // 提交通知，让线程去执行关闭窗口任务
             executorService.submit(() -> {
-                ActiveXComponent compnent = LibraryFactory.getActiveXCompnent();
+                ActiveXComponent compnent = JacobUtils.getActiveXCompnent();
                 Library dm = new DMLibrary(compnent);
                 List<Long> hwnds = dm.enumWindow(0, "", "Tango3", 2);
                 Mouse mouse = new DMMouse(compnent);
