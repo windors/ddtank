@@ -250,49 +250,58 @@ public class DDTankRefindByNewWindow implements DDTankCoreRefindHandler, Seriali
         public static void gc() {
             // 提交通知，让线程去执行关闭窗口任务
             executorService.submit(() -> {
-                ActiveXComponent compnent = JacobUtils.getActiveXCompnent();
-                Library dm = new DMLibrary(compnent);
-                List<Long> hwnds = dm.enumWindow(0, "", "Tango3", 2);
-                Mouse mouse = new DMMouse(compnent);
-                for (Long hwnd : hwnds) {
+                Thread execThread = new Thread(() -> {
+                    ActiveXComponent compnent = JacobUtils.getActiveXCompnent();
+                    Library dm = new DMLibrary(compnent);
+                    List<Long> hwnds = dm.enumWindow(0, "", "Tango3", 2);
+                    Mouse mouse = new DMMouse(compnent);
+                    for (Long hwnd : hwnds) {
 
-                    // 尝试变更速度
-                    long toolHwnd = dm.findWindowEx(hwnd, "AfxWnd80su", "BrowserBar");
-                    if (dm.bindWindowEx(toolHwnd, "dx2", "dx2", "dx", "dx.public.active.message", 0)) {
-                        delayPersisted(500, false);
-                        mouse.moveTo(dm.getClientSize(toolHwnd)[0] - 16, 16);
-                        for (int i = 0; i < 50; i++) {
-                            mouse.leftClick();
+                        // 尝试变更速度
+                        long toolHwnd = dm.findWindowEx(hwnd, "AfxWnd80su", "BrowserBar");
+                        if (dm.bindWindowEx(toolHwnd, "dx2", "dx2", "dx", "dx.public.active.message", 0)) {
+                            delayPersisted(500, false);
+                            mouse.moveTo(dm.getClientSize(toolHwnd)[0] - 16, 16);
+                            for (int i = 0; i < 50; i++) {
+                                mouse.leftClick();
+                            }
+                            dm.unbindWindow();
+                            delayPersisted(500, false);
                         }
+
+                        // 将没用的图标删除
+                        hwnd = dm.findWindowEx(hwnd, "AfxWnd80su", "PageLabelBar");
+                        if (hwnd == 0) {
+                            continue;
+                        }
+                        dm.bindWindowEx(hwnd, "dx2", "dx2", "dx", "dx.public.active.message", 0);
+                        delayPersisted(1000, false);
+
+                        // 在窗口可见范围内去找图
+                        int[] size = dm.getClientSize(hwnd);
+                        int width = size[0];
+                        int height = size[1];
+                        Point result = new Point();
+                        // TODO 更新
+                        while (dm.findPic(0, 0, width, height, DDTankFileConfigProperties.getBaseDir() + "糖果崩溃.bmp", "101010", 0.8, 0, result)) {
+                            mouse.moveTo(result.setOffset(10, 0));
+                            mouse.rightClick();
+                            delay(1000, true);
+                        }
+
                         dm.unbindWindow();
-                        delayPersisted(500, false);
+                        delayPersisted(1000, false);
                     }
-
-                    // 将没用的图标删除
-                    hwnd = dm.findWindowEx(hwnd, "AfxWnd80su", "PageLabelBar");
-                    if (hwnd == 0) {
-                        continue;
-                    }
-                    dm.bindWindowEx(hwnd, "dx2", "dx2", "dx", "dx.public.active.message", 0);
-                    delayPersisted(1000, false);
-
-                    // 在窗口可见范围内去找图
-                    int[] size = dm.getClientSize(hwnd);
-                    int width = size[0];
-                    int height = size[1];
-                    Point result = new Point();
-                    // TODO 更新
-                    while (dm.findPic(0, 0, width, height, DDTankFileConfigProperties.getBaseDir() + "糖果崩溃.bmp", "101010", 0.8, 0, result)) {
-                        mouse.moveTo(result.setOffset(10, 0));
-                        mouse.rightClick();
-                        delay(1000, true);
-                    }
-
-                    dm.unbindWindow();
-                    delayPersisted(1000, false);
+                    // 释放资源
+                    JacobUtils.release();
+                });
+                execThread.start();
+                try {
+                    // 等待gc任务的结束
+                    execThread.join();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
                 }
-                // 释放资源
-                ComThread.Release();
             });
         }
     }
