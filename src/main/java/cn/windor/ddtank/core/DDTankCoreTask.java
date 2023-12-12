@@ -41,7 +41,7 @@ public class DDTankCoreTask implements Runnable, Serializable {
     private static final long serialVersionUID = 1L;
 
     // 游戏句柄
-    transient long hwnd;
+    long hwnd;
 
     protected DDTankLog ddtLog;
 

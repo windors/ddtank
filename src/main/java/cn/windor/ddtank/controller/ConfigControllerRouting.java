@@ -38,7 +38,7 @@ public class ConfigControllerRouting {
         DDTankCoreScript script = threadService.get(hwnd);
         map.put("threadName", script.getName());
         map.put("config", script.getProperties());
-        return "config/update";
+        return "config/update_run";
     }
     @GetMapping("/script/{index}")
     public String scriptCoreThreadConfig(@PathVariable int index,
@@ -46,7 +46,7 @@ public class ConfigControllerRouting {
         DDTankCoreScript script = scriptService.getByIndex(index);
         map.put("threadName", script.getName());
         map.put("config", script.getProperties());
-        return "config/update";
+        return "config/update_script";
 
     }
 
