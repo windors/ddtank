@@ -9,7 +9,7 @@ spring:
       filter:
         enabled: true
 windor:
-  srcConfigStrs:
+  srcConfigs:
     # 接口.key                   x1,  y1,  x2,   y2,  图片名                        色偏值,  相似度, 找图方式
     - DDTankPic10_4.isEnterLevel,     960, 0,   999,  32,  蛋10.4-本内退出.bmp,     303030, 0.7, 0
     - DDTankPic10_4.isMyRound,        470, 150, 490,  180, 蛋10.4-出手判定.bmp,     000000, 0.8, 0
