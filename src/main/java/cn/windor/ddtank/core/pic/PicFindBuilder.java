@@ -63,14 +63,14 @@ public class PicFindBuilder {
 
     public PicFind build(String dirPath, Library dm) {
         File[] files = searchLegalFiles(new File(dirPath).toPath());
-        if(files == null) {
+        if(files == null || files.length == 0) {
             log.warn("未在指定文件夹[{}]下找到[{}]!", dirPath, picName);
             return new PicFindEmptyImpl();
         }
         StringBuilder picName = new StringBuilder();
         for (File file : files) {
-            picName.append(file.getAbsolutePath());
+            picName.append(file.getAbsolutePath()).append("|");
         }
-        return new PicFindLibraryImpl(x1, x2, y1, y2, picName.toString(), deltaColor, sim, dir, dm);
+        return new PicFindLibraryImpl(x1, x2, y1, y2, picName.substring(0, picName.length() - 1), deltaColor, sim, dir, dm);
     }
 }
