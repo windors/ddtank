@@ -35,16 +35,16 @@ public class PicFindLibraryImpl implements PicFind, Serializable {
 
     @Override
     public boolean findPic() {
-        return false;
+        return dm.findPic(x1, y1, x2, y2, picName, deltaColor, sim, dir, null);
     }
 
     @Override
     public boolean findPic(Point point) {
-        return false;
+        return dm.findPic(x1, y1, x2, y2, picName, deltaColor, sim, dir, point);
     }
 
     @Override
     public List<Point> findPicEx() {
-        return null;
+        return dm.findPicEx(x1, y1, x2, y2, picName, deltaColor, sim, dir);
     }
 }
