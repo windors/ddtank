@@ -1,5 +1,7 @@
 package cn.windor.ddtank.util;
 
+import cn.windor.ddtank.core.DDTankOperate;
+import cn.windor.ddtank.core.impl.DDtankOperate2_3;
 import com.jacob.activeX.ActiveXComponent;
 import lombok.extern.slf4j.Slf4j;
 import org.thymeleaf.util.SetUtils;
@@ -143,12 +145,15 @@ public class DDTankComplexObjectUpdateUtils {
      */
     private static boolean isParentClass(Class a, Class b) {
         if(a.isInterface()) {
-            // 查看类b是否实现了a接口
-            Class[] interfaces = b.getInterfaces();
-            for (Class interfaceClass : interfaces) {
-                if(a == interfaceClass) {
-                    return true;
+            while(b != Object.class) {
+                // 查看类b是否实现了a接口
+                Class[] interfaces = b.getInterfaces();
+                for (Class interfaceClass : interfaces) {
+                    if (a == interfaceClass) {
+                        return true;
+                    }
                 }
+                b = b.getSuperclass();
             }
         }else {
             if (a == b) {
