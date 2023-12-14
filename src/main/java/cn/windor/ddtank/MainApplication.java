@@ -1,9 +1,11 @@
 package cn.windor.ddtank;
 
 
+import cn.windor.ddtank.config.DMPicConfigProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.env.ConfigurableEnvironment;
 
@@ -13,6 +15,7 @@ import java.net.URI;
 
 @SpringBootApplication
 @Slf4j
+@EnableConfigurationProperties(DMPicConfigProperties.class)
 public class MainApplication {
     public static void main(String[] args) {
         System.setProperty("java.awt.headless", "false");

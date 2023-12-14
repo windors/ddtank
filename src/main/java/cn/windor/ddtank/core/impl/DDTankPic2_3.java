@@ -21,57 +21,18 @@ public class DDTankPic2_3 extends DDTankPic10_4 implements Serializable {
         super(dm, path, properties, mouse);
     }
 
-    @Override
-    public boolean isEnterLevel() {
-        return dm.findPic(969, 470, 998, 502,
-                path + "蛋2-本内退出.bmp", "303030", 0.7, 0, null);
-    }
-
-    @Override
-    public boolean isMyRound() {
-        return dm.findPic(110, 90, 210, 140,
-                path + "蛋2-该出手了.bmp", "303030", 0.7, 0, null)
-                || dm.findPic(110, 90, 210, 140,
-                path + "蛋2-该出手了2.bmp", "303030", 0.7, 0, null);
-    }
-
-    @Override
-    public boolean needChooseMap() {
-        Point point = new Point();
-        if (dm.findPic(511, 437, 685, 527,
-                path + "蛋2-随机地图.bmp", "101010", 0.8, 0, point)) {
-            mouse.moveAndClick(point.getX() + 10, point.getY() + 10);
-            delay(300, true);
-        }
-        return dm.findPic(261, 71, 349, 122,
-                path + "蛋2-大副本页标识.bmp", "101010", 0.8, 0, null);
-    }
 
     @Override
     public boolean needClickStart() {
         Point point = new Point();
-        if (dm.findPic(891, 454, 981, 495,
-                path + "蛋2-开始1.bmp", "101010", 0.9, 0, point)
-                || dm.findPic(891, 454, 981, 495,
-                path + "蛋2-开始2.bmp", "101010", 0.9, 0, point)) {
+        if (getPicFind("needClickStart").findPic(point)) {
 //            mouse.moveAndClick(560, 844);
 //            mouse.moveAndClick(801, 137);
 //            mouse.moveAndClick(882, 141);
 //            mouse.moveAndClick(949, 346);
 //            mouse.moveAndClick(949, 346);
 //            mouse.moveAndClick(949, 346);
-            mouse.moveAndClick(point.getX() + 10, point.getY() + 10);
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public boolean needClickPrepare() {
-        Point point = new Point();
-        if (dm.findPic(891, 454, 981, 545,
-                path + "蛋2-准备.bmp", "101010", 0.9, 0, point)) {
-            mouse.moveAndClick(point);
+            mouse.moveAndClick(point.setOffset(10, 10));
             return true;
         }
         return false;
@@ -79,8 +40,7 @@ public class DDTankPic2_3 extends DDTankPic10_4 implements Serializable {
 
     @Override
     public boolean needCloseEmail() {
-        Point point = new Point();
-        if (dm.findPic(506, 164, 829, 404, path + "蛋2-邮件.bmp", "101010", 0.8, 0, point)) {
+        if (getPicFind("needCloseEmail").findPic()) {
             mouse.moveAndClick(836, 52);
             return true;
         }
@@ -90,13 +50,12 @@ public class DDTankPic2_3 extends DDTankPic10_4 implements Serializable {
     @Override
     public boolean needCloseTip() {
         boolean result = false;
-        if (dm.findPic(640, 222, 698, 262,
-                path + "蛋2-单人模式提示.bmp", "101010", 0.8, 0, null)) {
+        if (getPicFind("needCloseTip").findPic()) {
             mouse.moveAndClick(428, 346);
             result = true;
         }
         Point point = new Point();
-        if (dm.findPic(0, 0, 1000, 600, path + "蛋2-提示.bmp", "101010", 0.8, 0, point)) {
+        if (getPicFind("needCloseTip2").findPic(point)) {
             point.setOffset(20, 10);
             mouse.moveAndClick(point);
         }
@@ -106,8 +65,7 @@ public class DDTankPic2_3 extends DDTankPic10_4 implements Serializable {
     @Override
     public boolean needCreateRoom() {
         Point point = new Point();
-        if (dm.findPic(665, 466, 743, 540,
-                path + "蛋2-大厅标识.bmp", "101010", 1, 0, point)) {
+        if (getPicFind("needCreateRoom").findPic(point)) {
             point.setOffset(30, 10);
             mouse.moveAndClick(point);
             mouse.moveAndClick(408, 442);
@@ -123,8 +81,7 @@ public class DDTankPic2_3 extends DDTankPic10_4 implements Serializable {
         boolean find = false;
         boolean over = false;
         Point putInBag = null;
-        while ((cardList = dm.findPicEx(88, 59, 904, 571,
-                path + "蛋2-卡牌.bmp", "101010", 0.8, 0)) != null) {
+        while ((cardList = getPicFind("needDraw").findPicEx()) != null) {
             // 只要能找到卡牌，那么就循环
             find = true;
             if (!over) {
@@ -135,7 +92,7 @@ public class DDTankPic2_3 extends DDTankPic10_4 implements Serializable {
                 }
             }
             // TODO 等待检测到第三张牌后结束
-            if (dm.findPic(636, 224, 724, 291, path + "蛋2-翻第三张牌.bmp", "101010", 0.8, 0, null)) {
+            if (getPicFind("needDraw2").findPic()) {
                 over = true;
                 if (properties.getIsThirdDraw()) {
                     mouse.moveAndClick(433, 343);
@@ -145,11 +102,11 @@ public class DDTankPic2_3 extends DDTankPic10_4 implements Serializable {
             delay(1000, true);
         }
         // 如果已经翻过牌或找到了全选进被背包
-        if (find || dm.findPic(385, 218, 407, 246, path + "蛋2-全选进背包.bmp", "101010", 0.8, 0, null)) {
+        if (find || getPicFind("needDraw3").findPic()) {
             putInBag = new Point();
             int failTimes = 0;
             // 只要没找到全选按钮，那么就一直找
-            while (!dm.findPic(385, 218, 407, 246, path + "蛋2-全选进背包.bmp", "101010", 0.8, 0, putInBag)) {
+            while (!getPicFind("needDraw3").findPic(putInBag)) {
                 failTimes++;
                 delay(1000, true);
                 if(failTimes > 30) {
@@ -164,13 +121,14 @@ public class DDTankPic2_3 extends DDTankPic10_4 implements Serializable {
 
     @Override
     public boolean needGoingToWharf() {
-        if (dm.findPic(500, 466, 711, 554, path + "蛋2-频道.bmp", "101010", 0.8, 0, null)) {
+        if (getPicFind("needGoingToWharf").findPic()) {
             mouse.moveAndClick(608, 171);
             mouse.moveAndClick(608, 171);
         }
+        // 蛋2.3大厅检测需要移动下鼠标
         mouse.moveTo(558, 531);
         Point point = new Point();
-        if (dm.findPic(767, 359, 993, 537, path + "蛋2-大厅.bmp", "101010", 0.8, 0, point)) {
+        if (getPicFind("needGoingToWharf2").findPic(point)) {
             mouse.moveAndClick(point);
             return true;
         }

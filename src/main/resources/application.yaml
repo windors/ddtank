@@ -8,3 +8,47 @@ spring:
     hiddenmethod:
       filter:
         enabled: true
+windor:
+  srcConfigStrs:
+    # 接口.key                   x1,  y1,  x2,   y2,  图片名                        色偏值,  相似度, 找图方式
+    - DDTankPic10_4.isEnterLevel,     960, 0,   999,  32,  蛋10.4-本内退出.bmp,     303030, 0.7, 0
+    - DDTankPic10_4.isMyRound,        470, 150, 490,  180, 蛋10.4-出手判定.bmp,     000000, 0.8, 0
+    - DDTankPic10_4.needActiveWindow, 463, 339, 541,  363, 需要激活窗口.bmp,        202020, 0.8, 0
+    - DDTankPic10_4.needChooseMap,    500, 400, 740,  500, 蛋10.4-随机地图.bmp,     101010, 0.8, 0
+    - DDTankPic10_4.needChooseMap2,   200, 30,  320,  80,  蛋10.4-大副本页标识.bmp,  101010, 0.8, 0
+    - DDTankPic10_4.needClickStart,   900, 430, 990,  550, 蛋10.4-开始.bmp,        101010, 0.9, 0
+    - DDTankPic10_4.needClickPrepare, 900, 430, 990,  550, 蛋10.4-准备.bmp,        101010, 0.9, 0
+    - DDTankPic10_4.needCloseEmail,   570, 190, 760,  280, 蛋10.4-邮件.bmp,        101010, 0.8, 0
+    - DDTankPic10_4.needCloseTip,     610, 210, 790,  270, 蛋10.4-单人模式提示.bmp, 101010, 0.8, 0
+    - DDTankPic10_4.needCloseTip2,    60,  1,   981,  545, 蛋10.4-tip.bmp,        101010, 0.8, 0
+    - DDTankPic10_4.needCreateRoom,   560, 490, 700,  550, 蛋10.4-大厅标识.bmp,     101010, 1, 0
+    - DDTankPic10_4.needDraw,         0,   0,   1000, 600, 蛋10.4-卡牌.bmp,        101010, 0.8, 0
+    - DDTankPic10_4.needDraw2,        590, 185, 750,  290, 蛋10.4-翻第三张牌.bmp,   101010, 0.8, 0
+    - DDTankPic10_4.needGoingToWharf, 100, 90,  1000, 300, 蛋10.4-大厅.bmp,        101010, 1, 0
+    - DDTankPic2_3.isEnterLevel,      969, 470, 998, 502,  蛋2-本内退出.bmp,        303030, 0.7, 0
+    - DDTankPic2_3.isMyRound,         110, 90, 210, 140,   蛋2-该出手了.bmp,        303030, 0.7, 0
+    - DDTankPic2_3.needChooseMap,     511, 437, 685, 527,  蛋2-随机地图.bmp,        101010, 0.8, 0
+    - DDTankPic2_3.needChooseMap2,    261, 71, 349, 122,   蛋2-大副本页标识.bmp,     101010, 0.8, 0
+    - DDTankPic2_3.needClickStart,    891, 454, 981, 495,  蛋2-开始1.bmp,           101010, 0.9, 0
+    - DDTankPic2_3.needClickPrepare,  891, 454, 981, 545,  蛋2-准备.bmp,            101010, 0.9, 0
+    - DDTankPic2_3.needCloseEmail,    506, 164, 829, 404,  蛋2-邮件.bmp,            101010, 0.8, 0
+    - DDTankPic2_3.needCloseTip,      640, 222, 698, 262,  蛋2-单人模式提示.bmp,      101010, 0.8, 0
+    - DDTankPic2_3.needCloseTip2,     0, 0, 1000, 600,     蛋2-提示.bmp,            101010, 0.8, 0
+    - DDTankPic2_3.needCreateRoom,    665, 466, 743, 540,  蛋2-大厅标识.bmp,         101010, 1,  0
+    - DDTankPic2_3.needDraw,          88, 59, 904, 571,    蛋2-卡牌.bmp,            101010, 0.8, 0
+    - DDTankPic2_3.needDraw2,         636, 224, 724, 291,  蛋2-翻第三张牌.bmp,       101010, 0.8, 0
+    - DDTankPic2_3.needDraw3,         385, 218, 407, 246,  蛋2-全选进背包.bmp,       101010, 0.8, 0
+    - DDTankPic2_3.needGoingToWharf,  500, 466, 711, 554,  蛋2-频道.bmp,            101010, 0.8, 0
+    - DDTankPic2_3.needGoingToWharf2, 767, 359, 993, 537,  蛋2-大厅.bmp,            101010, 0.8, 0
+    - DDTankPic2_4.needChooseMap,     511, 437, 685, 527,  蛋2_4-随机地图.bmp,       101010, 0.8, 0
+    - DDTankPic2_4.needChooseMap2,    261, 71, 349, 122,   蛋2-大副本页标识.bmp,      101010, 0.8, 0
+    - DDTankPic2_4.needCloseTip,      640, 222, 698, 262,  蛋2_4-单人模式提示.bmp,    101010, 0.8, 0
+    - DDTankPic2_4.needCloseTip2,     0, 0, 1000, 600,     蛋2_4-提示.bmp,          101010, 0.8, 0
+    - DDTankPic2_4.needCreateRoom,    681, 442, 759, 531,  蛋2_4-大厅标识.bmp,       101010, 0.8, 0
+    - DDTankPic2_4.needDraw,          88, 59, 904, 571,    蛋2-卡牌.bmp,            101010, 0.8, 0
+    - DDTankPic2_4.needDraw2,         636, 224, 724, 291,  蛋2_4-翻第三张牌.bmp,     101010, 0.8, 0
+    - DDTankPic2_4.needDraw3,         385, 218, 407, 246,  蛋2-全选进背包.bmp,       101010, 0.8, 0
+    - DDTankPic2_4.needDraw4,         412, 121, 735, 442,  蛋2-罐子,                101010, 0.8, 0
+    - DDTankPic2_4.needDraw5,         412, 121, 735, 442,  蛋2-勋章.bmp,            101010, 0.8, 0
+    - DDTankPic2_4.needGoingToWharf,  767, 359, 993, 537,  蛋2_4-大厅.bmp,          101010, 0.8, 0
+    - DDTankPic2_4.needActiveWindow,  480, 250, 520, 300,  蛋2_4-需要激活窗口.bmp,    101010, 0.8, 0
