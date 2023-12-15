@@ -196,7 +196,7 @@ public class DDTankCoreScript implements Serializable, Runnable {
                     StringUtils.isEmpty(properties.getWebsite())) {
                 log.info("检测到网站或账户或密码为空，取消重新启动");
                 task.ddtLog.warn("检测到网站或账户或密码为空，取消重新启动");
-                return false;
+                return true;
             }
             // 先打断当前的脚本线程
             coreThread.interrupt();

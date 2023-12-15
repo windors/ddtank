@@ -3,9 +3,14 @@ package cn.windor.ddtank.core;
 import lombok.Getter;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+
+/**
+ * index
+ */
 
 public class DDTankLevel implements Serializable {
 
@@ -27,6 +32,9 @@ public class DDTankLevel implements Serializable {
     // 难度值
     private final double difficulty;
 
+    @Getter
+    private final LocalDateTime time;
+
     private static final Map<String, DDTankLevel> instanceMap = new HashMap<>();
 
     private DDTankLevel(double mode, int row, int line, double difficulty) {
@@ -34,6 +42,7 @@ public class DDTankLevel implements Serializable {
         this.row = row;
         this.line = line;
         this.difficulty = difficulty;
+        this.time = LocalDateTime.now();
     }
 
     public static DDTankLevel getInstance(DDTankCoreTaskProperties properties) {
