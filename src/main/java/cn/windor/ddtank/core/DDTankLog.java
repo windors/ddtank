@@ -1,5 +1,8 @@
 package cn.windor.ddtank.core;
 
+import cn.windor.ddtank.excel.DDTankLogConverter;
+import com.alibaba.excel.annotation.ExcelProperty;
+import com.alibaba.excel.annotation.write.style.ColumnWidth;
 import lombok.Getter;
 
 import java.io.Serializable;
@@ -71,9 +74,13 @@ public class DDTankLog implements Serializable {
         private static final long serialVersionUID = 1L;
 
         @Getter
+        @ExcelProperty(value = "消息时间")
+        @ColumnWidth(17)
         private final LocalDateTime time;
 
         @Getter
+        @ExcelProperty(value = "消息", converter = DDTankLogConverter.class)
+        @ColumnWidth(45)
         private final String msg;
 
         public Log(String msg) {

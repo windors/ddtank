@@ -77,6 +77,7 @@
 
             <div class="pull-right">
                 <button type="button" class="btn btn-warning script-start">启动</button>
+                <button class="btn btn-primary ddt-export-log">日志导出</button>
                 <button type="button" class="btn btn-danger script-delete">删除</button>
             </div>
         </form>
@@ -139,6 +140,23 @@
         $(".ddt tr td, th").click(function () {
             $(this).parent().find("input[type='checkbox']").click();
         })
+
+        // 日志导出
+        $(".ddt-export-log").click(function () {
+            let param = getCheckedHwndSerialize(this);
+            if(param === "") {
+                windorAlert('提示', '请 <b>选中一些脚本后</b> 再执行本方法')
+            }else {
+                var a = document.createElement('a');
+                a.href = "/file/export/logs?" + param;
+                a.style.display = 'none';
+                a.target = '_blank';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            }
+        })
+
         // 全选按钮
         $(".ddt tr th:first-child input").click(function () {
             let checked = $(this).prop('checked');

@@ -122,6 +122,22 @@ $(function () {
         });
     })
 
+    // 日志导出
+    $(".ddt-export-log").click(function () {
+        let param = getCheckedHwndSerialize(this);
+        if(param === "") {
+            windorAlert('提示', '请 <b>选中一些脚本后</b> 再执行本方法')
+        }else {
+            var a = document.createElement('a');
+            a.href = "/file/export/logs?" + param;
+            a.style.display = 'none';
+            a.target='_blank';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        }
+    })
+
 
     $(".ddt-suspend").click(function () {
         let hwnds = getCheckedHwndSerialize(this);

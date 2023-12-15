@@ -78,6 +78,11 @@
             <artifactId>jacob</artifactId>
             <version>1.20</version>
         </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>easyexcel</artifactId>
+            <version>3.3.3</version>
+        </dependency>
     </dependencies>
 
 
