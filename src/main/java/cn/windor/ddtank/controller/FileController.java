@@ -22,33 +22,13 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/file")
-public class FileController {
-    @Autowired
-    private DDTankThreadService threadService;
-
-    @Autowired
-    private DDTankScriptService scriptService;
+public class FileController extends BaseScriptController {
 
     @GetMapping("/export/logs")
     public void exportLogs(HttpServletResponse response,
                            @RequestParam(value = "hwnd", required = false) List<Long> hwnds,
                            @RequestParam(value = "index", required = false) List<Integer> indexList) throws IOException {
-        List<DDTankCoreScript> scripts = new ArrayList<>();
-        if(hwnds != null) {
-            for (Long hwnd : hwnds) {
-                DDTankCoreScript script = threadService.get(hwnd);
-                if (script != null) {
-                    scripts.add(script);
-                }
-            }
-        }else if (indexList != null) {
-            for (Integer index : indexList) {
-                scripts.add(scriptService.getByIndex(index));
-            }
-        }else {
-            return;
-        }
-        exportScriptsLogs(response, scripts);
+        exportScriptsLogs(response, getScripts(hwnds, indexList));
     }
 
     private void exportScriptsLogs(HttpServletResponse response, List<DDTankCoreScript> scripts) throws IOException {

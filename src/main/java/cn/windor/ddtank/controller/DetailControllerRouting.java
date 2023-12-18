@@ -63,6 +63,6 @@ public class DetailControllerRouting {
         map.put("runTime", script.getRunTime());
         map.put("suspend", script.isSuspend());
         map.put("levelSummaryMap", script.getTask().getSummary());
-        return "script/detail";
+        return "detail";
     }
 }
