@@ -192,7 +192,7 @@ public class DDtankOperate10_4 implements DDTankOperate, Serializable {
                     if (!ddTankPic.isMyRound()) {
                         keyboard.keyUp(' ');
                         return;
-                    }else {
+                    } else {
                         keyboard.keyDown(' ');
                     }
                 }
@@ -207,13 +207,22 @@ public class DDtankOperate10_4 implements DDTankOperate, Serializable {
         double strengthUnit = (double) (properties.getStrengthEndX() - properties.getStrengthStartX()) / 100;
         int x = (int) (properties.getStrengthStartX() + strengthUnit * strength - 1);
         String nowColor = dm.getAveRGB(x - 1, 574, x + 1, 590).toLowerCase();
-        while(true) {
+        while (true) {
             String color = dm.getAveRGB(x - 1, 574, x + 1, 590).toLowerCase();
-            if(!ColorUtils.isSimColor(nowColor, color + "-303030")) {
+            if (!ColorUtils.isSimColor(nowColor, color + "-303030")) {
                 keyboard.keyUp(' ');
                 // 当颜色不变时，说明当前回合还未结束
-                while(ColorUtils.isSimColor(nowColor, color+"-101010")) {
-                    color = dm.getAveRGB(x, 574, x + 1, 590).toLowerCase();
+                nowColor = dm.getAveRGB(x - 1, 574, x + 1, 590).toLowerCase();
+                long startTime = System.currentTimeMillis();
+                do {
+                    if(System.currentTimeMillis() - startTime > 1000) {
+                        // 定时检查是否还在回合内，不在回合内直接返回即可
+                        if(!ddTankPic.isMyRound()) {
+                            return;
+                        }
+                        startTime = System.currentTimeMillis();
+                    }
+                    color = dm.getAveRGB(x - 1, 574, x + 1, 590).toLowerCase();
                     if (properties.getAftertreatment()) {
                         // 后处理
                         for (int i = 0; i < properties.getAftertreatmentSec(); i++) {
@@ -223,11 +232,11 @@ public class DDtankOperate10_4 implements DDTankOperate, Serializable {
                     } else {
                         delay(10, true);
                     }
-                }
+                } while (ColorUtils.isSimColor(nowColor, color + "-101010"));
                 return;
             }
             tired = tired + 1;
-            if(tired % 500 == 0) {
+            if (tired % 500 == 0) {
                 if (!ddTankPic.isMyRound()) {
                     keyboard.keyUp(' ');
                     return;
@@ -275,24 +284,24 @@ public class DDtankOperate10_4 implements DDTankOperate, Serializable {
         if (angle == 70) {
             angle = (int) theta - 5;
         }
-        if(properties.getIsClosestAngle()) {
+        if (properties.getIsClosestAngle()) {
             // 临近角度
             Integer nowAngle = ddTankPic.getAngle();
-            if(nowAngle > angle) {
+            if (nowAngle > angle) {
                 // 只有在当前角度比自动角度高时才能临近，否则根本都打不到boss
-                if(nowAngle < 20) {
+                if (nowAngle < 20) {
                     angle = 20;
-                }else if(nowAngle < 30) {
+                } else if (nowAngle < 30) {
                     angle = 30;
-                }else if(nowAngle < 40) {
+                } else if (nowAngle < 40) {
                     angle = 40;
-                }else if(nowAngle < 45) {
+                } else if (nowAngle < 45) {
                     angle = 45;
-                }else if(nowAngle < 50) {
+                } else if (nowAngle < 50) {
                     angle = 50;
-                }else if(nowAngle < 65) {
+                } else if (nowAngle < 65) {
                     angle = 65;
-                }else if(nowAngle < 70) {
+                } else if (nowAngle < 70) {
                     angle = 70;
                 }
             }
