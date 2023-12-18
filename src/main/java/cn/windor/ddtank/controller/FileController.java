@@ -5,7 +5,9 @@ import cn.windor.ddtank.core.DDTankLog;
 import cn.windor.ddtank.service.DDTankScriptService;
 import cn.windor.ddtank.service.DDTankThreadService;
 import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.ExcelWriter;
 import com.alibaba.excel.write.builder.ExcelWriterBuilder;
+import com.alibaba.excel.write.metadata.WriteSheet;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,10 +42,16 @@ public class FileController extends BaseScriptController {
         response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
 
         // 这里需要设置不关闭流
-        ExcelWriterBuilder excelWriterBuilder = EasyExcel.write(response.getOutputStream(), DDTankLog.Log.class).inMemory(true).autoCloseStream(Boolean.FALSE);
+        ExcelWriter excelWriter = EasyExcel.write(response.getOutputStream())
+                .head(DDTankLog.Log.class)
+                .inMemory(true).autoCloseStream(false)
+                .build();
+        int i = 0;
         for (DDTankCoreScript script : scripts) {
             List<DDTankLog.Log> logs = script.getDDTankLog().getLogs();
-            excelWriterBuilder.sheet(script.getName()).doWrite(logs);
+            WriteSheet writeSheet = EasyExcel.writerSheet(i++, script.getName()).build();
+            excelWriter.write(logs, writeSheet);
         }
+        excelWriter.finish();
     }
 }
