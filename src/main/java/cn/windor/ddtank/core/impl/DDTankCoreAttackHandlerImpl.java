@@ -7,11 +7,16 @@ import cn.windor.ddtank.core.*;
 import cn.windor.ddtank.exception.DDTankAngleResolveException;
 import cn.windor.ddtank.core.DDTankCoreAttackHandler;
 import cn.windor.ddtank.handler.DDTankFindPositionMoveHandler;
+import cn.windor.ddtank.mapper.DDTankConfigMapper;
 import cn.windor.ddtank.type.TowardEnum;
+import cn.windor.ddtank.util.FileUtils;
+import cn.windor.dto.HttpResponse;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -40,6 +45,17 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler, Ser
     @Getter
     @Setter
     private static Map<String, Double> calcedMap = new ConcurrentHashMap<>();
+    private static long lastUpdateTime = System.currentTimeMillis();
+
+    static {
+        File file = DDTankConfigMapper.getDDTankStrengthFile();
+        if(file.exists()) {
+            try {
+                calcedMap = (Map<String, Double>) FileUtils.readSeriaizedObject(file);
+            } catch (Exception ignore) {}
+        }
+
+    }
 
     boolean exit;
 
@@ -50,7 +66,7 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler, Ser
     protected DDTankPic ddtankPic;
 
     /**
-     * 关卡选择器
+     * 攻击逻辑选择器（走位、调整角度等）
      */
     DDTankCoreHandlerSelector handlerSelector;
 
@@ -478,7 +494,9 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler, Ser
         }
     }
 
-    class CalcStrengthTask implements Callable<Double> {
+    class CalcStrengthTask implements Callable<Double>, Serializable {
+
+        private static final long serialVersionUID = 1L;
 
         private final double horizontal;
 
@@ -487,6 +505,7 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler, Ser
         private final int angle;
 
         private final double wind;
+
 
 
         public CalcStrengthTask(int angle, double wind, double horizontal, double vertical) {
@@ -502,7 +521,12 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler, Ser
             if (calcedMap.get(key) == null) {
                 double strength = ddtankOperate.getStrength(angle, wind, horizontal, vertical);
                 calcedMap.put(key, strength);
-                log.info("缓存{}, {}", key, strength);
+                log.debug("缓存{}, {}", key, strength);
+                // 保存力度表
+                if(System.currentTimeMillis() - lastUpdateTime > 3000) {
+                    lastUpdateTime = System.currentTimeMillis();
+                    FileUtils.writeObject(calcedMap, DDTankConfigMapper.getDDTankStrengthFile());
+                }
                 return strength;
             }
             return calcedMap.get(key);
