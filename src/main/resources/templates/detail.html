@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="/static/css/common/form.css" th:href="@{/static/css/common/form.css}">
     <link rel="stylesheet" th:href="@{/static/css/bg.css}"/>
     <script src="/static/js/jquery.rsSliderLens.js" th:src="@{/static/js/jquery.rsSliderLens.js}"></script>
-    <link rel="stylesheet" th:href="@{/static/css/common/thread_detail.css}"/>
+    <link rel="stylesheet" th:href="@{/static/css/detail.css}"/>
 </head>
 <body>
 <div id="addTask" class="modal fade" tabindex="-1" role="dialog">
@@ -207,18 +207,20 @@
                         </div>
                     </div>
                 </div>
-                <form id="form-reconnect" class="form-horizontal">
-                    <div class="form-group">
-                        <label class="col-md-2 control-label">账号</label>
-                        <div class="col-md-3"><input class="form-control" name="username" th:value="${username}"/></div>
-                        <label class="col-md-2 control-label">密码</label>
-                        <div class="col-md-3"><input class="form-control" name="password" type="password"
-                                                     th:value="${password}"/></div>
-                        <div class="col-md-2">
-                            <button class="btn btn-primary col-xs-12">设置</button>
+                <div class="form-horizontal">
+                    <form id="form-reconnect" class="form-horizontal">
+                        <div class="form-group">
+                            <label class="col-md-2 control-label">账号</label>
+                            <div class="col-md-3"><input class="form-control" name="username" th:value="${username}"/></div>
+                            <label class="col-md-2 control-label">密码</label>
+                            <div class="col-md-3"><input class="form-control" name="password" type="password"
+                                                         th:value="${password}"/></div>
+                            <div class="col-md-2">
+                                <button class="btn btn-primary col-xs-12">设置</button>
+                            </div>
                         </div>
-                    </div>
-                </form>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

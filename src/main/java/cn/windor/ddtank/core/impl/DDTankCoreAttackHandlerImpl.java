@@ -425,7 +425,8 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler, Ser
                     return true;
                 }
             } catch (Exception e) {
-                log.info("请更新屏距算法，当前调用出现{}异常。（下个版本解决，目前不影响使用）", e.getClass());
+                log.info("请更新屏距算法，当前调用出现{}异常。", e.getClass());
+                ddtLog.error("请更新屏距算法，当前调用出现" + e.getClass() + "异常。");
                 return false;
             }
             return false;
