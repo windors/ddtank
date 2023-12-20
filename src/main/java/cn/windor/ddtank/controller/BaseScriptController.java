@@ -4,12 +4,11 @@ import cn.windor.ddtank.core.DDTankCoreScript;
 import cn.windor.ddtank.service.DDTankScriptService;
 import cn.windor.ddtank.service.DDTankThreadService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Controller
+
 public class BaseScriptController {
     @Autowired
     protected DDTankScriptService scriptService;

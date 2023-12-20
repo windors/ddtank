@@ -32,18 +32,6 @@ public class UtilController {
     @Autowired
     private DDTankThreadService threadService;
 
-    @Autowired
-    private DDTankMarkHwndService markHwndService;
-
-    @Autowired
-    private DDTankConfigService configService;
-
-    @Autowired
-    private DDTankCoreTaskProperties defaultProperties;
-
-    @Autowired
-    private Library dm;
-
     @PostMapping("/test")
     public HttpResponse test(@RequestParam String methodName,
                                          @RequestParam long hwnd) {
@@ -84,129 +72,20 @@ public class UtilController {
         };
     }
 
-    @PostMapping("/suspend")
-    public HttpDataResponse<Integer> suspendCoreThread(@RequestParam(name = "hwnd") List<Long> hwnds) {
-        int success = 0;
-        for (Long hwnd : hwnds) {
-            DDTankCoreScript thread = threadService.get(hwnd);
-            if (thread == null) {
-                continue;
-            }
-            thread.sendSuspend();
-            success++;
-        }
-        return HttpDataResponse.ok(success);
-    }
-
-    @PostMapping("/continue")
-    public HttpResponse continueCoreThread(@RequestParam(name = "hwnd") List<Long> hwnds) {
-        int success = 0;
-        for (Long hwnd : hwnds) {
-            DDTankCoreScript thread = threadService.get(hwnd);
-            if (thread == null) {
-                continue;
-            }
-            thread.sendContinue();
-            success++;
-        }
-        return HttpDataResponse.ok(success);
-    }
-
     /**
-     * TODO 将返回值映射到前端
-     *
+     * 刷新图片缓存
      * @param hwnd
      * @return
      */
-    @PostMapping("/state")
-    public HttpDataResponse<CoreThreadStateEnum> getCoreThreadState(@RequestParam long hwnd) {
-        DDTankCoreScript thread = threadService.get(hwnd);
-        if (thread == null) {
-            return HttpDataResponse.err(DDTankHttpResponseEnum.PARAM_LOST, CoreThreadStateEnum.NOT_STARTED);
-        }
-        return HttpDataResponse.ok(thread.getCoreState());
-    }
-
-    @PostMapping("/start")
-    public HttpResponse start(@RequestParam long hwnd,
-                              String name,
-                              Integer propertiesMode,
-                              Integer levelLine,
-                              Integer levelRow,
-                              Double levelDifficulty,
-                              String attackSkill,
-                              Integer enemyFindMode,
-                              Boolean isHandleCalcDistance,
-                              Double handleDistance) {
-//        threadService.start(hwnd, version, propertiesMode, name);
-        DDTankCoreScript script = markHwndService.get(hwnd);
-        if(propertiesMode != null) {
-            if (propertiesMode == 0) {
-                script.setProperties(defaultProperties.clone());
-            } else {
-                script.setProperties(configService.getByIndex(propertiesMode - 1).clone());
-            }
-        }
-        if(name != null) {
-            script.setName(name);
-        }
-        DDTankCoreTaskProperties properties = script.getProperties();
-        if(levelLine != null) {
-            properties.setLevelLine(levelLine);
-        }
-        if(levelRow != null) {
-            properties.setLevelRow(levelRow);
-        }
-        if(levelDifficulty != null) {
-            properties.setLevelDifficulty(levelDifficulty);
-        }
-        if(attackSkill != null) {
-            properties.setAttackSkill(attackSkill);
-        }
-        if(enemyFindMode != null) {
-            properties.setEnemyFindMode(enemyFindMode);
-        }
-        if(isHandleCalcDistance != null) {
-            properties.setIsHandleCalcDistance(isHandleCalcDistance);
-        }
-        if(handleDistance != null && properties.getIsHandleCalcDistance()) {
-            properties.setHandleDistance(handleDistance);
-        }
-        return HttpResponse.auto(threadService.start(script));
-    }
-
-    @PostMapping("/restart")
-    public HttpResponse restart(@RequestParam(name = "hwnd") List<Long> hwnds) throws InterruptedException {
-        threadService.restart(hwnds);
-        return HttpResponse.ok();
-    }
-
-    @PostMapping("/stop")
-    public HttpResponse stop(@RequestParam(name = "hwnd") List<Long> hwnds) throws InterruptedException {
-        threadService.stop(hwnds);
-        return HttpResponse.ok();
-    }
-
-    @PostMapping("/rebind")
-    public HttpResponse rebind(@RequestParam(name = "hwnd") long hwnd,
-                               @RequestParam long newHwnd) {
-        return HttpResponse.auto(threadService.rebind(hwnd, newHwnd));
-    }
-
-    @PostMapping("/remove")
-    public HttpResponse remove(@RequestParam(name = "hwnd") List<Long> hwnds) {
-        for (Long hwnd : hwnds) {
-            threadService.remove(hwnd);
-        }
-        return HttpResponse.ok();
-    }
-
     @PostMapping("/refreshPic")
     public HttpResponse refreshPic(long hwnd) {
         DDTankCoreScript coreThread = threadService.get(hwnd);
         return HttpResponse.auto(coreThread.refreshPic());
     }
 
+    /**
+     * 重命名脚本
+     */
     @PostMapping("/rename")
     public HttpResponse rename(long hwnd, String newName) {
         DDTankCoreScript coreThread = threadService.get(hwnd);
@@ -214,6 +93,9 @@ public class UtilController {
         return HttpResponse.ok();
     }
 
+    /**
+     * 保存力度缓存
+     */
     @PostMapping("/strength")
     public HttpResponse saveStrength() {
         Map<String, Double> calcedMap = DDTankCoreAttackHandlerImpl.getCalcedMap();
@@ -221,6 +103,9 @@ public class UtilController {
         return HttpResponse.ok();
     }
 
+    /**
+     * 从硬盘中获取力度表缓存
+     */
     @PostMapping("/strength/load")
     public HttpResponse loadStrength() throws IOException, ClassNotFoundException {
         File file = DDTankConfigMapper.getDDTankStrengthFile();

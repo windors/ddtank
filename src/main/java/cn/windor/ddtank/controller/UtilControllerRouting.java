@@ -20,6 +20,11 @@ public class UtilControllerRouting {
     @Autowired
     private DDTankThreadService threadService;
 
+    /**
+     * TODO 待更换为更详细的测试接口
+     * @param map
+     * @return
+     */
     @GetMapping("/test")
     public String test(Map<String, Object> map) {
         Map<String, String> tests = new TreeMap<>((s1, s2) -> {
@@ -45,6 +50,11 @@ public class UtilControllerRouting {
         return "util/test";
     }
 
+    /**
+     * 力度表缓存的相关操作
+     * @param map
+     * @return
+     */
     @GetMapping("/strength")
     public String strength(Map<String, Object> map) {
 
