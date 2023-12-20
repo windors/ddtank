@@ -9,12 +9,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 @RequestMapping("/detail")
-public class DetailController extends BaseScriptController {
+public class DetailConfigController extends BaseScriptController {
 
     @Autowired
     private DDTankDetailService ddTankDetailService;

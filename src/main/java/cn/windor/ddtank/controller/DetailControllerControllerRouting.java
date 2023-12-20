@@ -14,7 +14,7 @@ import java.util.Map;
 
 @Controller
 @RequestMapping("detail")
-public class DetailControllerRouting {
+public class DetailControllerControllerRouting {
 
     @Autowired
     private DDTankThreadService ddTankThreadService;
