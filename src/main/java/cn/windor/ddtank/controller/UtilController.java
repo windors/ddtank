@@ -4,17 +4,16 @@ import cn.windor.ddtank.base.Library;
 import cn.windor.ddtank.core.DDTankCoreScript;
 import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 import cn.windor.ddtank.config.DDTankFileConfigProperties;
-import cn.windor.ddtank.core.DDTankPic;
 import cn.windor.ddtank.core.impl.DDTankCoreAttackHandlerImpl;
+import cn.windor.ddtank.dto.DDTankHttpResponseEnum;
+import cn.windor.ddtank.dto.HttpDataResponse;
+import cn.windor.ddtank.dto.HttpResponse;
 import cn.windor.ddtank.mapper.DDTankConfigMapper;
 import cn.windor.ddtank.service.DDTankConfigService;
 import cn.windor.ddtank.service.DDTankMarkHwndService;
 import cn.windor.ddtank.service.DDTankThreadService;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
 import cn.windor.ddtank.util.FileUtils;
-import cn.windor.dto.HttpDataResponse;
-import cn.windor.dto.HttpResponse;
-import cn.windor.type.HttpResponseEnum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +21,6 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Map;
@@ -47,23 +45,25 @@ public class UtilController {
     private Library dm;
 
     @PostMapping("/test")
-    public HttpDataResponse<Object> test(@RequestParam String methodName,
+    public HttpResponse test(@RequestParam String methodName,
                                          @RequestParam long hwnd) {
-        DDTankCoreScript thread = threadService.get(hwnd);
-        if (thread == null) {
-            return new HttpDataResponse(HttpResponseEnum.ILLEGAL_INPUT, null);
-        }
-        thread.refreshPic();
-        try {
-            Method method = DDTankPic.class.getMethod(methodName);
-            Object result = method.invoke(thread.getDdtankPic());
-            return new HttpDataResponse(HttpResponseEnum.OK, result == null ? "null" : result.toString());
-        } catch (Exception e) {
-            e.printStackTrace();
-            return new HttpDataResponse(HttpResponseEnum.ERROR, e);
-        }
+//        DDTankCoreScript thread = threadService.get(hwnd);
+//        if (thread == null) {
+//            return new HttpResponse(DDTankHttpResponseEnum.PARAM_LOST, "未找到窗口[" + hwnd + "]所绑定的脚本");
+//        }
+//        thread.refreshPic();
+//        try {
+//            Method method = DDTankPic.class.getMethod(methodName);
+//            Object result = method.invoke(thread.getDdtankPic());
+//            return new HttpDataResponse(DDTankHttpResponseEnum.OK, result == null ? "null" : result.toString());
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return new HttpDataResponse(DDTankHttpResponseEnum.ERROR, e);
+//        }
+        return HttpResponse.notDev();
     }
 
+    // TODO 待修改逻辑
     @GetMapping("/screenshot")
     public StreamingResponseBody getScreenshot(@RequestParam long hwnd) {
         DDTankCoreScript script = threadService.get(hwnd);
@@ -73,7 +73,7 @@ public class UtilController {
         String path = DDTankFileConfigProperties.getScreenshotPath();
         try {
             script.screenshot(path);
-        }catch (IllegalStateException ignore) {
+        }catch (Exception ignore) {
             return outputStream -> {
 
             };
@@ -122,7 +122,7 @@ public class UtilController {
     public HttpDataResponse<CoreThreadStateEnum> getCoreThreadState(@RequestParam long hwnd) {
         DDTankCoreScript thread = threadService.get(hwnd);
         if (thread == null) {
-            return HttpDataResponse.ok(CoreThreadStateEnum.NOT_STARTED);
+            return HttpDataResponse.err(DDTankHttpResponseEnum.PARAM_LOST, CoreThreadStateEnum.NOT_STARTED);
         }
         return HttpDataResponse.ok(thread.getCoreState());
     }

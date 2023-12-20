@@ -10,7 +10,6 @@ import cn.windor.ddtank.handler.DDTankFindPositionMoveHandler;
 import cn.windor.ddtank.mapper.DDTankConfigMapper;
 import cn.windor.ddtank.type.TowardEnum;
 import cn.windor.ddtank.util.FileUtils;
-import cn.windor.dto.HttpResponse;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;

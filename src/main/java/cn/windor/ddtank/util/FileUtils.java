@@ -1,7 +1,6 @@
 package cn.windor.ddtank.util;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.parameters.P;
 import org.springframework.util.FileCopyUtils;
 
 import java.io.*;

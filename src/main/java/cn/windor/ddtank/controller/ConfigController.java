@@ -1,9 +1,11 @@
 package cn.windor.ddtank.controller;
 
 import cn.windor.ddtank.core.DDTankCoreTaskProperties;
+import cn.windor.ddtank.dto.HttpResponse;
 import cn.windor.ddtank.service.DDTankConfigService;
 import cn.windor.ddtank.service.DDTankThreadService;
-import cn.windor.dto.HttpResponse;
+
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,6 +29,7 @@ public class ConfigController {
 
     /**
      * 更新运行中的配置
+     * TODO 将配置二合一
      */
     @PutMapping("/run/{hwnd}")
     public HttpResponse updateCoreThreadProperties(@PathVariable long hwnd,
