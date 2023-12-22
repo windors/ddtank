@@ -28,14 +28,30 @@ public class DDTankCoreTaskProperties implements Serializable, Cloneable {
     }
 
     public synchronized void update(DDTankCoreTaskProperties properties) {
-        this.enemyOffsetX = properties.enemyOffsetX;
-        this.enemyOffsetY = properties.enemyOffsetY;
-        this.myOffsetX = properties.myOffsetX;
-        this.myOffsetY = properties.myOffsetY;
-        this.version = properties.version;
-        this.bindDisplay = properties.bindDisplay;
-        this.bindMouse = properties.bindMouse;
-        this.bindKeypad = properties.bindKeypad;
+        if(properties.enemyFindMode != null) {
+            this.enemyOffsetX = properties.enemyOffsetX;
+        }
+        if(properties.enemyOffsetY != null) {
+            this.enemyOffsetY = properties.enemyOffsetY;
+        }
+        if(properties.myOffsetX != null) {
+            this.myOffsetX = properties.myOffsetX;
+        }
+        if(properties.myOffsetY != null) {
+            this.myOffsetY = properties.myOffsetY;
+        }
+        if(properties.version != null) {
+            this.version = properties.version;
+        }
+        if(properties.bindDisplay != null) {
+            this.bindDisplay = properties.bindDisplay;
+        }
+        if(properties.bindMouse != null) {
+            this.bindMouse = properties.bindMouse;
+        }
+        if(properties.bindKeypad != null) {
+            this.bindKeypad = properties.bindKeypad;
+        }
         this.bindPublic = properties.bindPublic;
         this.bindMode = properties.bindMode;
         this.levelMode = properties.levelMode;

@@ -10,7 +10,7 @@ public class HttpDataResponse<T> extends HttpResponse {
         this.data = data;
     }
 
-    public HttpDataResponse(HttpResponseEnum responseEnum, T data) {
+    public HttpDataResponse(Response responseEnum, T data) {
         super(responseEnum);
         this.data = data;
     }
@@ -19,15 +19,15 @@ public class HttpDataResponse<T> extends HttpResponse {
         return new HttpDataResponse<T>(OK.code, OK.msg, data);
     }
 
-    public static HttpDataResponse<?> err(HttpResponseEnum responseEnum) {
+    public static HttpDataResponse<?> err(Response responseEnum) {
         return new HttpDataResponse<>(responseEnum.getCode(), responseEnum.getMsg(), null);
     }
 
-    public static <T> HttpDataResponse<T> err(HttpResponseEnum responseEnum, T data) {
+    public static <T> HttpDataResponse<T> err(Response responseEnum, T data) {
         return new HttpDataResponse<>(responseEnum.getCode(), responseEnum.getMsg(), data);
     }
 
     public static void main(String[] args) {
-        HttpResponse err = HttpDataResponse.err(DDTankHttpResponseEnum.PARAM_LOST);
+        HttpResponse err = HttpDataResponse.err(DDTankResponseEnum.PARAM_LOST);
     }
 }

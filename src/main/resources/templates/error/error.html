@@ -1,0 +1,36 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>出错啦 [[${code}]]</title>
+    <link rel="stylesheet" th:href="@{/static/css/error.css}">
+
+</head>
+<body>
+    <p class="not-found" th:text="${msg}"> page not found </p>
+    <p th:if="${@environment.getProperty('spring.profiles.active') != null && @environment.getProperty('spring.profiles.active').equals('dev')}">[[${data.ip}]]:[[${data.port}]][[${data.uri}]]</p>
+    <div class="tipsiz">
+        <div class="tipsiz-body">
+            <div class="left-arm arm"></div>
+            <div class="face">
+                <div class="upper-face">
+                    <div class="element" th:text="${code}">404</div>
+                </div>
+                <div class="mouth"></div>
+            </div>
+            <div class="right-arm arm"></div>
+        </div>
+    </div>
+    <p> maybe you want to go <a id="back" th:href='${data.referer}'>back? </a></p>
+<script>
+    document.getElementById("back").onclick = function () {
+        if(location.href === this.href) {
+            window.history.back();
+        }else{
+            location.hrefg = this.href;
+        }
+        return false;
+    }
+</script>
+</body>
+</html>

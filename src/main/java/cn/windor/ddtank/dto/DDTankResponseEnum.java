@@ -1,6 +1,6 @@
 package cn.windor.ddtank.dto;
 
-public enum DDTankHttpResponseEnum implements HttpResponseEnum {
+public enum DDTankResponseEnum implements Response {
 
     OK(200, "OK"),
     PARAM_LOST(405, "未根据参数找到符合要求的值");
@@ -8,7 +8,7 @@ public enum DDTankHttpResponseEnum implements HttpResponseEnum {
     private final Integer code;
     private final String msg;
 
-    private DDTankHttpResponseEnum(int code, String msg) {
+    private DDTankResponseEnum(int code, String msg) {
         this.code = code;
         this.msg = msg;
     }

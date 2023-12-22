@@ -54,4 +54,8 @@ public class DDTankCoreScriptThread extends Thread {
             this.interrupt();
         }
     }
+
+    public void stopForced() {
+        stop();
+    }
 }

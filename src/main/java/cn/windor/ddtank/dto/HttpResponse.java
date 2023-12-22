@@ -14,7 +14,7 @@ public class HttpResponse implements Serializable {
 
     protected static final HttpResponse ERROR = new HttpResponse(500, "ERROR");
 
-    public HttpResponse(HttpResponseEnum responseEnum) {
+    public HttpResponse(Response responseEnum) {
         this.code = responseEnum.getCode();
         this.msg = responseEnum.getMsg();
     }
@@ -32,12 +32,16 @@ public class HttpResponse implements Serializable {
         return success ? OK : ERROR;
     }
 
+    public static HttpResponse auto(Response response) {
+        return new HttpResponse(response);
+    }
 
-    public static HttpResponse err(HttpResponseEnum ddTankHttpResponseEnum) {
+
+    public static HttpResponse err(Response ddTankHttpResponseEnum) {
         return new HttpResponse(ddTankHttpResponseEnum);
     }
 
-    public static HttpResponse err(HttpResponseEnum ddTankHttpResponseEnum, String reason) {
+    public static HttpResponse err(Response ddTankHttpResponseEnum, String reason) {
         return new HttpResponse(ddTankHttpResponseEnum.getCode(), reason);
     }
 

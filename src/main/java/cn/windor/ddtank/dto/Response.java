@@ -1,6 +1,6 @@
 package cn.windor.ddtank.dto;
 
-public interface HttpResponseEnum {
+public interface Response {
     Integer getCode();
 
     String getMsg();

@@ -1,25 +1,20 @@
 package cn.windor.ddtank.service.impl;
 
 import cn.windor.ddtank.base.*;
-import cn.windor.ddtank.config.DDTankStartParam;
 import cn.windor.ddtank.core.*;
 import cn.windor.ddtank.core.DDTankCoreTaskProperties;
+import cn.windor.ddtank.dto.DDTankThreadResponseEnum;
+import cn.windor.ddtank.dto.Response;
 import cn.windor.ddtank.entity.LevelRule;
-import cn.windor.ddtank.handler.DDTankHwndMarkHandler;
-import cn.windor.ddtank.handler.impl.DDTankHwndMarkHandlerImpl;
 import cn.windor.ddtank.service.DDTankMarkHwndService;
 import cn.windor.ddtank.service.DDTankThreadService;
-import com.melloware.jintellitype.HotkeyListener;
-import com.melloware.jintellitype.JIntellitype;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 
 @Service
 @Slf4j
@@ -41,187 +36,228 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
 
     /**
      * 启动脚本
+     * 追踪链交给了通过hwnd找DDTankCoreScript处理
+     * @return 每个脚本的启动情况
      */
     @Override
-    public boolean start(DDTankCoreScript coreScript) {
-        long hwnd = coreScript.getHwnd();
-        DDTankCoreScriptThread thread;
-        synchronized (threadMap) {
-            if ((thread = threadMap.get(hwnd)) != null) {
-                // 指定脚本已保存在线程映射中
-                DDTankCoreScript script = thread.getScript();
-                if (script == coreScript) {
-                    if (!thread.isAlive()) {
-                        // 如果脚本线程已停止运行则再次启动脚本
-                        thread = new DDTankCoreScriptThread(script);
-                        threadMap.put(hwnd, thread);
+    public Map<DDTankCoreScript, Response> start(List<DDTankCoreScript> scripts) {
+        scripts = new ArrayList<>(scripts);
+        Map<DDTankCoreScript, Response> result = new HashMap<>();
+        scripts.forEach(script -> result.put(script, DDTankThreadResponseEnum.FAIL));
+
+        // 脚本存在检测，若脚本已被维护进threadMap则直接处理并返回即可
+        for (Map.Entry<Long, DDTankCoreScriptThread> entry : threadMap.entrySet()) {
+            DDTankCoreScriptThread scriptThread = entry.getValue();
+            for (DDTankCoreScript script : scripts) {
+                if (scriptThread.getScript() == script) {
+                    // 当前脚本已经被加入到了内存中执行过
+                    if (!scriptThread.isAlive()) {
+                        // 线程存活，忽略本次请求
+                        result.put(script, DDTankThreadResponseEnum.THREAD_IS_ALIVE);
+                    } else {
+                        if (scriptThread.getState() == Thread.State.NEW) {
+                            // 线程还未启动，直接启动
+                            scriptThread.start();
+                        } else {
+                            // 线程已经被停止，需要再次创建新的线程对象并启动
+                            scriptThread = new DDTankCoreScriptThread(script);
+                            // 注意这里仅仅是替换，并没有根据script.hwnd替换key，唯一的替换在重绑定功能
+                            threadMap.put(entry.getKey(), scriptThread);
+                            scriptThread.start();
+                        }
+                        result.put(script, DDTankThreadResponseEnum.OK);
                     }
-                    return true;
-                }else {
-                    log.warn("启动失败，当前窗口[{}]已绑定脚本[{}]", hwnd, thread.getScript().getName());
-                    return false;
+                    // 该script到这里已经处理完毕，无需再进入后面的其他流程
+                    scripts.remove(script);
+                    break;
                 }
-            } else {
-                // 当前窗口未运行过脚本，则直接启动脚本即可。
-                thread = new DDTankCoreScriptThread(coreScript);
-                thread.start();
-                threadMap.put(hwnd, thread);
-                markHwndService.removeByHwnd(hwnd);
-                return true;
             }
         }
+
+        List<DDTankCoreScript> legalScript = new ArrayList<>(scripts.size());
+        // 窗口绑定检测，若目标窗口已绑定了其他脚本，则不再启动脚本
+        scripts.forEach((script) -> {
+            long hwnd = script.getHwnd();
+            if (threadMap.get(hwnd) == null) {
+                legalScript.add(script);
+            } else {
+                result.put(script, DDTankThreadResponseEnum.WINDOW_IS_BUNDED);
+            }
+        });
+
+        // 创建线程并启动
+        for (DDTankCoreScript script : legalScript) {
+            long hwnd = script.getHwnd();
+            DDTankCoreScriptThread thread = new DDTankCoreScriptThread(script);
+            threadMap.put(hwnd, thread);
+            thread.start();
+            // 通知标记服务移除该对象
+            markHwndService.removeByHwnd(hwnd);
+            result.put(script, DDTankThreadResponseEnum.OK);
+        }
+        return result;
     }
 
-    @Override
-    public boolean start(DDTankCoreScriptThread coreScriptThread) {
-        if(coreScriptThread.getState() == Thread.State.TERMINATED) {
-            // 如果线程终止则调用start(script)
-            return start(new DDTankCoreScriptThread(coreScriptThread.getScript()));
+    /**
+     * 根据传入的脚本列表从运行中的脚本中获取包装其的线程集合
+     * @return 找到的所有脚本线程，<b>注意：结果集合个数会小于等于传入的参数集合，注意外部要加以判断</b>
+     */
+    private List<DDTankCoreScriptThread> getExistsThreadByScript(List<DDTankCoreScript> scripts) {
+        if (scripts == null || scripts.size() == 0) {
+            return new ArrayList<>();
         }
-
-        // 否则现有线程可以
-        return false;
+        // 找到scripts对应的线程
+        List<DDTankCoreScriptThread> result = new ArrayList<>(scripts.size());
+        for (DDTankCoreScriptThread thread : threadMap.values()) {
+            for (DDTankCoreScript script : scripts) {
+                // 这里使用的是等于号，所以script必须是从内存中获取的script，而非是equals的script
+                if (thread.getScript() == script) {
+                    result.add(thread);
+                    scripts.remove(script);
+                    break;
+                }
+            }
+        }
+        return result;
     }
 
 
     /**
      * 停止脚本
      *
-     * @param hwnds 要停止的脚本列表
-     * @throws InterruptedException 等待脚本停止的过程中发生了中断
+     * @param scripts 要停止的脚本列表，必须从相关Service中获取，因为内部使用==来判断是否是同一个脚本
      */
+    @SneakyThrows
     @Override
-    public int stop(List<Long> hwnds) throws InterruptedException {
-        int result = 0;
-        List<Callable<Boolean>> stopThreadList = new ArrayList<>(hwnds.size());
-        for (Long hwnd : hwnds) {
-            DDTankCoreScriptThread thread = threadMap.get(hwnd);
-            if (thread == null) {
-                // 未找到指定脚本，有可能是在换绑后前端未刷新仍然传送的旧句柄，先进行窗口存在检测
-                if(!dm.getWindowState(hwnd, 0)) {
-                    continue;
+    public Map<DDTankCoreScript, Response> stop(List<DDTankCoreScript> scripts) {
+        Map<DDTankCoreScript, Response> result = new HashMap<>(scripts.size(), 1);
+        // 初始化结果集
+        scripts.forEach(script -> result.put(script, DDTankThreadResponseEnum.FAIL));
+
+        // 找到scripts对应的线程
+        List<DDTankCoreScriptThread> existsScriptsThread = getExistsThreadByScript(scripts);
+        // 封装停止任务
+        List<Callable<Boolean>> stopThreadList = new ArrayList<>(existsScriptsThread.size());
+        existsScriptsThread.forEach(scriptThread -> stopThreadList.add(new DDTankCoreScriptThreadStopCallable(scriptThread)));
+
+        // 执行停止任务
+        List<Future<Boolean>> stopThreadResultList = threadPool.invokeAll(stopThreadList);
+
+        // 封装结果集
+        int index = 0;
+        for (Future<Boolean> stopThreadResult : stopThreadResultList) {
+            DDTankCoreScriptThread thread = existsScriptsThread.get(index);
+            DDTankCoreScript script = thread.getScript();
+            try {
+                if (stopThreadResult.get()) {
+                    result.put(script, DDTankThreadResponseEnum.OK);
                 }
-                // 窗口未失效，尝试从父窗口中查找（前台模式绑定的是顶层父窗口）
-                hwnd = dm.getWindow(hwnd, 7);
-                thread = threadMap.get(hwnd);
-                if (thread == null) {
-                    log.warn("[脚本停止]：未找到指定脚本{}", hwnd);
-                    continue;
-                }
+            } catch (ExecutionException | InterruptedException e) {
+                // TODO 停止过程中遇到了错误，理论上不会出现异常
+                log.error("尝试停止脚本过程中遇到了异常：");
+                e.printStackTrace();
             }
-            final DDTankCoreScriptThread finalThread = thread;
-            result++;
-            stopThreadList.add(() -> {
-                finalThread.tryStop();
-                try {
-                    // 等待线程终止
-                    finalThread.join();
-                    return true;
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+            index++;
         }
-        threadPool.invokeAll(stopThreadList);
         return result;
     }
 
 
+    /**
+     * 停止线程所用的Callable接口实现
+     */
+    private static class DDTankCoreScriptThreadStopCallable implements Callable<Boolean> {
+
+        /**
+         * 已经尝试过停止的脚本线程
+         * 由于Java中的一个线程对象调用过一次start方法后就无法再次调用start方法，所以在调用了停止方法后如果想要再次启动，则需要额外创建新的
+         * DDTankCoreScriptThread对象，因此旧的DDTankCoreScriptThread对象就完全无用了，可以随意处置。
+         */
+        private static final Set<DDTankCoreScriptThread> triedThreadSet = new ConcurrentSkipListSet<>();
+
+        private final DDTankCoreScriptThread scriptThread;
+
+        public DDTankCoreScriptThreadStopCallable(DDTankCoreScriptThread scriptThread) {
+            this.scriptThread = scriptThread;
+        }
+
+        @Override
+        public Boolean call() throws Exception {
+            if (scriptThread.isAlive()) {
+                if (triedThreadSet.add(scriptThread)) {
+                    // 未尝试过停止操作
+                    scriptThread.tryStop();
+                    scriptThread.join();
+                    // 线程终止后及时的从尝试停止Set中移除，防止内存堆积
+                    triedThreadSet.remove(scriptThread);
+                } else {
+                    // 已尝试过普通的停止方法，使用强制终止来对线程进行停止操作
+                    scriptThread.stopForced();
+                }
+            }
+            return true;
+        }
+    }
+
     @Override
-    public boolean updateProperties(long hwnd, DDTankCoreTaskProperties config) {
+    public Response updateProperties(long hwnd, DDTankCoreTaskProperties config) {
         DDTankCoreScriptThread thread = threadMap.get(hwnd);
         if (thread == null) {
-            return false;
+            return DDTankThreadResponseEnum.WINDOW_SCRIPT_IS_NOT_EXISTS;
         }
         thread.getScript().updateProperties(config);
-        return true;
+        return DDTankThreadResponseEnum.OK;
     }
 
     /**
-     * 重启脚本
+     * 重启指定脚本
      *
-     * @param hwnds
      * @return
      */
     @Override
-    public synchronized int restart(List<Long> hwnds) throws InterruptedException {
-        int result = 0;
-        List<Long> aliveHwnds = new ArrayList<>(hwnds.size());
-        List<Long> legalHwnds = new ArrayList<>(hwnds.size());
-        for (Long hwnd : hwnds) {
-            DDTankCoreScriptThread thread = threadMap.get(hwnd);
-            if (thread == null) {
-                // 未找到指定脚本，尝试从父窗口中查找（前台模式绑定的是顶层父窗口）
-                hwnd = dm.getWindow(hwnd, 7);
-                thread = threadMap.get(hwnd);
-                if (thread == null) {
-                    log.warn("[脚本重启]：未找到指定脚本{}", hwnd);
-                    continue;
-                }
-            }
-            legalHwnds.add(hwnd);
-            // 如果有线程存活，那么将存活的线程记录下来，准备之后停止
-            if (thread.isAlive()) {
-                aliveHwnds.add(hwnd);
-            } else {
-                result++;
-            }
-        }
+    public Map<DDTankCoreScript, Response> restart(List<DDTankCoreScript> scripts) {
+        // 停止所有活动的脚本
+        stop(scripts);
 
-        // 停止所有活动的线程
-        result += stop(aliveHwnds);
-
-        for (Long hwnd : legalHwnds) {
-            DDTankCoreScriptThread thread = threadMap.get(hwnd);
-            if (thread == null) {
-                // 未找到指定脚本，尝试从父窗口中查找（前台模式绑定的是顶层父窗口）
-                hwnd = dm.getWindow(hwnd, 7);
-                thread = threadMap.get(hwnd);
-            }
-            thread = new DDTankCoreScriptThread(thread.getScript());
-            threadMap.put(hwnd, thread);
-            thread.start();
-        }
-        return result;
+        // 启动所有脚本
+        return start(scripts);
     }
 
     @Override
-    public boolean remove(long hwnd) {
+    public Response remove(long hwnd) {
         DDTankCoreScriptThread coreThread = threadMap.remove(hwnd);
         if (coreThread == null) {
-            return false;
+            return DDTankThreadResponseEnum.WINDOW_SCRIPT_IS_NOT_EXISTS;
         }
         if (coreThread.isAlive()) {
             coreThread.tryStop();
         }
-        return true;
+        return DDTankThreadResponseEnum.OK;
     }
 
     @Override
-    public synchronized boolean rebind(long hwnd, long newHwnd) {
+    public Response rebind(DDTankCoreScript script, long newHwnd) {
         long newLegalHwnd = markHwndService.getLegalHwnd(newHwnd);
-        if(newLegalHwnd == 0) {
-            log.error("重绑定失败：新窗口无效！");
-            return false;
+        if (newLegalHwnd == 0) {
+            return DDTankThreadResponseEnum.WINDOW_IS_ILLEGAL;
         }
 
         if (threadMap.get(newHwnd) != null) {
-            log.error("重绑定失败：新窗口已绑定到{}！", threadMap.get(newLegalHwnd).getName());
-            return false;
+            return DDTankThreadResponseEnum.WINDOW_IS_BUNDED;
         }
+        long hwnd = script.getHwnd();
 
         // 2. 获取hwnd所挂脚本的状态
-        DDTankCoreScriptThread coreThread = threadMap.get(hwnd);
-        if (coreThread == null) {
-            log.error("重绑定失败：检测到窗口{}绑定脚本已被移除，请重新创建脚本！", hwnd);
-            return false;
+        DDTankCoreScriptThread coreThread = getThread(hwnd);
+        if(coreThread == null) {
+            coreThread = new DDTankCoreScriptThread(script);
         }
+
         if (coreThread.isAlive()) {
             // 线程还在运行，调用内部的hwnd自行重绑定即可
-            return coreThread.getScript().rebind(newLegalHwnd, true);
+            coreThread.getScript().rebind(newLegalHwnd, true);
         } else {
             // 线程终止，直接改变hwnd即可
-            DDTankCoreScript script = coreThread.getScript();
             script.setHwnd(newLegalHwnd);
             coreThread = new DDTankCoreScriptThread(script);
             coreThread.start();
@@ -230,40 +266,13 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
             threadMap.remove(hwnd);
             threadMap.put(newLegalHwnd, coreThread);
         }
-        return true;
-    }
-
-    @Override
-    public boolean addRule(long hwnd, LevelRule rule) {
-        DDTankCoreScriptThread coreThread = threadMap.get(hwnd);
-        if (coreThread == null) {
-            return false;
-        }
-
-        return coreThread.getScript().addRule(rule);
-    }
-
-    @Override
-    public boolean removeRule(long hwnd, int index) {
-        DDTankCoreScriptThread coreThread = threadMap.get(hwnd);
-        if (coreThread == null) {
-            return false;
-        }
-        return coreThread.getScript().removeRule(index);
-    }
-
-    @Override
-    public boolean setAutoReconnect(DDTankCoreScript coreThread, String username, String password) {
-        if (coreThread == null) {
-            return false;
-        }
-        return coreThread.setAutoReconnect(username, password);
+        return DDTankThreadResponseEnum.OK;
     }
 
     @Override
     public DDTankCoreScript get(long hwnd) {
         DDTankCoreScriptThread scriptThread = threadMap.get(hwnd);
-        if(scriptThread == null) {
+        if (scriptThread == null) {
             return null;
         }
         return scriptThread.getScript();
@@ -277,7 +286,7 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
     @Override
     public boolean isRunning(DDTankCoreScript script) {
         for (DDTankCoreScriptThread thread : threadMap.values()) {
-            if(thread.getScript() == script) {
+            if (thread.getScript() == script) {
                 return true;
             }
         }
@@ -294,7 +303,8 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
     }
 
     /**
-     * 提供给正在运行中的脚本的重绑定方法，用于不停止/重启的内部重绑定
+     * 提供给正在运行中的脚本的静态重绑定方法，用于不停止/重启的内部重绑定
+     *
      * @param hwnd
      * @param newHwnd
      * @return
@@ -306,7 +316,7 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
 
     public static DDTankCoreScript getRunningScript(long hwnd) {
         DDTankCoreScriptThread scriptThread = threadMap.get(hwnd);
-        if(scriptThread == null) {
+        if (scriptThread == null) {
             return null;
         }
         return scriptThread.getScript();
