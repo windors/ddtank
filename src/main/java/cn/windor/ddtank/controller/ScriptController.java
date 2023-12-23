@@ -90,6 +90,9 @@ public class ScriptController extends BaseScriptController {
         return HttpDataResponse.ok(ddTankThreadService.start(scripts));
     }
 
+    /**
+     * 暂停指定脚本
+     */
     @PostMapping("/suspend")
     public HttpDataResponse<Integer> suspendCoreThread(@RequestParam(name = "hwnd", required = false) List<Long> hwnds,
                                                        @RequestParam(name = "index", required = false) List<Integer> indexList) {
@@ -102,6 +105,9 @@ public class ScriptController extends BaseScriptController {
         return HttpDataResponse.ok(success);
     }
 
+    /**
+     * 使指定脚本恢复运行
+     */
     @PostMapping("/continue")
     public HttpResponse continueCoreThread(@RequestParam(name = "hwnd", required = false) List<Long> hwnds,
                                            @RequestParam(name = "index", required = false) List<Integer> indexList) {
@@ -116,8 +122,6 @@ public class ScriptController extends BaseScriptController {
 
     /**
      * 查询指定脚本运行状态
-     *
-     * @return
      */
     @PostMapping("/state")
     public HttpDataResponse<CoreThreadStateEnum> getCoreThreadState(@RequestParam long hwnd) {
@@ -191,12 +195,18 @@ public class ScriptController extends BaseScriptController {
     }
 
 
+    /**
+     * 使选中的脚本停止运行
+     */
     @PostMapping("/stop")
     public HttpResponse stop(@RequestParam(name = "hwnd", required = false) List<Long> hwnds,
-                             @RequestParam(name="index", required = false) List<Integer> indexList) throws InterruptedException {
+                             @RequestParam(name="index", required = false) List<Integer> indexList) {
         return HttpDataResponse.ok(threadService.stop(getScripts(hwnds, indexList)));
     }
 
+    /**
+     * 指定脚本重绑定操作，若脚本未启动则会直接启动
+     */
     @PostMapping("/rebind")
     public HttpResponse rebind(@RequestParam(name = "hwnd", required = false) long hwnd,
                                @RequestParam(name = "index", required = false) int index,
@@ -208,22 +218,15 @@ public class ScriptController extends BaseScriptController {
      * 移除指定脚本
      */
     @PostMapping("/remove")
-    public HttpResponse remove(@RequestParam(name = "hwnd") List<Long> hwnds) {
-        for (Long hwnd : hwnds) {
-            threadService.remove(hwnd);
+    public HttpResponse remove(@RequestParam(name = "hwnd", required = false) List<Long> hwnds,
+                               @RequestParam(name = "index", required = false) List<Integer> indexList) {
+        if(hwnds != null) {
+            for (Long hwnd : hwnds) {
+                threadService.remove(hwnd);
+            }
+            return HttpResponse.ok();
+        }else {
+            return HttpDataResponse.ok(scriptService.removeByIndex(indexList));
         }
-        return HttpResponse.ok();
     }
-
-//    /**
-//     * TDOO 二合一
-//     * 移除已序列化的脚本
-//     *
-//     * @param indexList 待移除的脚本索引
-//     * @return 成功移除的脚本个数
-//     */
-//    @PostMapping("/remove")
-//    public HttpResponse removeScripts(@RequestParam(name = "index") List<Integer> indexList) {
-//        return HttpDataResponse.ok(scriptService.removeByIndex(indexList));
-//    }
 }

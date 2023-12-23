@@ -146,12 +146,7 @@ public class DDTankMarkHwndServiceImpl implements DDTankMarkHwndService {
                 }
                 case SHORTCUT_STOP: {
                     long hwnd = dm.getMousePointWindow();
-                    try {
-                        threadService.stop(Collections.singletonList(threadService.get(hwnd)));
-                    } catch (InterruptedException e) {
-                        log.warn("脚本已在停止");
-                        throw new RuntimeException(e);
-                    }
+                    threadService.stop(Collections.singletonList(threadService.get(hwnd)));
                     break;
                 }
                 default:
