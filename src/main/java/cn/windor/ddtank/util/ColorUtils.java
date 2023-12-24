@@ -1,5 +1,8 @@
 package cn.windor.ddtank.util;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 public class ColorUtils {
     public static String add(String color1, String color2) {
         int r = Integer.parseInt(color1.substring(0, 2), 16) + Integer.parseInt(color2.substring(0, 2), 16);
@@ -20,6 +23,10 @@ public class ColorUtils {
         for (String c : colors) {
             String[] split = c.split("-");
             String color = split[0];
+            if(color.length() != 6) {
+                log.warn("非法Color：{}", colorStr);
+                return false;
+            }
             int offR = r - Integer.parseInt(color.substring(0, 2), 16);
             int offG = g - Integer.parseInt(color.substring(2, 4), 16);
             int offB = b - Integer.parseInt(color.substring(4, 6), 16);

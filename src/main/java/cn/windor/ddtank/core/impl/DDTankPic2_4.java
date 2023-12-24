@@ -108,17 +108,10 @@ public class DDTankPic2_4 extends DDTankPic2_3 implements Serializable {
             success = false;
         }
         int angle = 0;
-        try {
-            angle = Integer.parseInt(reuslt);
-        }catch (NumberFormatException e) {
-            log.error("角度获取失败，字库精准度不足！");
-            success = false;
-        }
+        angle = Integer.parseInt(reuslt);
         if(success) {
             return angle;
         } else {
-            dm.capture(42, 548, 86, 588, DDTankFileConfigProperties.getFailDir("angle") + "/" + System.currentTimeMillis() + ".bmp");
-            delay(10000, true);
             return null;
         }
     }

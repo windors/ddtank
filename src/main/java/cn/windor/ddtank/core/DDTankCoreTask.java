@@ -8,6 +8,7 @@ import cn.windor.ddtank.base.impl.DMKeyboard;
 import cn.windor.ddtank.base.impl.DMLibrary;
 import cn.windor.ddtank.base.impl.DMMouse;
 import cn.windor.ddtank.config.DDTankFileConfigProperties;
+import cn.windor.ddtank.config.DDTankSetting;
 import cn.windor.ddtank.core.impl.*;
 import cn.windor.ddtank.entity.LevelRule;
 import cn.windor.ddtank.exception.StopTaskException;
@@ -349,8 +350,14 @@ public class DDTankCoreTask implements Runnable, Serializable {
 
                             if (ddtankPic.needDraw()) {
                                 delay(300, true);
-                                DMLibrary.capture(dm, hwnd, DDTankFileConfigProperties.getDrawDir(Thread.currentThread().getName()) + "/" + passes + ".png");
+
+                                // 翻牌截图
+                                if(DDTankSetting.isDrawCapture()) {
+                                    DMLibrary.capture(dm, hwnd, DDTankFileConfigProperties.getDrawDir(Thread.currentThread().getName()) + "/" + passes + ".png");
+                                }
                                 ddtLog.success("第" + ++passes + "次副本已通关");
+
+                                // 关卡记录结束
                                 levelSummary.summary();
 
                                 // 执行自动领任务操作
@@ -373,6 +380,8 @@ public class DDTankCoreTask implements Runnable, Serializable {
                                 // 执行固定延迟
                                 delay((long) (properties.getLevelEndWaitTime() * 1000), true);
                             }
+
+                            // 整体流程检测间隔延迟
                             delay(properties.getDelay(), true);
                         } catch (StopTaskException ignored) {
                         } catch (Exception e) {

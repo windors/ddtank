@@ -144,8 +144,6 @@ public class DDTankPic2_3 extends DDTankPic10_4 implements Serializable {
             result = result.replaceAll("\\D", "");
         }
         if ("".equals(result)) {
-            log.error("角度获取失败，请更新字库！");
-            dm.capture(42, 548, 86, 588, DDTankFileConfigProperties.getFailDir("angle") + "/" + System.currentTimeMillis() + ".bmp");
             return null;
         }
         return Integer.parseInt(result);

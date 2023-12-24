@@ -1,6 +1,8 @@
 package cn.windor.ddtank.core.impl;
 
 import cn.windor.ddtank.base.*;
+import cn.windor.ddtank.config.DDTankFileConfigProperties;
+import cn.windor.ddtank.config.DDTankSetting;
 import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 import cn.windor.ddtank.exception.DDTankAngleResolveException;
 import cn.windor.ddtank.exception.DDTankStrengthResolveException;
@@ -126,6 +128,14 @@ public class DDtankOperate10_4 implements DDTankOperate, Serializable {
                 nowAngle = ddTankPic.getAngle();
             }
         } catch (Exception e) {
+            if (e instanceof NumberFormatException) {
+                log.error("角度获取失败，字库精准度不足！");
+            } else {
+                log.error("角度获取失败，请更新字库！");
+            }
+            if(DDTankSetting.isFailCapture()) {
+                dm.capture(42, 548, 86, 588, DDTankFileConfigProperties.getFailDir("angle") + "/" + System.currentTimeMillis() + ".bmp");
+            }
             throw new DDTankAngleResolveException();
         }
         return true;
@@ -215,9 +225,9 @@ public class DDtankOperate10_4 implements DDTankOperate, Serializable {
                 nowColor = dm.getAveRGB(x - 1, 574, x + 1, 590).toLowerCase();
                 long startTime = System.currentTimeMillis();
                 do {
-                    if(System.currentTimeMillis() - startTime > 1000) {
+                    if (System.currentTimeMillis() - startTime > 1000) {
                         // 定时检查是否还在回合内，不在回合内直接返回即可
-                        if(!ddTankPic.isMyRound()) {
+                        if (!ddTankPic.isMyRound()) {
                             return;
                         }
                         startTime = System.currentTimeMillis();

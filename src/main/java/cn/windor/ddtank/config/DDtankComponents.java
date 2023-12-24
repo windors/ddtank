@@ -21,6 +21,11 @@ public class DDtankComponents {
     private ConfigurableApplicationContext context;
 
     @Bean
+    public DDTankSetting getDDTankSetting() {
+        return new DDTankSetting();
+    }
+
+    @Bean
     public DDTankCoreTaskProperties getDDTankConfigProperties() {
         return new DDTankCoreTaskProperties(DDTankConfigMapper.getDefaultConfigProperties());
     }
