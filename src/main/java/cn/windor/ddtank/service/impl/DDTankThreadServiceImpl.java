@@ -40,7 +40,7 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
      * @return 每个脚本的启动情况
      */
     @Override
-    public Map<DDTankCoreScript, Response> start(List<DDTankCoreScript> scripts) {
+    public synchronized Map<DDTankCoreScript, Response> start(List<DDTankCoreScript> scripts) {
         scripts = new ArrayList<>(scripts);
         Map<DDTankCoreScript, Response> result = new HashMap<>();
         scripts.forEach(script -> result.put(script, DDTankThreadResponseEnum.FAIL));
@@ -130,7 +130,7 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
      */
     @SneakyThrows
     @Override
-    public Map<DDTankCoreScript, Response> stop(List<DDTankCoreScript> scripts) {
+    public synchronized Map<DDTankCoreScript, Response> stop(List<DDTankCoreScript> scripts) {
         Map<DDTankCoreScript, Response> result = new HashMap<>(scripts.size(), 1);
         // 初始化结果集
         scripts.forEach(script -> result.put(script, DDTankThreadResponseEnum.FAIL));
@@ -216,7 +216,7 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
      * @return
      */
     @Override
-    public Map<DDTankCoreScript, Response> restart(List<DDTankCoreScript> scripts) {
+    public synchronized Map<DDTankCoreScript, Response> restart(List<DDTankCoreScript> scripts) {
         // 停止所有活动的脚本
         stop(scripts);
 
