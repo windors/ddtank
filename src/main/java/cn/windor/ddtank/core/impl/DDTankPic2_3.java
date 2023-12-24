@@ -109,7 +109,7 @@ public class DDTankPic2_3 extends DDTankPic10_4 implements Serializable {
             while (!getPicFind("needDraw3").findPic(putInBag)) {
                 failTimes++;
                 delay(1000, true);
-                if(failTimes > 30) {
+                if (failTimes > 30) {
                     // 30秒未找到全选按钮，那么就直接返回
                     return true;
                 }
@@ -137,14 +137,18 @@ public class DDTankPic2_3 extends DDTankPic10_4 implements Serializable {
 
     @Override
     public Integer getAngle() {
-        String reuslt = dm.ocr(42, 548, 86, 588, "1a1a1a-000000|1a260d-000000|101724-000000|1a2016-000000|28222b-000000|260d0d-000000|1c1d20-000000|211d1d-000000|171d32-000000|1c0d03-000000", 0.95);
-        reuslt = reuslt.replaceAll("\\D", "");
-        if ("".equals(reuslt)) {
+        String result = dm.ocr(42, 548, 86, 588, "1a1a1a-000000|1a260d-000000|101724-000000|1a2016-000000|28222b-000000|260d0d-000000|1c1d20-000000|211d1d-000000|171d32-000000|1c0d03-000000", 0.95);
+        result = result.replaceAll("\\D", "");
+        if ("".equals(result)) {
+            result = dm.ocr(42, 548, 86, 588, "000000-000000|170b02-000000|1b1818-000000", 0.95);
+            result = result.replaceAll("\\D", "");
+        }
+        if ("".equals(result)) {
             log.error("角度获取失败，请更新字库！");
             dm.capture(42, 548, 86, 588, DDTankFileConfigProperties.getFailDir("angle") + "/" + System.currentTimeMillis() + ".bmp");
             return null;
         }
-        return Integer.parseInt(reuslt);
+        return Integer.parseInt(result);
     }
 
     @Override
