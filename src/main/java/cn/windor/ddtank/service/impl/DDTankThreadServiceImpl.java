@@ -51,7 +51,7 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
             for (DDTankCoreScript script : scripts) {
                 if (scriptThread.getScript() == script) {
                     // 当前脚本已经被加入到了内存中执行过
-                    if (!scriptThread.isAlive()) {
+                    if (scriptThread.isAlive()) {
                         // 线程存活，忽略本次请求
                         result.put(script, DDTankThreadResponseEnum.THREAD_IS_ALIVE);
                     } else {
@@ -106,6 +106,7 @@ public class DDTankThreadServiceImpl implements DDTankThreadService {
         if (scripts == null || scripts.size() == 0) {
             return new ArrayList<>();
         }
+        scripts = new ArrayList<>(scripts);
         // 找到scripts对应的线程
         List<DDTankCoreScriptThread> result = new ArrayList<>(scripts.size());
         for (DDTankCoreScriptThread thread : threadMap.values()) {

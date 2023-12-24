@@ -1,5 +1,6 @@
 package cn.windor.ddtank.core;
 
+import cn.windor.ddtank.exception.StopTaskException;
 import cn.windor.ddtank.type.CoreThreadStateEnum;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +20,11 @@ public class DDTankCoreScriptThread extends Thread implements Comparable {
 
     @Override
     public void run() {
-        script.run();
+        try {
+            script.run();
+        }catch (StopTaskException e) {
+            log.info("停止运行");
+        }
     }
 
     /**

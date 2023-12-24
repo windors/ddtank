@@ -392,7 +392,7 @@
         if (param['hwnd'] == param['newHwnd']) {
             windorAlert("请更改句柄后再进行操作");
         } else {
-            postAjax("/util/rebind", param, function (data) {
+            postAjax("/script/rebind", param, function (data) {
                 windorAlert('提示', '重绑定成功');
             })
         }

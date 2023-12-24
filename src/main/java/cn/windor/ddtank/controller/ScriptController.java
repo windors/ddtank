@@ -206,8 +206,8 @@ public class ScriptController extends BaseScriptController {
      * 指定脚本重绑定操作，若脚本未启动则会直接启动
      */
     @PostMapping("/rebind")
-    public HttpResponse rebind(@RequestParam(name = "hwnd", required = false) long hwnd,
-                               @RequestParam(name = "index", required = false) int index,
+    public HttpResponse rebind(@RequestParam(name = "hwnd", required = false) Long hwnd,
+                               @RequestParam(name = "index", required = false) Integer index,
                                @RequestParam long newHwnd) {
         return HttpResponse.auto(threadService.rebind(getScript(hwnd, index), newHwnd));
     }
@@ -238,6 +238,7 @@ public class ScriptController extends BaseScriptController {
                                  @RequestParam(required = false) Integer index,
                                  String name,
                                  Integer propertiesMode,
+                                 Boolean suspend,
                                  Integer levelLine,
                                  Integer levelRow,
                                  Double levelDifficulty,
@@ -266,6 +267,10 @@ public class ScriptController extends BaseScriptController {
             } else {
                 script.setProperties(configService.getByIndex(propertiesMode - 1).clone());
             }
+        }
+
+        if(suspend != null && suspend) {
+            script.sendSuspend();
         }
 
         if (name != null) {
