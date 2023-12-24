@@ -1,13 +1,17 @@
 package cn.windor.ddtank.dto;
 
 
+import lombok.Getter;
+
 import java.io.Serializable;
 
 /**
  * Windor项目统一返回对象
  */
 public class HttpResponse implements Serializable {
+    @Getter
     protected final int code;
+    @Getter
     protected final String msg;
 
     protected static final HttpResponse OK = new HttpResponse(200, "OK");

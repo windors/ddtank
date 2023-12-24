@@ -1,5 +1,6 @@
 package cn.windor.ddtank.dto;
 
+
 public enum DDTankThreadResponseEnum implements Response {
     OK(200, "OK"),
     FAIL(405, "失败"),
@@ -9,6 +10,7 @@ public enum DDTankThreadResponseEnum implements Response {
     WINDOW_SCRIPT_IS_NOT_EXISTS(405, "指定窗口未绑定脚本");
 
     private final Integer code;
+
     private final String msg;
 
     private DDTankThreadResponseEnum(int code, String msg) {

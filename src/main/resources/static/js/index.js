@@ -30,29 +30,35 @@ $("#start-all-form").submit(function () {
 
 // 单个脚本启动
 $(".ddtank-start-form").submit(function () {
-    postAjax("/util/start", $(this).serialize(), function (data) {
-        windorAlert('提示', '脚本启动成功！');
+    // 先设置，然后再启动
+    let hwnd = $($(this).find("input[name='hwnd']")[0]).val();
+    putAjax("/script/config", $(this).serialize(), function (data) {
+        postAjax("/script/start", {
+            hwnd: hwnd
+        }, function (data) {
+            windorAlert('提示', '脚本启动成功！');
+        });
     });
     return false;
 })
 
 // 重启某个线程
 function restart(hwnd) {
-    postAjax("/util/restart", {hwnd: hwnd}, function (data) {
+    postAjax("/script/restart", {hwnd: hwnd}, function (data) {
         windorAlert('提示', '已重启脚本')
     });
 }
 
 // 移除某个线程
 function remove(hwnd) {
-    postAjax("/util/remove", {hwnd: hwnd}, function (data) {
+    postAjax("/script/remove", {hwnd: hwnd}, function (data) {
         windorAlert('提示', '已移除脚本')
     });
 }
 
 // 停止某个脚本
 function stop(hwnd) {
-    postAjax("/util/stop", {hwnd: hwnd}, function (data) {
+    postAjax("/script/stop", {hwnd: hwnd}, function (data) {
         windorAlert('提示', '已停止脚本')
     })
 }
@@ -125,13 +131,13 @@ $(function () {
     // 日志导出
     $(".ddt-export-log").click(function () {
         let param = getCheckedHwndSerialize(this);
-        if(param === "") {
+        if (param === "") {
             windorAlert('提示', '请 <b>选中一些脚本后</b> 再执行本方法')
-        }else {
+        } else {
             var a = document.createElement('a');
             a.href = "/file/export/logs?" + param;
             a.style.display = 'none';
-            a.target='_blank';
+            a.target = '_blank';
             document.body.appendChild(a);
             a.click();
             a.remove();
@@ -141,10 +147,10 @@ $(function () {
 
     $(".ddt-suspend").click(function () {
         let hwnds = getCheckedHwndSerialize(this);
-        if(hwnds === "") {
+        if (hwnds === "") {
             windorAlert('提示', '请 <b>选中一些脚本后</b> 再执行本方法')
-        }else{
-            postAjax('/util/suspend', hwnds, function (data) {
+        } else {
+            postAjax('/script/suspend', hwnds, function (data) {
                 windorAlert('提示', '已尝试暂停选中的脚本');
             })
         }
@@ -152,40 +158,40 @@ $(function () {
 
     $(".ddt-continue").click(function () {
         let hwnds = getCheckedHwndSerialize(this);
-        if(hwnds === "") {
+        if (hwnds === "") {
             windorAlert('提示', '请 <b>选中一些脚本后</b> 再执行本方法')
-        }else{
-            postAjax('/util/continue', hwnds, function (data) {
+        } else {
+            postAjax('/script/continue', hwnds, function (data) {
                 windorAlert('提示', '已尝试恢复选中的脚本');
             })
         }
     })
     $(".ddt-stop").click(function () {
         let hwnds = getCheckedHwndSerialize(this);
-        if(hwnds === "") {
+        if (hwnds === "") {
             windorAlert('提示', '请 <b>选中一些脚本后</b> 再执行本方法')
-        }else{
-            postAjax('/util/stop', hwnds, function (data) {
+        } else {
+            postAjax('/script/stop', hwnds, function (data) {
                 windorAlert('提示', '选中的脚本已停止');
             })
         }
     })
     $(".ddt-restart").click(function () {
         let hwnds = getCheckedHwndSerialize(this);
-        if(hwnds === "") {
+        if (hwnds === "") {
             windorAlert('提示', '请 <b>选中一些脚本后</b> 再执行本方法')
-        }else{
-            postAjax('/util/restart', hwnds, function (data) {
+        } else {
+            postAjax('/script/restart', hwnds, function (data) {
                 windorAlert('提示', '选中的脚本已重启');
             })
         }
     })
     $(".ddt-remove").click(function () {
         let hwnds = getCheckedHwndSerialize(this);
-        if(hwnds === "") {
+        if (hwnds === "") {
             windorAlert('提示', '请 <b>选中一些脚本后</b> 再执行本方法')
-        }else{
-            postAjax('/util/remove', hwnds, function (data) {
+        } else {
+            postAjax('/script/remove', hwnds, function (data) {
                 windorAlert('提示', '已尝试移除指定脚本');
             })
         }

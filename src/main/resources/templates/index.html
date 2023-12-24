@@ -55,6 +55,7 @@
          th:style="'background-image:url(/static/img/bg/void_system_by_elreviae_d8wihvy.jpg);'"
          th:if="${classifiedStartedMap.size() > 0}"></div>
 </div>
+<!--提示框-->
 <div class="row index-main" th:if="${waitStartMap.keySet().size() == 0 && classifiedStartedMap.keySet().size() == 0}">
     <div class="alert alert-warning alert-dismissible fade in" role="alert">
         <button type="button" class="close" data-dismiss="alert" aria-label="Close">
@@ -63,6 +64,7 @@
         当前还未标记任何窗口哦，请使用快捷键<kbd>alt + 1</kbd>标记游戏窗口吧。已标记？请 <a href="">刷新</a>
     </div>
 </div>
+<!--已标记窗口设置-->
 <div class="row index-main">
     <!--导航栏-->
     <div th:if="${waitStartMap.keySet().size() > 0}">
@@ -131,14 +133,8 @@
             </div>
         </div>
     </div>
-    <!--    <div class="alert alert-warning alert-dismissible fade in" role="alert"-->
-    <!--         th:if="${startedMap.keySet().size() == 0}">-->
-    <!--        <button type="button" class="close" data-dismiss="alert" aria-label="Close">-->
-    <!--            <span aria-hidden="true">&times;</span>-->
-    <!--        </button>-->
-    <!--        当前还无任何脚本在启动中哦~。已启动？请 <a href="">刷新</a>-->
-    <!--    </div>-->
 </div>
+<!--脚本列表-->
 <div class="row index-main">
     <div th:if="${classifiedStartedMap.keySet().size() > 0}" th:each="configName:${classifiedStartedMap.keySet()}">
         <form class="ddt start">
@@ -184,10 +180,9 @@
             <button id="ddt-remove" class="btn btn-danger ddt-remove">移除</button>
         </div>
     </div>
-
-    <audio id="danger-data">
-    </audio>
+    <audio id="danger-data"></audio>
 </div>
+<!--神秘代码区-->
 <div class="index-tool hidden-xs hidden-sm" th:if="${danger != null}">
     <div class="main-tool-wrapper">
         <div class="main-tool">

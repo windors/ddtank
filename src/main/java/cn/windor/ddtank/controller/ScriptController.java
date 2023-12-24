@@ -3,9 +3,7 @@ package cn.windor.ddtank.controller;
 
 import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 import cn.windor.ddtank.core.DDTankCoreScript;
-import cn.windor.ddtank.dto.DDTankResponseEnum;
-import cn.windor.ddtank.dto.HttpDataResponse;
-import cn.windor.ddtank.dto.HttpResponse;
+import cn.windor.ddtank.dto.*;
 import cn.windor.ddtank.service.DDTankConfigService;
 import cn.windor.ddtank.service.DDTankMarkHwndService;
 import cn.windor.ddtank.service.DDTankScriptService;
@@ -200,7 +198,7 @@ public class ScriptController extends BaseScriptController {
      */
     @PostMapping("/stop")
     public HttpResponse stop(@RequestParam(name = "hwnd", required = false) List<Long> hwnds,
-                             @RequestParam(name="index", required = false) List<Integer> indexList) {
+                             @RequestParam(name = "index", required = false) List<Integer> indexList) {
         return HttpDataResponse.ok(threadService.stop(getScripts(hwnds, indexList)));
     }
 
@@ -211,7 +209,7 @@ public class ScriptController extends BaseScriptController {
     public HttpResponse rebind(@RequestParam(name = "hwnd", required = false) long hwnd,
                                @RequestParam(name = "index", required = false) int index,
                                @RequestParam long newHwnd) {
-        return HttpResponse.auto(threadService.rebind(getScript(hwnd, index) , newHwnd));
+        return HttpResponse.auto(threadService.rebind(getScript(hwnd, index), newHwnd));
     }
 
     /**
@@ -220,13 +218,81 @@ public class ScriptController extends BaseScriptController {
     @PostMapping("/remove")
     public HttpResponse remove(@RequestParam(name = "hwnd", required = false) List<Long> hwnds,
                                @RequestParam(name = "index", required = false) List<Integer> indexList) {
-        if(hwnds != null) {
+        if (hwnds != null) {
             for (Long hwnd : hwnds) {
                 threadService.remove(hwnd);
             }
             return HttpResponse.ok();
-        }else {
+        } else {
             return HttpDataResponse.ok(scriptService.removeByIndex(indexList));
         }
+    }
+
+    /**
+     * 一键更新配置文件
+     * @param hwnd 先根据hwnd从运行中的脚本中获取脚本，若未获取到则再从mark中获取，因此标记队列hwnd和脚本和hwnd不能发生冲突
+     * @param propertiesMode 配置索引+1，若为0表示使用默认配置
+     */
+    @PutMapping("/config")
+    public HttpResponse updateConfig(@RequestParam(required = false) Long hwnd,
+                                 @RequestParam(required = false) Integer index,
+                                 String name,
+                                 Integer propertiesMode,
+                                 Integer levelLine,
+                                 Integer levelRow,
+                                 Double levelDifficulty,
+                                 String attackSkill,
+                                 Integer enemyFindMode,
+                                 Boolean isHandleCalcDistance,
+                                 Double handleDistance) {
+        DDTankCoreScript script = null;
+        if (hwnd != null) {
+            // 先从运行中的线程中获取Script，若未获取到再从markHwnd中获取Script
+            script = threadService.get(hwnd);
+            if (script == null) {
+                script = markHwndService.get(hwnd);
+            }
+        } else if (index != null) {
+            script = scriptService.getByIndex(index);
+        }
+
+        if(script == null) {
+            return HttpResponse.auto(DDTankThreadResponseEnum.WINDOW_SCRIPT_IS_NOT_EXISTS);
+        }
+
+        if (propertiesMode != null) {
+            if (propertiesMode == 0) {
+                script.setProperties(defaultProperties.clone());
+            } else {
+                script.setProperties(configService.getByIndex(propertiesMode - 1).clone());
+            }
+        }
+
+        if (name != null) {
+            script.setName(name);
+        }
+        DDTankCoreTaskProperties properties = script.getProperties();
+        if (levelLine != null) {
+            properties.setLevelLine(levelLine);
+        }
+        if (levelRow != null) {
+            properties.setLevelRow(levelRow);
+        }
+        if (levelDifficulty != null) {
+            properties.setLevelDifficulty(levelDifficulty);
+        }
+        if (attackSkill != null) {
+            properties.setAttackSkill(attackSkill);
+        }
+        if (enemyFindMode != null) {
+            properties.setEnemyFindMode(enemyFindMode);
+        }
+        if (isHandleCalcDistance != null) {
+            properties.setIsHandleCalcDistance(isHandleCalcDistance);
+        }
+        if (handleDistance != null && properties.getIsHandleCalcDistance()) {
+            properties.setHandleDistance(handleDistance);
+        }
+        return HttpResponse.auto(DDTankResponseEnum.OK);
     }
 }

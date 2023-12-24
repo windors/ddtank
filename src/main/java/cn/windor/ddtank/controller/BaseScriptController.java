@@ -2,6 +2,7 @@ package cn.windor.ddtank.controller;
 
 import cn.windor.ddtank.core.DDTankCoreScript;
 import cn.windor.ddtank.exception.DDTankScriptNotFoundException;
+import cn.windor.ddtank.service.DDTankMarkHwndService;
 import cn.windor.ddtank.service.DDTankScriptService;
 import cn.windor.ddtank.service.DDTankThreadService;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,9 @@ import java.util.List;
 public class BaseScriptController {
     @Autowired
     protected DDTankScriptService scriptService;
+
+    @Autowired
+    protected DDTankMarkHwndService markHwndService;
 
     @Autowired
     protected DDTankThreadService threadService;
@@ -33,7 +37,14 @@ public class BaseScriptController {
             for (Long hwnd : hwnds) {
                 DDTankCoreScript script = threadService.get(hwnd);
                 if (script != null) {
+                    // 先从运行脚本中获取
                     scripts.add(script);
+                }else {
+                    // 若运行脚本中未获取到，则去markHwndService中获取
+                    script = markHwndService.get(hwnd);
+                    if(script != null) {
+                        scripts.add(script);
+                    }
                 }
             }
         }

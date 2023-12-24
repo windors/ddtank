@@ -211,7 +211,8 @@
                     <form id="form-reconnect" class="form-horizontal">
                         <div class="form-group">
                             <label class="col-md-2 control-label">账号</label>
-                            <div class="col-md-3"><input class="form-control" name="username" th:value="${username}"/></div>
+                            <div class="col-md-3"><input class="form-control" name="username" th:value="${username}"/>
+                            </div>
                             <label class="col-md-2 control-label">密码</label>
                             <div class="col-md-3"><input class="form-control" name="password" type="password"
                                                          th:value="${password}"/></div>
@@ -259,18 +260,7 @@
 </div>
 </body>
 <script>
-    // 序列化
     $(function () {
-        $("#btn-serialize").click(function () {
-            let name = $($("h1")[0]).html();
-            let hwnd = location.href.split('/')[5]
-            if(confirm('确定要保存脚本【' + name + '】到硬盘吗？')) {
-                postAjax('/script/add/' + hwnd, {}, function () {
-                    windorAlert('提示', '保存成功！')
-                })
-            }
-        })
-
         // 刷新滑块宽度
         $("#btn-addTask").click(function () {
             $(".sliderlens.horiz").css("width", "100%");
@@ -313,33 +303,43 @@
         }
     })
 
+    // 序列化脚本
+    $("#btn-serialize").click(function () {
+        let name = $($("h1")[0]).html();
+        if (confirm('确定要保存脚本【' + name + '】到硬盘吗？')) {
+            postAjax('/script/save', getData(), function () {
+                windorAlert('提示', '保存成功！')
+            })
+        }
+    })
+
     // 封装参数，将URI中的参数封装
     function getData(data) {
         let strings = location.pathname.split("/");
         let param = strings[strings.length - 1];
-        if(data === undefined) {
+        if (data === undefined) {
             data = {};
         }
-        if(typeof data === "object") {
-            if(location.pathname.includes("run")) {
+        if (typeof data === "object") {
+            if (location.pathname.includes("run")) {
                 data['hwnd'] = param;
-            }else if(location.pathname.includes("script")) {
+            } else if (location.pathname.includes("script")) {
                 data['index'] = param;
             }
-        }
-        else if(typeof data === "string") {
-            if(data !== "") {
+        } else if (typeof data === "string") {
+            if (data !== "") {
                 data += "&";
             }
-            if(location.pathname.includes("run")) {
+            if (location.pathname.includes("run")) {
                 data += "hwnd=" + param;
-            }else if(location.pathname.includes("script")) {
+            } else if (location.pathname.includes("script")) {
                 data += "index" + param;
             }
         }
 
         return data;
     }
+
     // 设置自动使用活力
     $("#btn-autoUseProp").click(function () {
         postAjax('/detail/autoUseProp', getData({

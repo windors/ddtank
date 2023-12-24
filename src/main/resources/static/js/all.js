@@ -27,6 +27,34 @@ function postAjax(url, data, successFunc) {
     });
 }
 
+/*方法包装器，内部调用*/
+function methodAdapter(data, method) {
+    if (data instanceof Array) {
+        data.push({
+            name: "_method",
+            value: method
+        })
+    } else if (typeof data == 'string') {
+        if (data.length === 0) {
+            data += "_method=" + method;
+        } else {
+            data += "&_method=" + method;
+        }
+    } else {
+        data["_method"] = method;
+    }
+
+    if (data instanceof Array) {
+        data.push({
+            name: "_method",
+            value: method
+        })
+    } else {
+        data["_method"] = method;
+    }
+    return data;
+}
+
 /*
 *
 *       var datas = new FormData();
@@ -60,46 +88,14 @@ function postFileAjax(url, data, successFunc) {
 
 /* 统一返回方法 --- delete */
 function deleteAjax(url, data, successFunc) {
-    if (data instanceof Array) {
-        data.push({
-            name: "_method",
-            value: "DELETE"
-        })
-    } else {
-        data["_method"] = "DELETE";
-    }
-    $.post(url, data, function (data) {
-        if (data.code === 200) {
-            successFunc(data);
-        } else {
-            windorResponseAlert(data);
-        }
-    });
+    data = methodAdapter(data, "DELETE")
+    postAjax(url, data, successFunc);
 }
 
 /* 统一返回方法 --- put */
 function putAjax(url, data, successFunc) {
-    if (data instanceof Array) {
-        data.push({
-            name: "_method",
-            value: "PUT"
-        })
-    } else if (typeof data == 'string') {
-        if (data.length === 0) {
-            data += "_method=PUT";
-        } else {
-            data += "&_method=PUT"
-        }
-    } else {
-        data["_method"] = "PUT";
-    }
-    $.post(url, data, function (data) {
-        if (data.code === 200) {
-            successFunc(data);
-        } else {
-            windorResponseAlert(data);
-        }
-    });
+    data = methodAdapter(data, "PUT");
+    postAjax(url, data, successFunc);
 }
 
 /*底部波浪*/
@@ -119,8 +115,6 @@ $(document).ready(function () {
     $("a[href='#a_null']").click(function () {
         return false;
     });
-
-
 });
 
 //波浪动画

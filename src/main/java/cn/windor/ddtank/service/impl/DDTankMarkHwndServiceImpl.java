@@ -54,7 +54,7 @@ public class DDTankMarkHwndServiceImpl implements DDTankMarkHwndService {
     }
 
     public static final int SHORTCUT_START = 1; // 模拟任务开始快捷键
-    public static final int SHORTCUT_STOP = 2; // 模拟手动结束任务快捷键\
+    public static final int SHORTCUT_STOP = 2; // 模拟手动结束任务快捷键
 
 
     @Override

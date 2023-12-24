@@ -5,7 +5,7 @@ import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class DDTankCoreScriptThread extends Thread {
+public class DDTankCoreScriptThread extends Thread implements Comparable {
 
     @Getter
     private final DDTankCoreScript script;
@@ -57,5 +57,13 @@ public class DDTankCoreScriptThread extends Thread {
 
     public void stopForced() {
         stop();
+    }
+
+    @Override
+    public int compareTo(Object o) {
+        if(this == o) {
+            return 0;
+        }
+        return 1;
     }
 }
