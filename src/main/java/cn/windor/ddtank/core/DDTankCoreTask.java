@@ -129,7 +129,7 @@ public class DDTankCoreTask implements Runnable, Serializable {
         this.keyboard = new DMKeyboard(dm.getSource());
 
 
-        this.ddTankCoreAttackHandler = new DDTankCoreAttackHandlerImpl(properties, keyboard, ddtankPic, ddtankOperate, ddtLog);
+        this.ddTankCoreAttackHandler = new DDTankCoreAttackHandlerImpl(dm, properties, keyboard, ddtankPic, ddtankOperate, ddtLog);
         this.ddtankSelectMapHandler = new DDTankSelectMapHandlerImpl(properties, ddtankOperate, ddtLog);
         this.ddTankTaskAutoCompleteHandler = new DDTankAutoCompleteHandlerImpl(keyboard, mouse);
         this.ddTankAutoUsePropHandler = new DDTankAutoUsePropHandlerImpl(mouse, keyboard, dm, ddtLog);

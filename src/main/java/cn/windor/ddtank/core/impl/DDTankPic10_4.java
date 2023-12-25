@@ -1,6 +1,7 @@
 package cn.windor.ddtank.core.impl;
 
 import cn.windor.ddtank.base.*;
+import cn.windor.ddtank.config.DDTankSetting;
 import cn.windor.ddtank.config.DMPicConfigProperties;
 import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 import cn.windor.ddtank.config.DDTankFileConfigProperties;
@@ -262,20 +263,14 @@ public class DDTankPic10_4 extends AbstractDDTankPic implements DDTankPic, Seria
     @Override
     public double getWind() {
         String windStr = dm.ocr(461, 20, 536, 42, "000000-000000|ff0000-000000", 1);
-        try {
-            double wind = Double.parseDouble(windStr);
-            long startTime = System.currentTimeMillis();
-            while (System.currentTimeMillis() - startTime < 1000) {
-                if (dm.findColor(524, 25, 537, 39, "eaeaea|848484", 1, 0, null)) {
-                    return -wind;
-                } else if (dm.findColor(462, 26, 474, 48, "eaeaea|848484", 1, 0, null)) {
-                    return wind;
-                }
+        double wind = Double.parseDouble(windStr);
+        long startTime = System.currentTimeMillis();
+        while (System.currentTimeMillis() - startTime < 1000) {
+            if (dm.findColor(524, 25, 537, 39, "eaeaea|848484", 1, 0, null)) {
+                return -wind;
+            } else if (dm.findColor(462, 26, 474, 48, "eaeaea|848484", 1, 0, null)) {
+                return wind;
             }
-        }catch (Exception e) {
-            log.warn("未找到风力");
-            // 保存风力图片
-            dm.capture(461, 20, 536, 42, DDTankFileConfigProperties.getFailDir("wind") + "/" + System.currentTimeMillis() + ".bmp");
         }
         return 0;
     }

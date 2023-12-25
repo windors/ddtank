@@ -1,7 +1,10 @@
 package cn.windor.ddtank.core.impl;
 
 import cn.windor.ddtank.base.Keyboard;
+import cn.windor.ddtank.base.Library;
 import cn.windor.ddtank.base.Point;
+import cn.windor.ddtank.config.DDTankFileConfigProperties;
+import cn.windor.ddtank.config.DDTankSetting;
 import cn.windor.ddtank.core.DDTankCoreTaskProperties;
 import cn.windor.ddtank.core.*;
 import cn.windor.ddtank.exception.DDTankAngleResolveException;
@@ -39,6 +42,7 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler, Ser
     protected Integer angle;
 
     protected Double strength;
+    protected Library dm;
 
     // 攻击缓存
     @Getter
@@ -71,7 +75,8 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler, Ser
 
     private final static ExecutorService calcStrengthExecutors = Executors.newCachedThreadPool();
 
-    public DDTankCoreAttackHandlerImpl(DDTankCoreTaskProperties properties, Keyboard keyboard, DDTankPic ddtankPic, DDTankOperate ddtankOperate, DDTankLog ddtLog) {
+    public DDTankCoreAttackHandlerImpl(Library dm, DDTankCoreTaskProperties properties, Keyboard keyboard, DDTankPic ddtankPic, DDTankOperate ddtankOperate, DDTankLog ddtLog) {
+        this.dm = dm;
         this.properties = properties;
         this.keyboard = keyboard;
         this.ddtankPic = ddtankPic;
@@ -218,7 +223,16 @@ public class DDTankCoreAttackHandlerImpl implements DDTankCoreAttackHandler, Ser
 
         double horizontal = new BigDecimal((enemyPosition.getX() - myPosition.getX()) / distance).setScale(2, RoundingMode.UP).doubleValue();
         double vertical = new BigDecimal((myPosition.getY() - enemyPosition.getY()) / distance).setScale(2, RoundingMode.UP).doubleValue();
-        double wind = ddtankPic.getWind();
+        double wind = 0;
+        try {
+            ddtankPic.getWind();
+        }catch (Exception e) {
+            log.warn("未找到风力");
+            // 保存风力图片
+            if(DDTankSetting.isFailCapture()) {
+                dm.capture(461, 20, 536, 42, DDTankFileConfigProperties.getFailDir("wind") + "/" + System.currentTimeMillis() + ".bmp");
+            }
+        }
         boolean exactWind = properties.getExactWind();
         if(!exactWind) {
             wind = Math.ceil(wind / 0.5) * 0.5;
